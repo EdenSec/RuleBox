@@ -2,7 +2,7 @@
   "platform": "alpha",
   "version": 1,
   "categories": ["常用模板", "告警筛选", "IP 与资产", "自定义组合"],
-  "notice": "Alpha 官方未公开检索语法文档，以下字段参考常见态势感知平台的告警检索语法整理，不同部署版本可能存在字段差异，请在平台字典中确认后再使用。",
+  "notice": "Alpha 官方未公开检索语法文档，以下字段与取值参考常见私有部署态势感知平台的告警检索语法整理（direction、alarmResults、alarmStatus 等均为示例）。不同版本字段名、枚举值与运算符可能存在差异，使用前请先在平台数据字典中确认；时间范围等字段本库未收录。",
   "items": [
     {
       "id": "alpha-high-risk",
@@ -41,7 +41,7 @@
       "id": "alpha-response-200",
       "title": "响应码 200 的告警",
       "category": "常用模板",
-      "code": "responseCode == \"200\" AND alarmName != \"rule-a\" AND direction == \"10\" AND alarmResults in [\"UNKNOWN\",\"OK\"]",
+      "code": "responseCode == \"200\" AND alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\" AND direction == \"10\" AND alarmResults in [\"UNKNOWN\",\"OK\"]",
       "desc": "查询响应码为 200 的纵向流量告警，并限定判定结果为 UNKNOWN 或 OK。",
       "tags": ["响应码", "200"],
       "vars": [],
@@ -165,10 +165,84 @@
       "id": "alpha-high-risk-ip",
       "title": "高危 + 指定资产",
       "category": "自定义组合",
-      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND destAddress == \"{{ip}}\" AND alarmName != \"rule-a\"",
+      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND destAddress == \"{{ip}}\" AND alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\"",
       "desc": "把常用排除逻辑与目标资产组合，适合应急响应时只看单台主机。",
       "tags": ["高危", "资产"],
       "vars": [{ "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-name-in",
+      "title": "多告警名称组合",
+      "category": "告警筛选",
+      "code": "alarmName in [\"rule-a\",\"rule-b\"] AND direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "用 in 一次匹配多个告警名称，适合把同类规则合并查询；请替换为平台字典中的实际规则名。",
+      "tags": ["alarmName", "in"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-processed",
+      "title": "已处置告警",
+      "category": "告警筛选",
+      "code": "alarmStatus == \"processed\" AND direction == \"10\"",
+      "desc": "查看已处置告警，用于复盘处置结果与统计闭环情况；取值以平台字典为准。",
+      "tags": ["已处置", "复盘"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-severity-var",
+      "title": "按威胁等级变量筛选",
+      "category": "告警筛选",
+      "code": "threatSeverity == \"{{level}}\" AND direction == \"10\"",
+      "desc": "把威胁等级抽成变量，便于在 High、Medium、Low 之间切换；枚举值以平台字典为准。",
+      "tags": ["威胁等级", "变量"],
+      "vars": [
+        { "name": "level", "label": "威胁等级", "placeholder": "High", "example": "High" }
+      ],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-exclude-src",
+      "title": "排除指定源 IP",
+      "category": "IP 与资产",
+      "code": "srcAddress != \"{{ip}}\" AND threatSeverity in [\"Medium\",\"High\"] AND direction == \"10\"",
+      "desc": "排除已知扫描器或内部探测源的地址，减少误报；srcAddress 字段需在平台字典确认。",
+      "tags": ["srcAddress", "降噪"],
+      "vars": [
+        { "name": "ip", "label": "排除的源 IP", "placeholder": "198.51.100.20", "example": "198.51.100.20" }
+      ],
+      "source": "基于示例字段的组合（字段需平台确认）",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-asset-port",
+      "title": "资产与多端口组合",
+      "category": "IP 与资产",
+      "code": "destAddress == \"{{ip}}\" AND destPort in [\"{{port1}}\",\"{{port2}}\"] AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "把资产与多个业务端口组合，快速确认某台主机上特定服务的告警。",
+      "tags": ["destAddress", "destPort"],
+      "vars": [
+        { "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" },
+        { "name": "port1", "label": "端口 1", "placeholder": "443", "example": "443" },
+        { "name": "port2", "label": "端口 2", "placeholder": "8080", "example": "8080" }
+      ],
+      "source": "基于示例字段的组合（字段需平台确认）",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-unknown-high",
+      "title": "高危且判定未知未处置",
+      "category": "自定义组合",
+      "code": "threatSeverity in [\"Medium\",\"High\"] AND alarmResults in [\"UNKNOWN\"] AND alarmStatus != \"processed\" AND direction == \"10\"",
+      "desc": "筛出中高危、系统尚未判定且未处置的告警，作为人工复核队列。",
+      "tags": ["高危", "人工复核"],
+      "vars": [],
       "source": "基于示例字段的组合",
       "risk": "safe"
     }

@@ -2,7 +2,7 @@
   "platform": "google",
   "version": 1,
   "categories": ["基础语法", "敏感文件", "暴露面发现"],
-  "notice": "Google 当前官方帮助仅明确列出 site:、filetype:、before:/after:、英文双引号与 - 排除；intitle:、inurl:、intext:、allintitle:、allinurl:、allintext:、inanchor:、OR、.. 数字范围与 * 通配符仍被广泛使用，但未在当前官方帮助单列，效果可能随检索策略变化。cache: 已于 2024 年 9 月 24 日停用。",
+  "notice": "Google 当前官方帮助仅明确列出 site:、filetype:、before:/after:、英文双引号与 - 排除；intitle:、inurl:、intext:、allintitle:、allinurl:、allintext:、inanchor:、OR、.. 数字范围与 * 通配符仍被广泛使用，但未在当前官方帮助单列，效果可能随检索策略变化。cache: 已于 2024 年 9 月 24 日停用。无扩展名的文件（如 .env、.DS_Store）无法用 filetype: 命中，应改用 inurl: 或正文关键词。",
   "items": [
     {
       "id": "google-site",
@@ -134,8 +134,8 @@
       "id": "google-env-file",
       "title": ".env 配置文件",
       "category": "敏感文件",
-      "code": "site:{{domain}} filetype:env \"DB_\"",
-      "desc": "搜索误部署的 .env 配置文件，注意仅做授权范围内的泄露排查。",
+      "code": "site:{{domain}} inurl:\".env\" (\"DB_\" OR \"APP_KEY\" OR \"SECRET_KEY\")",
+      "desc": ".env 没有扩展名，filetype:env 无法命中；改用 inurl 定位文件名并配合内容特征，可减少误报。仅做授权范围内的泄露排查。",
       "tags": ["敏感文件", ".env"],
       "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
       "source": "公开 Google Hacking 用法",
@@ -357,6 +357,119 @@
       "code": "site:{{domain}} inurl:phpinfo",
       "desc": "定位遗留的 phpinfo 或环境探针页面，可泄露路径、组件版本与配置信息。",
       "tags": ["phpinfo", "信息泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-ds-store",
+      "title": ".DS_Store 目录残留",
+      "category": "敏感文件",
+      "code": "site:{{domain}} inurl:\".DS_Store\"",
+      "desc": "macOS 打包残留文件，可泄露目录与文件名结构；属于低风险但常见的信息泄露点。",
+      "tags": [".DS_Store", "信息泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-vcs-residue",
+      "title": "版本控制与 WEB-INF 残留",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (inurl:\".svn\" OR inurl:\"WEB-INF/web.xml\")",
+      "desc": "检查误部署的 .svn 目录与 WEB-INF 配置，两者都可能暴露源码结构或服务配置。",
+      "tags": [".svn", "WEB-INF", "源码泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-actuator",
+      "title": "Spring Actuator 端点",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} inurl:actuator (inurl:env OR inurl:heapdump OR inurl:health)",
+      "desc": "Spring Boot Actuator 可能暴露环境变量、堆转储与健康信息，需确认是否对外可达。",
+      "tags": ["Spring", "Actuator"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-server-status",
+      "title": "Apache 状态页",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"Apache Status\"",
+      "desc": "mod_status 状态页会展示当前请求、客户端地址与运行状态，不宜对外开放。",
+      "tags": ["Apache", "server-status"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-phpmyadmin",
+      "title": "phpMyAdmin 入口",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"phpMyAdmin\"",
+      "desc": "定位数据库管理入口，确认是否限制来源地址并使用强口令。",
+      "tags": ["phpMyAdmin", "数据库"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-json-config",
+      "title": "JSON 与 XML 配置泄露",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:json OR filetype:xml) (\"password\" OR \"secret\" OR \"token\")",
+      "desc": "检索配置类文件中出现的凭据字段，命中后需人工确认是否为真实密钥。",
+      "tags": ["JSON", "XML", "凭据"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-backup-index",
+      "title": "备份目录列表",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"index of\" (backup OR bak OR dump OR sql)",
+      "desc": "在目录列表中定向查找备份相关目录，比泛搜 index of 更聚焦。",
+      "tags": ["备份", "目录浏览"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-subdomain",
+      "title": "子域粗略枚举",
+      "category": "基础语法",
+      "code": "site:*.{{domain}} -site:www.{{domain}}",
+      "desc": "site:*.domain 只匹配子域，适合快速了解收录的子域范围；收录不完整，需结合其他子域发现方式。",
+      "tags": ["site", "子域"],
+      "vars": [{ "name": "domain", "label": "主域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-allinanchor",
+      "title": "锚文本包含全部关键词",
+      "category": "基础语法",
+      "code": "allinanchor:{{kw1}} {{kw2}}",
+      "desc": "要求链接锚文本中同时包含全部关键词，用于梳理站内引用与外部提及关系。",
+      "tags": ["allinanchor"],
+      "vars": [
+        { "name": "kw1", "label": "锚文本词 1", "placeholder": "下载", "example": "下载" },
+        { "name": "kw2", "label": "锚文本词 2", "placeholder": "客户端", "example": "客户端" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-exception",
+      "title": "异常堆栈泄露",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (\"Fatal error\" OR \"stack trace\" OR \"Exception in thread\")",
+      "desc": "检索页面回显的异常堆栈，判断是否存在错误处理不当与路径、类名泄露。",
+      "tags": ["报错", "堆栈"],
       "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
       "source": "公开 Google Hacking 用法",
       "risk": "recon"

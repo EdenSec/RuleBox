@@ -2,7 +2,7 @@
   "platform": "baidu",
   "version": 1,
   "categories": ["基础语法", "暴露面发现", "敏感文件", "组合技巧"],
-  "notice": "百度当前高级搜索文档明确支持 site:、intitle:、inurl:、filetype:、双引号精确匹配、- 排除与 | 或关系；| 两侧建议留空格。+ 强制包含、书名号精确匹配与括号分组属于常见技巧，官方高级搜索页未单列，效果可能随检索策略变化。",
+  "notice": "百度当前高级搜索文档明确支持 site:、intitle:、inurl:、filetype:、双引号精确匹配与 - 排除；| 或关系、+ 强制包含、书名号精确匹配与括号分组属于常见技巧，官方高级搜索页未单列，效果可能随检索策略变化，建议两侧留空格并实测。百度仅对部分文档格式建立索引，filetype:all 等写法不保证覆盖全部类型。",
   "items": [
     {
       "id": "baidu-site",
@@ -51,7 +51,7 @@
       "title": "指定文件类型",
       "category": "基础语法",
       "code": "filetype:{{ext}} site:{{domain}} {{keyword}}",
-      "desc": "只返回指定格式的文档，常用于收集公开的 PDF、Word、Excel 资料。",
+      "desc": "只返回指定格式的文档，常用于收集公开的 PDF、Word、Excel 资料；百度常见可检索格式包括 pdf、doc、docx、xls、xlsx、ppt、pptx、rtf、txt，具体以实际收录为准。",
       "tags": ["filetype"],
       "vars": [
         { "name": "ext", "label": "文件类型", "placeholder": "pdf", "example": "pdf" },
@@ -66,7 +66,7 @@
       "title": "检索全部文档类型",
       "category": "基础语法",
       "code": "filetype:all site:{{domain}} {{keyword}}",
-      "desc": "filetype:all 表示不限具体格式，只筛选百度收录的各类文档，适合先摸清站点对外暴露了哪些资料。",
+      "desc": "filetype:all 是常见的“全部文档”写法，官方高级帮助未单列，且百度只对部分文档格式建立索引，结果可能不完整；建议先用具体格式验证效果。",
       "tags": ["filetype", "文档"],
       "vars": [
         { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
@@ -107,7 +107,7 @@
       "title": "或匹配",
       "category": "组合技巧",
       "code": "intitle:\"{{keywordA}}\" | intitle:\"{{keywordB}}\"",
-      "desc": "竖线表示或关系，任一标题条件命中即可，适合一次覆盖多种叫法；建议在竖线两侧留空格。",
+      "desc": "竖线表示或关系，任一标题条件命中即可，适合一次覆盖多种叫法；该写法官方高级帮助未单列，建议两侧留空格并实测结果。",
       "tags": ["or"],
       "vars": [
         { "name": "keywordA", "label": "关键词 A", "placeholder": "后台", "example": "后台" },
@@ -133,7 +133,7 @@
     },
     {
       "id": "baidu-multi-site",
-      "title": "排除子域",
+      "title": "主域内排除子域",
       "category": "组合技巧",
       "code": "site:{{domain}} {{keyword}} -site:{{subdomain}}",
       "desc": "先限定主域，再用 -site: 去掉已知子域，便于聚焦剩余资产。",
@@ -299,6 +299,114 @@
       "code": "site:{{domain}} \"@{{domain}}\"",
       "desc": "同时限定站点与邮箱后缀，找出页面中公开的企业邮箱地址。",
       "tags": ["email"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-intitle-multi",
+      "title": "标题同时包含多个词",
+      "category": "基础语法",
+      "code": "site:{{domain}} intitle:{{kw1}} intitle:{{kw2}}",
+      "desc": "重复使用 intitle: 让多个关键词都出现在标题中，比单个标题词更精准；百度没有 allintitle，只能用这种写法。",
+      "tags": ["intitle", "组合"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "kw1", "label": "标题词 1", "placeholder": "后台", "example": "后台" },
+        { "name": "kw2", "label": "标题词 2", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-title-url",
+      "title": "标题与 URL 双限定",
+      "category": "组合技巧",
+      "code": "site:{{domain}} intitle:\"{{titlekw}}\" inurl:{{urlkw}}",
+      "desc": "同时限制标题与 URL 特征，把范围收缩到具体功能页，例如标题含“登录”且路径含 admin。",
+      "tags": ["intitle", "inurl"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "titlekw", "label": "标题关键词", "placeholder": "登录", "example": "登录" },
+        { "name": "urlkw", "label": "URL 关键词", "placeholder": "admin", "example": "admin" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-upload-path",
+      "title": "上传下载与文件目录",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (inurl:upload | inurl:download | inurl:file)",
+      "desc": "从路径特征梳理文件上传、下载与附件目录，重点关注是否存在未授权访问。",
+      "tags": ["upload", "download"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-error-leak",
+      "title": "报错信息泄露",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (\"Warning: mysql\" | \"error on line\" | \"SQL syntax\" | \"ORA-\")",
+      "desc": "检索页面回显的数据库与脚本报错，辅助发现错误处理不当的位置；仅做授权范围内的排查。",
+      "tags": ["报错", "信息泄露"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-phpinfo",
+      "title": "phpinfo 与探针页面",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (inurl:phpinfo | inurl:phpinfo.php | intitle:\"phpinfo()\")",
+      "desc": "定位遗留的 phpinfo 或环境探针页面，这类页面会暴露路径、组件版本与配置信息。",
+      "tags": ["phpinfo", "信息泄露"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-mobile-site",
+      "title": "移动端与子站入口",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (inurl:m | inurl:mobile | inurl:wap)",
+      "desc": "按移动端常见路径特征发现单独的移动站或 H5 入口，避免资产清单遗漏。",
+      "tags": ["移动端", "子站"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-backup-path",
+      "title": "备份与导出路径",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (inurl:backup | inurl:bak | inurl:dump | inurl:export)",
+      "desc": "百度对压缩包索引有限，用 URL 中的备份、导出特征词更容易命中下载页与目录。",
+      "tags": ["备份", "inurl"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-archive",
+      "title": "压缩包与归档文件",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:zip | filetype:rar | filetype:7z)",
+      "desc": "尝试检索公开压缩包；百度对 zip、rar 等格式收录不稳定，命中率低于文档格式，建议与备份路径检索配合使用。",
+      "tags": ["压缩包", "备份"],
       "vars": [
         { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
       ],
