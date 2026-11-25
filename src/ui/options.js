@@ -37,7 +37,7 @@ import { openFormDialog, openInfoDialog } from './form-dialog.js';
 import { openItemDialog } from './item-dialog.js';
 
 const hasChrome = typeof chrome !== 'undefined';
-const SECTIONS = ['general', 'ai', 'data', 'import', 'about'];
+const SECTIONS = ['general', 'ai', 'data', 'builtin', 'import', 'about'];
 
 const PLATFORM_ID_PATTERN = /^[a-zA-Z0-9_-]{2,32}$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;

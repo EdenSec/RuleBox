@@ -40,6 +40,7 @@
         <button class="rb-opt-nav-item is-active" type="button" data-section="general">通用</button>
         <button class="rb-opt-nav-item" type="button" data-section="ai">AI 助手</button>
         <button class="rb-opt-nav-item" type="button" data-section="data">自定义数据</button>
+        <button class="rb-opt-nav-item" type="button" data-section="builtin">内置条目显示</button>
         <button class="rb-opt-nav-item" type="button" data-section="import">导入导出</button>
         <button class="rb-opt-nav-item" type="button" data-section="about">关于</button>
       </nav>
@@ -448,12 +449,31 @@
 
           <div class="rb-card">
             <div class="rb-card-head">
-              <h3 class="rb-card-title">内置条目显示</h3>
-              <span id="builtin-hidden-count" class="rb-badge">已隐藏 0 条</span>
+              <h3 class="rb-card-title">本地数据维护</h3>
             </div>
-            <p class="rb-note">
-              隐藏只是不在面板里展示，内置数据不会被删除，也不会被导出或上传，随时可以在这里恢复。
-            </p>
+            <div class="rb-inline">
+              <button id="btn-clear-recents" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空最近使用</button>
+              <button id="btn-clear-variables" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空变量记忆</button>
+              <button id="btn-clear-favorites" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空收藏</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 内置条目显示（软隐藏名单，随时可恢复） -->
+        <section class="rb-opt-section" data-section="builtin" hidden>
+          <header class="rb-section-head">
+            <h2>内置条目显示</h2>
+            <p>在面板里点条目右侧的眼睛图标即可隐藏。隐藏只是不在面板展示，内置数据不会被删除，随时可以在这里恢复。</p>
+          </header>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">已隐藏的内置条目</h3>
+              <div class="rb-inline">
+                <span id="builtin-hidden-count" class="rb-badge">已隐藏 0 条</span>
+                <button id="btn-hidden-restore-all" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">全部恢复</button>
+              </div>
+            </div>
             <div class="rb-inline">
               <input id="builtin-search" class="rb-input rb-input--search" type="search"
                 placeholder="搜索标题、代码或标签" aria-label="搜索内置条目">
@@ -461,22 +481,10 @@
                 <input id="builtin-only-hidden" type="checkbox">
                 <span>只看已隐藏</span>
               </label>
-              <button id="btn-hidden-restore-all" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">全部恢复</button>
             </div>
             <div id="builtin-item-list" class="rb-data-list"></div>
             <div class="rb-inline rb-inline--end">
               <button id="btn-builtin-more" class="rb-btn rb-btn--ghost rb-btn--sm" type="button" hidden>显示更多</button>
-            </div>
-          </div>
-
-          <div class="rb-card">
-            <div class="rb-card-head">
-              <h3 class="rb-card-title">本地数据维护</h3>
-            </div>
-            <div class="rb-inline">
-              <button id="btn-clear-recents" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空最近使用</button>
-              <button id="btn-clear-variables" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空变量记忆</button>
-              <button id="btn-clear-favorites" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空收藏</button>
             </div>
           </div>
         </section>

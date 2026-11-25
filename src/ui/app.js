@@ -66,6 +66,8 @@ const SHORTCUT = {
 const state = {
   settings: null,
   data: null,
+  // 当前隐藏名单，仅用于页脚提示数量，不参与过滤逻辑
+  hidden: [],
   favorites: new Set(),
   variables: {},
   recents: [],
@@ -123,6 +125,7 @@ function applyHidden(data, hidden) {
 
 async function loadPanelData(force = false) {
   const [data, hidden] = await Promise.all([loadAll(force), getHidden()]);
+  state.hidden = hidden;
   return applyHidden(data, hidden);
 }
 
@@ -312,6 +315,10 @@ function bindHeader() {
   // HTML 中该按钮是空节点，图标与文案必须由这里注入，
   // 否则头部会出现一个看不见却可点击的空白按钮（历史遗漏）
   setFavoritesOnly(state.favoritesOnly, { render: false });
+
+  // 页脚“已隐藏 N 条 · 恢复”直达设置页的内置条目显示分区
+  const hiddenLink = $('#footer-hidden');
+  if (hiddenLink) hiddenLink.addEventListener('click', () => openOptions('builtin'));
 }
 
 /**
@@ -359,7 +366,7 @@ function updateSidePanelButton() {
 
 /**
  * 打开设置页。
- * @param {string} section 可选分区（general / ai / data / import / about）。
+ * @param {string} section 可选分区（general / ai / data / builtin / import / about）。
  *   openOptionsPage 不支持锚点，需要定位到具体分区时必须直接打开带 hash 的地址，
  *   否则用户会被丢到设置首页，还要自己再找一遍。
  */
@@ -763,22 +770,31 @@ async function handleDeleteItem(item) {
 /**
  * 面板内隐藏内置条目。
  * 只写入 rb.hidden，内置 JSON 与自定义数据都不动，设置页可随时恢复。
+ * 写入串行执行：连续快速点多个眼睛图标时，后一次必须基于前一次写入后的名单，
+ * 否则两次“读-改-写”并发会互相覆盖，导致只生效一条。
  */
-async function handleHideItem(item) {
-  const key = itemKey(item);
-  let hidden;
-  try {
-    hidden = await getHidden();
-    if (hidden.includes(key)) return;
-    await setHidden([...hidden, key]);
-  } catch {
-    toast('隐藏失败，请重试', 'error');
-    return;
-  }
+let hiddenWriteQueue = Promise.resolve();
 
-  state.data = applyHidden(state.data, [...hidden, key]);
-  renderAll();
-  toast('已隐藏，可在设置页「内置条目显示」中恢复', 'success');
+function handleHideItem(item) {
+  const key = itemKey(item);
+  const run = async () => {
+    let hidden;
+    try {
+      hidden = await getHidden();
+      if (hidden.includes(key)) return;
+      await setHidden([...hidden, key]);
+    } catch {
+      toast('隐藏失败，请重试', 'error');
+      return;
+    }
+
+    state.data = applyHidden(state.data, [...hidden, key]);
+    state.hidden = [...hidden, key];
+    renderAll();
+    toast(`已隐藏 ${state.hidden.length} 条，点底部「已隐藏」可恢复`, 'success');
+  };
+  hiddenWriteQueue = hiddenWriteQueue.then(run, run);
+  return hiddenWriteQueue;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1850,6 +1866,8 @@ function renderFooter() {
   const hint = $('#footer-hint');
   if (!count || !hint) return;
 
+  renderHiddenFooter();
+
   if (state.tab === 'ai') {
     count.textContent = 'AI 输出仅供辅助，请核对字段后使用';
     // 生成中把快捷键提示换成“停止”，让用户知道此刻能做什么
@@ -1863,6 +1881,26 @@ function renderFooter() {
   const total = applyFavorites(all).length;
   count.textContent = `${searchScopeLabel()}：${visible} / ${total} 条`;
   hint.textContent = `${SHORTCUT.search} 搜索 · 点条目右侧“复制”`;
+}
+
+/**
+ * 有隐藏条目时，把页脚的快捷键提示换成“已隐藏 N 条 · 恢复”。
+ * 隐藏入口在卡片上，恢复入口若只藏在设置页里，用户很容易找不到，
+ * 所以列表页始终给一个一眼能看见的直达链接。
+ */
+function renderHiddenFooter() {
+  const link = $('#footer-hidden');
+  const hint = $('#footer-hint');
+  if (!link || !hint) return;
+
+  const total = state.hidden.length;
+  const show = total > 0 && state.tab !== 'ai';
+  link.hidden = !show;
+  hint.hidden = show;
+  if (!show) return;
+
+  link.textContent = `已隐藏 ${total} 条 · 恢复`;
+  link.title = '打开设置页「内置条目显示」恢复';
 }
 
 /**

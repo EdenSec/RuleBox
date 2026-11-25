@@ -857,6 +857,22 @@ body.is-fluid {
   white-space: nowrap;
 }
 
+/* 隐藏条目恢复入口：与页脚同字号，靠颜色区分可点击 */
+.rb-footer-link {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--rb-accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rb-footer-link:hover {
+  text-decoration: underline;
+}
+
 /* ------------------------------------------------------------------ */
 /* 宽屏（侧边栏拉宽）后两列展示卡片                                     */
 /* ------------------------------------------------------------------ */
