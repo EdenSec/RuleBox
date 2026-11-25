@@ -1,87 +1,168 @@
 # RuleBox · 安全语法与 Payload 速取
 
-面向网络安全工程师的 Chrome / Edge 浏览器插件：把常用的测绘语法（FOFA / 鹰图 / Quake / ZoomEye / Shodan / Alpha 态势感知 / DayDayMap / 0.zone / Google Hacking / 工具命令）与漏洞测试 Payload（SQLi / XSS / SSRF / RCE 等 19 类）做成可搜索、一键复制粘贴的速取面板，并可选接入 AI 用自然语言生成定制语法。
+<div align="center">
 
-## 使用场景
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Chrome](https://img.shields.io/badge/Chrome-116%2B-green)
+![Edge](https://img.shields.io/badge/Edge-116%2B-green)
+![MV3](https://img.shields.io/badge/Manifest-V3-3fb950)
+![License](https://img.shields.io/badge/license-MIT-3fb950)
 
-- 做信息搜集时记不住 `domain="example.com"` 这类语法？打开面板，搜索、填变量、一键复制。
-- 做安全测试时需要 `' AND IF(1=1, SLEEP(5), 0) --` 这类 Payload？直接搜，点一下复制即粘贴到测试点。
-- 需要定制化语句（例如“查询响应码为 200 的告警”）？用 AI 助手生成完整语法后复制。
+**面向网络安全工程师的浏览器速取面板** — 测绘语法、漏洞 Payload、AI 助手，三者合一，一键复制。
 
-## 功能
+</div>
 
-- **语法库 / Payload 库**：全部数据来自 JSON 数据文件（依据各平台公开文档与公开技术资料整理，条目带来源标注），支持平台、分类、关键词多维筛选。
-- **变量填充**：语法中的 `{{domain}}`、`{{ip}}` 等占位符在复制时弹窗填写，填写过的值会记忆，下次自动带出。
-- **复制格式**：仅代码 / Markdown 代码块 / 标题 + 代码，可在设置页切换。
-- **收藏 / 最近使用**：高频条目可收藏，只看收藏一键切换。
-- **隐藏内置条目**：暂时用不到的内置语法点眼睛图标即可隐藏，不删除任何数据；设置页「内置条目显示」可搜索、逐条或全部恢复，面板页脚也会提示当前隐藏条数。
-- **AI 助手**（可选）：自然语言生成定制语法 / Payload；支持 DeepSeek、通义千问、Kimi、智谱 GLM、OpenAI、Ollama 本地模型及任意 OpenAI 兼容端点；流式输出、每日限额、错误即时提示。
-- **右键菜单**：选中网页文本后右键“在 RuleBox 中搜索”，直接把关键词带入面板搜索框。
-- **侧边栏模式**：Chrome 116+ / Edge 116+ 可固定在侧边栏常驻使用，与弹窗共用同一界面；浏览器不支持时该入口自动隐藏，弹窗与标签页模式不受影响。
-- **深色终端风主题**：深色 / 浅色 / 跟随系统，无渐变、无花哨装饰。
+---
 
-## 安装（开发者模式）
+## ✨ 这是什么？
 
-本项目是标准的 Manifest V3 扩展，无需构建、无需打包，直接加载项目根目录即可。Chrome 与 Edge（Chromium 内核）通用，两种浏览器选其一安装即可。
+做安全的都懂：`domain="example.com" && title="后台"` 这种 FOFA 语法、`' AND IF(1=1, SLEEP(5), 0) --` 这种 SQL Payload，每次做测试都在脑子里记、浏览器里搜。
+
+**RuleBox 把这些变成了一个可搜索、可筛选、可变量填充的面板** — 装到 Chrome / Edge 里，按一下快捷键就弹出来，搜一下、填变量、点复制，直接粘到测试工具里。
+
+- 🗂️ **11 个测绘平台**：FOFA / Hunter / Quake / ZoomEye / Shodan / Alpha / DayDayMap / 0.zone / Google / Baidu / 工具命令
+- 💣 **19 类漏洞 Payload**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
+- 🤖 **AI 助手**（可选）：自然语言生成定制语法，支持 DeepSeek / 通义 / Kimi / 智谱 / OpenAI / Ollama 本地
+
+---
+
+## 🖼️ 界面预览
+
+**深色主题**（默认）
+
+<p align="center">
+  <img src="assets/screenshot-popup-dark.png" alt="主面板 · 语法库" width="420">
+  <img src="assets/screenshot-ai-dark.png" alt="AI 助手" width="420">
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-settings-dark.png" alt="设置页" width="920">
+</p>
+
+<details>
+<summary><b>浅色主题预览</b>（点击展开）</summary>
+
+<br>
+
+<p align="center">
+  <img src="assets/screenshot-popup-light.png" alt="主面板 · 浅色" width="420">
+  <img src="assets/screenshot-ai-light.png" alt="AI 助手 · 浅色" width="420">
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-settings-light.png" alt="设置页 · 浅色" width="920">
+</p>
+
+</details>
+
+> 主题可在设置页切换：跟随系统 / 深色 / 浅色；也可点击面板右上角的主题按钮快速切换。
+
+---
+
+## 🚀 快速安装
+
+本项目是标准的 Manifest V3 扩展，**无需构建、无需打包**，直接加载源码目录即可。
 
 ### Chrome
 
-1. 打开 Chrome，进入 `chrome://extensions/`。
-2. 打开右上角「开发者模式」。
-3. 点击「加载已解压的扩展程序」，选择本项目根目录（包含 `manifest.json` 的目录）。
-4. 工具栏出现 RuleBox 图标（深色圆角底 + 绿色 `>_`）即安装成功。
+1. 打开 `chrome://extensions/`
+2. 右上角打开「开发者模式」
+3. 点击「加载已解压的扩展程序」，选择本项目根目录
+4. 工具栏出现 RuleBox 图标即安装成功
 
 ### Edge
 
-1. 打开 Edge，进入 `edge://extensions/`（或「设置和更多」→「扩展」→「管理扩展」）。
-2. 打开左侧（部分版本在页面底部）「开发人员模式」开关。
-3. 点击「加载解压缩的扩展」，选择本项目根目录（包含 `manifest.json` 的目录）。
-4. 点击「选择文件夹」，工具栏出现 RuleBox 图标即安装成功。
-5. 若图标未显示，点工具栏的「扩展」按钮，在 RuleBox 上点「在工具栏中显示」。
+1. 打开 `edge://extensions/`
+2. 打开「开发人员模式」
+3. 点击「加载解压缩的扩展」，选择本项目根目录
+4. 工具栏出现 RuleBox 图标即安装成功
 
-> Edge 与 Chrome 的扩展互不共用目录：同一份源码可以同时装进两个浏览器，但各自的设置、收藏、最近使用是分开存储的（`chrome.storage.local` 按浏览器隔离）。修改源码后，到对应的扩展管理页点该卡片的「重新加载 / 重载」即可生效，无需重新安装。
+> Edge 与 Chrome 扩展的存储互不共用 — 同一份源码可以同时装进两个浏览器，设置、收藏、最近使用按浏览器隔离。
 
-## 快捷键
+---
+
+## ⌨️ 快捷键
 
 | 快捷键 | 功能 |
-| --- | --- |
-| `Ctrl+Shift+Y`（macOS `Cmd+Shift+Y`） | 打开 RuleBox 面板 |
+| :--- | :--- |
+| `Ctrl+Shift+Y` / `Cmd+Shift+Y` | 打开 RuleBox 面板 |
 | `Ctrl+K` / `Cmd+K` | 聚焦搜索框 |
 | `Ctrl+1` / `2` / `3` | 切换 语法库 / Payload / AI 助手 |
-| `Ctrl+Enter`（AI 输入框内） | 发送 AI 请求 |
+| `Ctrl+Enter` | AI 输入框内发送请求 |
 | `Escape` | 清空搜索 / 关闭弹窗 |
 
-## AI 配置
+---
 
-1. 打开面板右上角「设置」→「AI 助手」。
-2. 打开「启用 AI 助手」总开关。
-3. 选择供应商（预设 7 家，也可自定义任意 OpenAI 兼容端点），填入 API Key（仅保存在本地 `chrome.storage.local`，导出配置时自动剔除）。
-4. 非内置域名端点首次使用时需点击「授权域名」（浏览器弹窗确认后才能访问）。
-5. 可配置：模型、温度、超时、流式输出、历史条数、每日请求上限、请求最小间隔、系统提示词（基础提示词可编辑、可恢复默认，另支持追加要求）等。
-6. 可选开关「携带库内写法示例」：请求前在本地检索最相关的少量库内条目作为参考，只发送召回到的几条，不联网、不上传全库。开启后生成结果更贴近库内写法；对完全陌生的需求也可关闭以节省 token。
+## 🧭 功能一览
 
-**接口异常提示**：AI 接口出现额度、鉴权或限流类错误时，对话里会立即显示错误原因与控制台入口，便于当场处理。错误只在本机展示，不写入本地记录、不上传、不向任何第三方推送。
+### 语法库 / Payload 库
 
-## 数据来源与免责声明
+- **多维筛选**：平台 → 分类 → 关键词，三级组合快速定位
+- **变量填充**：`{{domain}}`、`{{ip}}`、`{{target}}` 这类占位符复制时弹窗填写，填过的值自动记忆
+- **复制格式**：仅代码 / Markdown 代码块 / 标题 + 代码，设置页一键切换
+- **收藏 / 最近使用**：高频条目收藏后只看收藏；最近 20 条自动记录
+- **隐藏内置条目**：暂时用不到的点眼睛图标隐藏，不删除任何数据；设置页可恢复
+- **自定义条目**：自己加的语法和 Payload，跟内置的一样用
+- **右键搜索**：选中网页文本后右键「在 RuleBox 中搜索」，关键词直接带入
+- **侧边栏模式**：Chrome 116+ / Edge 116+ 固定常驻，弹窗模式同时保留
 
-- 语法与字段依据各平台公开文档与公开技术资料整理，条目内标注 `source` 来源；平台会员等级会影响可用字段，实际以官方控制台为准。
-- Alpha 态势感知字段参考常见态势感知平台的告警检索语法整理，不同部署版本可能存在差异，示例值均为通用占位。
+### AI 助手
+
+- **自然语言生成**：「查询响应码为 200 的告警」→ 直接生成完整语法
+- **多供应商**：预设 DeepSeek / 通义千问 / Kimi / 智谱 GLM / OpenAI / Ollama（本地），也支持任意 OpenAI 兼容端点
+- **流式输出**：token 一个接一个出，不用等整批
+- **本地召回示例**：请求前从库内检索最相关的少量条目作为参考，让生成风格贴近库内写法；不上传全库
+- **安全**：API Key 仅保存在本地 `chrome.storage.local`，导出配置时自动剔除；请求有域名授权、每日限额、最小间隔三重防护
+- **错误即时提示**：额度不足、鉴权失败、限流等在对话里直接显示原因
+
+### 深色终端风主题
+
+- 深色 / 浅色 / 跟随系统三档
+- 无渐变、无花哨装饰，信息密度高、长时间看不累
+- 原生控件（下拉框等）随主题着色，深浅一致
+
+---
+
+## 🤖 AI 配置（可选）
+
+1. 打开面板右上角「设置」→「AI 助手」
+2. 打开「启用 AI 助手」总开关
+3. 选择供应商（预设 7 家，也可自定义），填入 API Key
+4. 非内置域名端点首次使用需点击「授权域名」
+5. 可调：模型、温度、超时、流式、历史条数、每日限额、系统提示词等
+
+**接口异常时**：对话里立即显示错误原因与控制台入口；错误只在本机展示，不写入记录、不上传、不推送。
+
+---
+
+## 📖 数据来源与免责声明
+
+- 语法与字段依据各平台**公开文档**与公开技术资料整理，条目内标注 `source` 来源
+- Alpha 态势感知为私有部署产品，字段参考通用模式整理，不同版本可能存在差异，示例值均为**通用占位**
 - 本插件仅提供语法与 Payload 的速查复制能力，所有内容仅供**已授权的安全测试与防御研究**使用。使用者在未授权目标上使用相关内容所产生的一切后果自行承担。
 
-## 目录概览
+---
+
+## 🗂️ 目录结构
 
 ```
-RuleBox
-├─ manifest.json            # MV3 清单
-├─ icons\                   # 扩展图标（16/32/48/128）
-└─ src\
-   ├─ background\          # Service Worker（右键菜单 / 侧边栏同步）
-   ├─ core\                # 无 UI 依赖的核心逻辑（存储、数据、AI、模板等）
-   ├─ data\                # 内置 JSON 数据（平台、语法、Payload、提示词）
-   ├─ options\             # 设置页（HTML/CSS）
-   ├─ popup\               # 弹窗 / 侧边栏共用页面（HTML/CSS）
-   ├─ shared\              # 设计令牌与基础样式
-   └─ ui\                  # 界面逻辑（app.js 面板、options.js 设置页、组件库）
+RuleBox/
+├─ manifest.json              # MV3 清单
+├─ icons/                     # 扩展图标（16/32/48/128）
+├─ assets/                    # README 截图与图片
+├─ src/
+│  ├─ background/             # Service Worker（右键菜单 / 侧边栏）
+│  ├─ core/                   # 核心逻辑（存储、数据、AI、搜索、模板…）
+│  ├─ data/                   # 内置 JSON 数据（平台 / 语法 / Payload / 提示词）
+│  ├─ options/                # 设置页（HTML/CSS）
+│  ├─ popup/                  # 弹窗（HTML/CSS）
+│  ├─ shared/                 # 设计令牌与基础样式
+│  └─ ui/                     # 界面逻辑（面板 / 设置页 / 组件库）
+└─ docs/DEVELOPMENT.md        # 开发与维护文档
 ```
 
-开发与维护文档见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)（含数据 schema、存储键清单、扩展指南与防重复开发约定）。
+---
+
+## 📜 License
+
+MIT License
