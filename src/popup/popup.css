@@ -1,0 +1,902 @@
+/* RuleBox 主界面（popup / 侧边栏）样式
+ * 风格：深色终端、直角感、单一绿色强调；不使用渐变。
+ * 尺寸：popup 默认 420×580，侧边栏按可视宽度自适应。
+ */
+
+html {
+  background: var(--rb-bg);
+}
+
+body {
+  width: 420px;
+  height: 580px;
+  overflow: hidden;
+}
+
+/* 侧边栏 / 以标签页打开：铺满可视区域，限制内容最大宽度保持可读性。
+ * 由 app.js 依据扩展上下文（SIDE_PANEL / TAB）添加 .is-fluid 类名。
+ * 注意：禁止用 @media 按视口宽度改写 body 尺寸——Chrome 打开 popup 时会先用
+ * 一个很小的视口测量内容，一旦命中“窄屏兜底”把 body 改成 100vw，popup 就会被
+ * 永久锁死在 154×187 的极小尺寸（实测 Chrome 151 复现）。 */
+body.is-fluid {
+  width: 100%;
+  height: 100vh;
+}
+
+@media (min-width: 460px) {
+  .rb-app {
+    max-width: 900px;
+    margin: 0 auto;
+    border-left: 1px solid var(--rb-border);
+    border-right: 1px solid var(--rb-border);
+  }
+}
+
+.rb-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--rb-bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* 顶部栏                                                              */
+/* ------------------------------------------------------------------ */
+
+.rb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg-elev);
+  flex: 0 0 auto;
+}
+
+.rb-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rb-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--rb-accent-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-accent-weak);
+  color: var(--rb-accent);
+  font-family: var(--rb-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  flex: 0 0 auto;
+}
+
+.rb-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.rb-brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.rb-brand-sub {
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rb-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.rb-btn--icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--rb-radius-sm);
+}
+
+.rb-btn--icon svg {
+  display: block;
+}
+
+/* 收藏过滤按钮的星标在 icons.js 中是 14px，这里放大到与主题/设置图标一致的 18px，
+   否则头部四个按钮里它会明显偏小 */
+#btn-favorites svg {
+  width: 18px;
+  height: 18px;
+}
+
+.rb-btn--icon.is-favorite {
+  color: var(--rb-warn);
+}
+
+.rb-btn--icon.is-active {
+  color: var(--rb-accent);
+  background: var(--rb-accent-weak);
+  border-color: var(--rb-accent-border);
+}
+
+/* ------------------------------------------------------------------ */
+/* 搜索                                                                */
+/* ------------------------------------------------------------------ */
+
+.rb-searchbar {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg);
+  flex: 0 0 auto;
+}
+
+.rb-searchbar[hidden] {
+  display: none;
+}
+
+.rb-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rb-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--rb-fg-subtle);
+  pointer-events: none;
+}
+
+.rb-search-input {
+  height: 32px;
+  padding-left: 32px;
+  padding-right: 68px;
+  border-radius: var(--rb-radius);
+}
+
+.rb-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.rb-search-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-search-clear:hover {
+  background: var(--rb-bg-hover);
+  color: var(--rb-fg);
+}
+
+.rb-search-clear[hidden] {
+  display: none;
+}
+
+.rb-search .rb-kbd {
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
+}
+
+/* 有内容时输入框右侧是清空按钮，快捷键提示会与它重叠，此时隐藏 kbd */
+.rb-search:has(.rb-search-clear:not([hidden])) .rb-kbd {
+  display: none;
+}
+
+.rb-search:has(.rb-search-clear:not([hidden])) .rb-search-input {
+  padding-right: 34px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 标签                                                                */
+/* ------------------------------------------------------------------ */
+
+.rb-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg);
+  flex: 0 0 auto;
+}
+
+.rb-tab {
+  position: relative;
+  padding: 9px 4px;
+  border-bottom: 2px solid transparent;
+  color: var(--rb-fg-muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.rb-tab:hover {
+  color: var(--rb-fg);
+  background: var(--rb-bg-hover);
+}
+
+.rb-tab.is-active {
+  color: var(--rb-fg);
+  border-bottom-color: var(--rb-accent);
+}
+
+.rb-tab[data-tab="ai"].is-active {
+  color: var(--rb-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 内容区                                                              */
+/* ------------------------------------------------------------------ */
+
+.rb-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* AI 面板自行管理滚动，避免双重滚动条 */
+.rb-content:has(.rb-panel.rb-ai:not([hidden])) {
+  overflow: hidden;
+}
+
+.rb-panel {
+  display: block;
+}
+
+.rb-panel[hidden] {
+  display: none !important;
+}
+
+/* 筛选区 */
+.rb-filter-block {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg);
+}
+
+.rb-filter-row {
+  min-width: 0;
+}
+
+/* 一级 / 二级筛选并排在同一行：420px 宽的 popup 里两行下拉会把列表可视区压掉约
+   40px，且两行同权重会让人分不清主次；并排后主筛选在左、从属筛选在右 */
+.rb-filter-row--inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rb-filter-row--inline .rb-select-wrap {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* 筛选行末尾的「+」：就地新增条目，与两个下拉同一行、固定宽度不参与拉伸 */
+.rb-filter-add {
+  flex: 0 0 auto;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--rb-fg-muted);
+}
+
+.rb-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 独占一行的筛选（AI 提示词场景）：label 撑满行宽，里面的下拉才能真正铺开；
+   否则 inline-flex 是收缩宽度，select 的 width:100% 会退化成固有宽度，长文案被截断 */
+.rb-filter-row > .rb-select-wrap {
+  display: flex;
+}
+
+/* label 是 flex 容器，UA 的 [hidden] 会被覆盖，必须显式声明 */
+.rb-select-wrap[hidden] {
+  display: none;
+}
+
+.rb-select-label {
+  font-size: 11px;
+  color: var(--rb-fg-subtle);
+  white-space: nowrap;
+}
+
+.rb-select {
+  width: auto;
+  max-width: 240px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* 筛选下拉：占满 label 剩余宽度，长平台名（如“零零信安 0.zone”）不会把
+   右侧的“分类”挤出可视区；宿主变宽（侧边栏 / TAB）时两个下拉等比拉伸 */
+.rb-select--filter {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.rb-select--sm {
+  max-width: 190px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 条目列表与卡片                                                      */
+/* ------------------------------------------------------------------ */
+
+.rb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.rb-card {
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius);
+  background: var(--rb-bg-elev);
+  padding: 9px 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.rb-card:hover {
+  border-color: var(--rb-border-strong);
+  background: var(--rb-bg-elev-2);
+}
+
+.rb-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rb-card-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.rb-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.rb-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.rb-card-meta:empty {
+  display: none;
+}
+
+.rb-badge--platform {
+  color: var(--rb-badge-color, var(--rb-fg-muted));
+  border-color: var(--rb-border-strong);
+}
+
+.rb-card-pre {
+  margin: 7px 0 0;
+  padding: 7px 9px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg-input);
+  max-height: 108px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--rb-fg);
+}
+
+.rb-card-pre .rb-code {
+  font-family: var(--rb-mono);
+}
+
+.rb-var {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--rb-accent-weak);
+  color: var(--rb-accent);
+}
+
+.rb-card-desc {
+  margin: 7px 0 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--rb-fg-muted);
+}
+
+.rb-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.rb-tag {
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-card-source {
+  margin: 6px 0 0;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-load-more {
+  width: 100%;
+  border-style: dashed;
+  padding: 8px;
+}
+
+.rb-btn.is-copied {
+  background: var(--rb-accent-weak);
+  border-color: var(--rb-accent);
+  color: var(--rb-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* AI 助手                                                             */
+/* ------------------------------------------------------------------ */
+
+.rb-ai {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.rb-ai-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--rb-border);
+  flex: 0 0 auto;
+}
+
+/* 目标 / 模型两个下拉等分第一行；420px 下状态与「清空对话」自动换到第二行 */
+.rb-ai-toolbar > .rb-select-wrap {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.rb-ai-toolbar > .rb-select-wrap .rb-select {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.rb-ai-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--rb-fg-subtle);
+  text-align: right;
+}
+
+.rb-ai-status[data-state="ok"] {
+  color: var(--rb-accent);
+}
+
+.rb-ai-status[data-state="warn"] {
+  color: var(--rb-warn);
+}
+
+/* 未配置 / 未启用时的就地引导：说明原因 + 直达 AI 分区 */
+.rb-ai-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-warn-weak);
+  flex: 0 0 auto;
+}
+
+.rb-ai-notice[hidden] {
+  display: none;
+}
+
+.rb-ai-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--rb-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.rb-ai-notice .rb-btn {
+  flex: 0 0 auto;
+}
+
+.rb-ai-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* 欢迎页 */
+.rb-ai-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 4px;
+}
+
+.rb-ai-welcome-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--rb-accent-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-accent-weak);
+  color: var(--rb-accent);
+}
+
+.rb-ai-welcome h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rb-ai-welcome p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+/* 三步引导：用有序列表，数字贴近文字，窄屏不换行错位 */
+.rb-ai-steps {
+  margin: 2px 0 4px;
+  padding-left: 18px;
+  color: var(--rb-fg-muted);
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.rb-ai-steps li {
+  margin: 0 0 2px;
+  padding-left: 2px;
+}
+
+.rb-ai-steps li::marker {
+  color: var(--rb-accent);
+  font-weight: 600;
+}
+
+.rb-ai-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.rb-ai-example {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px dashed var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: transparent;
+  color: var(--rb-fg-muted);
+  font-size: 11.5px;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.rb-ai-example:hover {
+  border-color: var(--rb-accent-border);
+  color: var(--rb-fg);
+  background: var(--rb-bg-elev);
+}
+
+/* 消息 */
+.rb-ai-msg {
+  margin-bottom: 12px;
+  padding-left: 8px;
+  border-left: 2px solid transparent;
+}
+
+.rb-ai-msg.is-user {
+  border-left-color: var(--rb-info);
+}
+
+.rb-ai-msg.is-assistant {
+  border-left-color: var(--rb-accent);
+}
+
+.rb-ai-msg.is-assistant.is-error {
+  border-left-color: var(--rb-danger);
+}
+
+.rb-ai-role {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--rb-fg-subtle);
+  margin-bottom: 3px;
+}
+
+.rb-ai-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rb-ai-text {
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.rb-ai-msg.is-user .rb-ai-text {
+  padding: 6px 9px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg-elev);
+}
+
+.rb-ai-msg.is-assistant.is-error .rb-ai-text {
+  color: var(--rb-danger);
+}
+
+/* 等待输出光标 */
+.rb-ai-msg.is-pending .rb-ai-text::after {
+  content: "▋";
+  margin-left: 2px;
+  color: var(--rb-accent);
+  animation: rb-blink 1s step-end infinite;
+}
+
+@keyframes rb-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.rb-ai-code {
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  overflow: hidden;
+  background: var(--rb-bg-input);
+}
+
+.rb-ai-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 5px 3px 9px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg-elev);
+}
+
+.rb-ai-code-lang {
+  font-family: var(--rb-mono);
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+  text-transform: lowercase;
+}
+
+.rb-ai-code pre {
+  margin: 0;
+  padding: 8px 9px;
+  overflow-x: auto;
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.rb-ai-code code {
+  white-space: pre;
+}
+
+.rb-ai-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* 提示词库 */
+.rb-ai-prompts {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--rb-border);
+  background: var(--rb-bg);
+  max-height: 116px;
+  overflow-y: auto;
+}
+
+.rb-prompt-list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.rb-prompt {
+  padding: 3px 8px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: transparent;
+  color: var(--rb-fg-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rb-prompt:hover {
+  color: var(--rb-accent);
+  border-color: var(--rb-accent-border);
+  background: var(--rb-accent-weak);
+}
+
+/* 输入区 */
+.rb-ai-form {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--rb-border);
+  background: var(--rb-bg-elev);
+}
+
+.rb-ai-form .rb-textarea {
+  flex: 1 1 auto;
+  min-height: 38px;
+  max-height: 140px;
+  resize: none;
+  padding: 7px 9px;
+  font-family: var(--rb-font);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.rb-ai-send {
+  flex: 0 0 auto;
+  min-width: 62px;
+  padding: 0 12px;
+}
+
+.rb-ai-send.is-stop {
+  background: var(--rb-danger-weak);
+  border-color: var(--rb-danger);
+  color: var(--rb-danger);
+}
+
+.rb-ai-send.is-stop:hover {
+  background: var(--rb-danger-weak);
+  border-color: var(--rb-danger);
+}
+
+/* ------------------------------------------------------------------ */
+/* 页脚                                                                */
+/* ------------------------------------------------------------------ */
+
+.rb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--rb-border);
+  background: var(--rb-bg-elev);
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+  flex: 0 0 auto;
+  min-height: 24px;
+}
+
+.rb-footer-count {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-footer-hint {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* 宽屏（侧边栏拉宽）后两列展示卡片                                     */
+/* ------------------------------------------------------------------ */
+
+@media (min-width: 680px) {
+  .rb-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .rb-load-more,
+  .rb-empty {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 新增 / 编辑条目的实时预览                                            */
+/* ------------------------------------------------------------------ */
+
+.rb-form-preview {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rb-border);
+}
+
+.rb-form-preview-where {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--rb-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.rb-form-preview-card {
+  pointer-events: none;
+  background: var(--rb-bg);
+}
+
+.rb-form-preview-card .rb-card-pre {
+  max-height: 96px;
+  overflow: hidden;
+}

@@ -1,0 +1,309 @@
+{
+  "platform": "baidu",
+  "version": 1,
+  "categories": ["基础语法", "暴露面发现", "敏感文件", "组合技巧"],
+  "notice": "百度当前高级搜索文档明确支持 site:、intitle:、inurl:、filetype:、双引号精确匹配、- 排除与 | 或关系；| 两侧建议留空格。+ 强制包含、书名号精确匹配与括号分组属于常见技巧，官方高级搜索页未单列，效果可能随检索策略变化。",
+  "items": [
+    {
+      "id": "baidu-site",
+      "title": "限定站点",
+      "category": "基础语法",
+      "code": "site:{{domain}} {{keyword}}",
+      "desc": "把搜索范围限定在目标域名内，用于了解站点收录情况与公开内容。",
+      "tags": ["site"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-intitle",
+      "title": "标题限定",
+      "category": "基础语法",
+      "code": "intitle:\"{{keyword}}\" site:{{domain}}",
+      "desc": "要求关键词出现在网页标题中，适合定位登录页、后台与专题页面。",
+      "tags": ["intitle"],
+      "vars": [
+        { "name": "keyword", "label": "标题关键词", "placeholder": "登录", "example": "登录" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-inurl",
+      "title": "URL 限定",
+      "category": "基础语法",
+      "code": "inurl:{{keyword}} site:{{domain}}",
+      "desc": "要求关键词出现在 URL 中，用于发现功能路径、接口与技术特征。",
+      "tags": ["inurl"],
+      "vars": [
+        { "name": "keyword", "label": "URL 关键词", "placeholder": "admin", "example": "admin" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-filetype",
+      "title": "指定文件类型",
+      "category": "基础语法",
+      "code": "filetype:{{ext}} site:{{domain}} {{keyword}}",
+      "desc": "只返回指定格式的文档，常用于收集公开的 PDF、Word、Excel 资料。",
+      "tags": ["filetype"],
+      "vars": [
+        { "name": "ext", "label": "文件类型", "placeholder": "pdf", "example": "pdf" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-filetype-all",
+      "title": "检索全部文档类型",
+      "category": "基础语法",
+      "code": "filetype:all site:{{domain}} {{keyword}}",
+      "desc": "filetype:all 表示不限具体格式，只筛选百度收录的各类文档，适合先摸清站点对外暴露了哪些资料。",
+      "tags": ["filetype", "文档"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-exact",
+      "title": "精确匹配",
+      "category": "基础语法",
+      "code": "\"{{phrase}}\"",
+      "desc": "双引号内不被分词，适合检索完整短语、错误信息与固定文案。",
+      "tags": ["quotes"],
+      "vars": [
+        { "name": "phrase", "label": "完整短语", "placeholder": "完整短语", "example": "完整短语" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-exclude",
+      "title": "排除关键词",
+      "category": "基础语法",
+      "code": "{{keyword}} -{{exclude}}",
+      "desc": "用减号排除包含指定词的页面，减少无关结果与转载内容干扰。",
+      "tags": ["exclude"],
+      "vars": [
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" },
+        { "name": "exclude", "label": "排除词", "placeholder": "排除词", "example": "排除词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-or",
+      "title": "或匹配",
+      "category": "组合技巧",
+      "code": "intitle:\"{{keywordA}}\" | intitle:\"{{keywordB}}\"",
+      "desc": "竖线表示或关系，任一标题条件命中即可，适合一次覆盖多种叫法；建议在竖线两侧留空格。",
+      "tags": ["or"],
+      "vars": [
+        { "name": "keywordA", "label": "关键词 A", "placeholder": "后台", "example": "后台" },
+        { "name": "keywordB", "label": "关键词 B", "placeholder": "管理", "example": "管理" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-group",
+      "title": "括号组合多站点",
+      "category": "组合技巧",
+      "code": "(site:{{domainA}} | site:{{domainB}}) {{keyword}}",
+      "desc": "用括号明确优先级，把多个限定条件组合成一组；括号分组属于常见技巧，官方高级搜索未单列，建议实际检索时验证效果。",
+      "tags": ["group", "site"],
+      "vars": [
+        { "name": "domainA", "label": "域名 A", "placeholder": "a.example.com", "example": "a.example.com" },
+        { "name": "domainB", "label": "域名 B", "placeholder": "b.example.com", "example": "b.example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-multi-site",
+      "title": "排除子域",
+      "category": "组合技巧",
+      "code": "site:{{domain}} {{keyword}} -site:{{subdomain}}",
+      "desc": "先限定主域，再用 -site: 去掉已知子域，便于聚焦剩余资产。",
+      "tags": ["site", "exclude"],
+      "vars": [
+        { "name": "domain", "label": "主域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" },
+        { "name": "subdomain", "label": "排除子域", "placeholder": "www.example.com", "example": "www.example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-book",
+      "title": "书名与专名精确匹配",
+      "category": "基础语法",
+      "code": "《{{title}}》",
+      "desc": "书名号精确匹配为常见用法，官方高级搜索未单独说明，效果可能随检索策略变化。",
+      "tags": ["book"],
+      "vars": [
+        { "name": "title", "label": "专有名称", "placeholder": "专有名称", "example": "专有名称" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-plus",
+      "title": "强制包含",
+      "category": "基础语法",
+      "code": "+{{must}} {{keyword}}",
+      "desc": "加号强制包含属于常见技巧，当前百度高级搜索页未列出该写法，效果可能不稳定；需要锁定时建议改用双引号精确短语。",
+      "tags": ["plus"],
+      "vars": [
+        { "name": "must", "label": "必含词", "placeholder": "必含词", "example": "必含词" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-login",
+      "title": "登录入口",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"登录\" (后台 | 管理 | 系统)",
+      "desc": "组合标题限定与或匹配，快速找出对外的登录与管理入口页面。",
+      "tags": ["login"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-admin-path",
+      "title": "后台路径特征",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} inurl:(admin | manage | console)",
+      "desc": "按常见后台路径片段检索，用于整理站点管理入口清单。",
+      "tags": ["admin", "inurl"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-index-of",
+      "title": "目录列表页",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"index of\"",
+      "desc": "查找可能开启目录浏览的页面，便于评估文件暴露风险。",
+      "tags": ["index"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-api-doc",
+      "title": "接口文档入口",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (inurl:swagger | inurl:api-docs | intitle:\"API 文档\")",
+      "desc": "检索常见接口文档路径与标题，了解对外暴露的 API 表面。",
+      "tags": ["api"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-pdf-doc",
+      "title": "公开 PDF 文档",
+      "category": "敏感文件",
+      "code": "site:{{domain}} filetype:pdf {{keyword}}",
+      "desc": "收集站点公开的 PDF 资料，用于了解组织架构、产品与制度信息。",
+      "tags": ["pdf", "filetype"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-office-doc",
+      "title": "Office 文档",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:doc | filetype:xls | filetype:ppt) {{keyword}}",
+      "desc": "一次覆盖 Word、Excel、PowerPoint 三类文档，检查是否存在过度公开的资料。",
+      "tags": ["office", "filetype"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "关键词", "example": "关键词" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-account-doc",
+      "title": "账号相关文档",
+      "category": "敏感文件",
+      "code": "site:{{domain}} filetype:xls (账号 | 密码 | 用户名)",
+      "desc": "检查公开表格中是否出现账号类字样，用于提醒客户清理敏感文件。",
+      "tags": ["account"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-contact",
+      "title": "联系方式公开情况",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (\"联系电话\" | \"联系人\" | \"邮箱\")",
+      "desc": "了解站点公开的联系方式分布，便于评估信息暴露与社工风险。",
+      "tags": ["contact"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-icp",
+      "title": "备案信息",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (ICP备案 | 备案号)",
+      "desc": "定位页面中的备案信息，辅助确认站点归属与主体信息。",
+      "tags": ["icp"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    },
+    {
+      "id": "baidu-email-domain",
+      "title": "同域邮箱",
+      "category": "组合技巧",
+      "code": "site:{{domain}} \"@{{domain}}\"",
+      "desc": "同时限定站点与邮箱后缀，找出页面中公开的企业邮箱地址。",
+      "tags": ["email"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "百度搜索高级语法",
+      "risk": "recon"
+    }
+  ]
+}

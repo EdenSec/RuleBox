@@ -1,0 +1,778 @@
+{
+  "platform": "zoomeye",
+  "version": 1,
+  "categories": ["运算符与匹配", "基础字段", "地理信息", "指纹与组件", "HTTP 指纹", "证书与 TLS", "时间与资产状态", "哈希与漏洞", "组合查询", "攻防场景"],
+  "notice": "ZoomEye 官方已改版为 = 等号语法（= 模糊 / == 精确），本库全部按官方最新语法维护；旧版 site: 冒号语法不再推荐。",
+  "items": [
+    {
+      "id": "zoomeye-op-fuzzy",
+      "title": "= 模糊匹配",
+      "category": "运算符与匹配",
+      "code": "title=\"{{keyword}}\"",
+      "desc": "等号表示模糊匹配：不区分大小写，按分词结果匹配，是官方推荐的默认查询方式。",
+      "tags": ["=", "模糊"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-exact",
+      "title": "== 精确匹配",
+      "category": "运算符与匹配",
+      "code": "title==\"{{keyword}}\"",
+      "desc": "双等号表示精确匹配：完整匹配关键词且区分大小写，适合需要严格命中的场景。",
+      "tags": ["==", "精确"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-and",
+      "title": "&& 逻辑与",
+      "category": "运算符与匹配",
+      "code": "device=\"router\" && port={{port}}",
+      "desc": "多个条件同时满足时使用 && 连接，替代旧版空格写法。",
+      "tags": ["&&", "AND"],
+      "vars": [{ "name": "port", "label": "端口", "placeholder": "80", "example": "80" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-or",
+      "title": "|| 逻辑或",
+      "category": "运算符与匹配",
+      "code": "service=\"{{service1}}\" || service=\"{{service2}}\"",
+      "desc": "任一条件满足即命中，官方示例：service=\"ssh\" || service=\"http\"。",
+      "tags": ["||", "OR"],
+      "vars": [
+        { "name": "service1", "label": "服务一", "placeholder": "ssh", "example": "ssh" },
+        { "name": "service2", "label": "服务二", "placeholder": "http", "example": "http" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-not",
+      "title": "!= 排除",
+      "category": "运算符与匹配",
+      "code": "country=\"{{country}}\" && subdivisions!=\"{{exclude}}\"",
+      "desc": "!= 表示排除条件，官方示例：country=\"US\" && subdivisions!=\"new york\"。",
+      "tags": ["!=", "排除"],
+      "vars": [
+        { "name": "country", "label": "国家", "placeholder": "US", "example": "US" },
+        { "name": "exclude", "label": "排除地区", "placeholder": "new york", "example": "new york" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-group",
+      "title": "() 括号优先级",
+      "category": "运算符与匹配",
+      "code": "(country=\"{{country}}\" && port!=\"{{port}}\") || (country=\"{{country}}\" && title!=\"404 Not Found\")",
+      "desc": "括号用于组合复杂逻辑的优先级处理，官方示例的组合排除写法。",
+      "tags": ["()", "优先级"],
+      "vars": [
+        { "name": "country", "label": "国家", "placeholder": "US", "example": "US" },
+        { "name": "port", "label": "排除端口", "placeholder": "80", "example": "80" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-wildcard",
+      "title": "* 通配模糊",
+      "category": "运算符与匹配",
+      "code": "title=\"{{keyword}}*\"",
+      "desc": "值末尾加 * 表示前缀模糊搜索，例：title=\"后台*\" 匹配以后台开头的标题。",
+      "tags": ["*", "通配"],
+      "vars": [{ "name": "keyword", "label": "前缀关键词", "placeholder": "后台", "example": "后台" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-op-quote",
+      "title": "引号与转义",
+      "category": "运算符与匹配",
+      "code": "app=\"{{keyword}}\"",
+      "desc": "搜索字符串必须使用双引号或单引号包裹；字符串内含引号或括号时用反斜杠转义，如 \"a\\\"b\"、portinfo\\(\\)。",
+      "tags": ["引号", "转义"],
+      "vars": [{ "name": "keyword", "label": "关键词", "placeholder": "Example System", "example": "Example System" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ip",
+      "title": "指定 IP",
+      "category": "基础字段",
+      "code": "ip=\"{{ip}}\"",
+      "desc": "查询单 IP 的端口与服务信息，支持 IPv4 与 IPv6。",
+      "tags": ["ip"],
+      "vars": [{ "name": "ip", "label": "IP 地址", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ip-ipv6",
+      "title": "IPv6 地址",
+      "category": "基础字段",
+      "code": "ip=\"{{ipv6}}\"",
+      "desc": "直接查询单个 IPv6 地址资产。",
+      "tags": ["ipv6"],
+      "vars": [{ "name": "ipv6", "label": "IPv6 地址", "placeholder": "2001:db8::1", "example": "2001:db8::1" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-is-ipv6",
+      "title": "IPv6 / IPv4 资产筛选",
+      "category": "基础字段",
+      "code": "is_ipv6={{value}}",
+      "desc": "is_ipv6=true 仅返回 IPv6 资产；对应还有 is_ipv4=true 仅返回 IPv4 资产，布尔值不需要引号。",
+      "tags": ["is_ipv6", "is_ipv4"],
+      "vars": [{ "name": "value", "label": "true / false", "placeholder": "true", "example": "true" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-cidr",
+      "title": "IP 段",
+      "category": "基础字段",
+      "code": "cidr=\"{{cidr}}\"",
+      "desc": "按 CIDR 查询整段 IP 资产：/24 为 C 段、/16 为 B 段、/8 为 A 段。",
+      "tags": ["cidr"],
+      "vars": [{ "name": "cidr", "label": "IP 段", "placeholder": "192.0.2.0/24", "example": "192.0.2.0/24" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-port",
+      "title": "指定端口",
+      "category": "基础字段",
+      "code": "port={{port}}",
+      "desc": "按端口筛选资产；例：port=80 不需要引号。",
+      "tags": ["port"],
+      "vars": [{ "name": "port", "label": "端口", "placeholder": "80", "example": "80" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-site",
+      "title": "域名 / 子域名（domain）",
+      "category": "基础字段",
+      "code": "domain=\"{{domain}}\"",
+      "desc": "查询域名及其子域名的全部资产；旧版 site: 写法已不推荐。",
+      "tags": ["domain", "子域名"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-is-domain",
+      "title": "域名资产筛选",
+      "category": "基础字段",
+      "code": "is_domain={{value}}",
+      "desc": "is_domain=true 仅返回带域名的资产，false 返回纯 IP 资产，便于区分域名与 IP 暴露面。",
+      "tags": ["is_domain"],
+      "vars": [{ "name": "value", "label": "true / false", "placeholder": "true", "example": "true" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-hostname",
+      "title": "主机名（hostname）",
+      "category": "基础字段",
+      "code": "hostname=\"{{hostname}}\"",
+      "desc": "按 IP 反查主机名命中的资产，适合梳理一台服务器上的多域名服务。",
+      "tags": ["hostname"],
+      "vars": [{ "name": "hostname", "label": "主机名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-org",
+      "title": "按组织筛选",
+      "category": "基础字段",
+      "code": "org=\"{{org}}\"",
+      "desc": "按 IP 归属组织筛选，例：org=\"Example University\"，适合定位机构与企业资产；官方同时支持 organization 别名。",
+      "tags": ["org"],
+      "vars": [{ "name": "org", "label": "组织名称", "placeholder": "Example University", "example": "Example University" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-isp",
+      "title": "按 ISP 筛选",
+      "category": "基础字段",
+      "code": "isp=\"{{isp}}\"",
+      "desc": "按网络服务提供商筛选，可与 org 数据互补。",
+      "tags": ["isp"],
+      "vars": [{ "name": "isp", "label": "ISP 名称", "placeholder": "Example ISP", "example": "Example ISP" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-asn",
+      "title": "按 ASN 筛选",
+      "category": "基础字段",
+      "code": "asn={{asn}}",
+      "desc": "按自治系统编号筛选，例：asn=64512，数字不需要引号。",
+      "tags": ["asn"],
+      "vars": [{ "name": "asn", "label": "ASN 编号", "placeholder": "64512", "example": "64512" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-banner",
+      "title": "协议 Banner",
+      "category": "基础字段",
+      "code": "banner=\"{{keyword}}\"",
+      "desc": "在各类协议返回内容（banner）中全局搜索关键词，如 FTP、SSH、HTTP 头等。",
+      "tags": ["banner", "协议"],
+      "vars": [{ "name": "keyword", "label": "关键词", "placeholder": "FTP", "example": "FTP" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-country",
+      "title": "按国家筛选",
+      "category": "地理信息",
+      "code": "country=\"{{country}}\"",
+      "desc": "限定国家或地区，支持缩写或全名，如 country=\"china\"、country=\"CN\"。",
+      "tags": ["country"],
+      "vars": [{ "name": "country", "label": "国家", "placeholder": "china", "example": "china" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-subdivisions",
+      "title": "按省 / 州筛选",
+      "category": "地理信息",
+      "code": "subdivisions=\"{{region}}\"",
+      "desc": "按一级行政区筛选，官方示例 subdivisions=\"beijing\"，需输入英文。",
+      "tags": ["subdivisions", "行政区"],
+      "vars": [{ "name": "region", "label": "行政区英文名", "placeholder": "beijing", "example": "beijing" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-city",
+      "title": "按城市筛选",
+      "category": "地理信息",
+      "code": "city=\"{{city}}\"",
+      "desc": "按城市限定资产，官方示例 city=\"beijing\"，需输入英文。",
+      "tags": ["city"],
+      "vars": [{ "name": "city", "label": "城市英文名", "placeholder": "beijing", "example": "beijing" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-icp-number",
+      "title": "ICP 备案号",
+      "category": "地理信息",
+      "code": "icp.number=\"{{number}}\"",
+      "desc": "按 ICP 备案号筛选站点，例：icp.number=\"京ICP备00000000号\"，请替换为实际备案号。",
+      "tags": ["icp", "备案"],
+      "vars": [{ "name": "number", "label": "备案号", "placeholder": "京ICP备00000000号", "example": "京ICP备00000000号" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-icp-name",
+      "title": "ICP 备案主体",
+      "category": "地理信息",
+      "code": "icp.name=\"{{name}}\"",
+      "desc": "按 ICP 备案单位名称筛选站点，例：icp.name=\"示例科技\"，可用于关联同一主体的多个站点。",
+      "tags": ["icp", "备案主体"],
+      "vars": [{ "name": "name", "label": "备案主体", "placeholder": "示例科技", "example": "示例科技" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-app",
+      "title": "应用 / 组件",
+      "category": "指纹与组件",
+      "code": "app=\"{{app}}\"",
+      "desc": "按组件名称筛选，官方示例 app=\"Apache Tomcat\"；搜索框输入厂商关键词会有 app 联想提示。",
+      "tags": ["app", "指纹"],
+      "vars": [{ "name": "app", "label": "应用名称", "placeholder": "nginx", "example": "nginx" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-service",
+      "title": "服务类型",
+      "category": "指纹与组件",
+      "code": "service=\"{{service}}\"",
+      "desc": "按服务协议筛选，常见值 http、ftp、ssh、telnet 等。",
+      "tags": ["service"],
+      "vars": [{ "name": "service", "label": "服务", "placeholder": "ssh", "example": "ssh" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-device",
+      "title": "设备类型",
+      "category": "指纹与组件",
+      "code": "device=\"{{device}}\"",
+      "desc": "按设备类型筛选，常见值 router、switch、storage-misc、camera 等。",
+      "tags": ["device", "物联网"],
+      "vars": [{ "name": "device", "label": "设备类型", "placeholder": "router", "example": "router" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-os",
+      "title": "操作系统",
+      "category": "指纹与组件",
+      "code": "os=\"{{os}}\"",
+      "desc": "按操作系统筛选，常见值 Linux、Windows、RouterOS、IOS、JUNOS 等。",
+      "tags": ["os"],
+      "vars": [{ "name": "os", "label": "操作系统", "placeholder": "RouterOS", "example": "RouterOS" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-product",
+      "title": "产品关键词",
+      "category": "指纹与组件",
+      "code": "product=\"{{product}}\"",
+      "desc": "按组件信息中的产品关键词筛选，支持主流资产组件检索。",
+      "tags": ["product", "指纹"],
+      "vars": [{ "name": "product", "label": "产品关键词", "placeholder": "OpenSSH", "example": "OpenSSH" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-protocol",
+      "title": "传输协议",
+      "category": "指纹与组件",
+      "code": "protocol=\"{{protocol}}\"",
+      "desc": "按传输层协议筛选，常见值 TCP、UDP、TCP6、SCTP。",
+      "tags": ["protocol"],
+      "vars": [{ "name": "protocol", "label": "传输协议", "placeholder": "TCP", "example": "TCP" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-industry",
+      "title": "行业类型",
+      "category": "指纹与组件",
+      "code": "industry=\"{{industry}}\"",
+      "desc": "按资产所属行业筛选，官方示例 industry=\"finance\"，具体分类取值以平台为准。",
+      "tags": ["industry", "行业"],
+      "vars": [{ "name": "industry", "label": "行业类型", "placeholder": "finance", "example": "finance" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-title",
+      "title": "网页标题",
+      "category": "HTTP 指纹",
+      "code": "title=\"{{keyword}}\"",
+      "desc": "按页面标题搜索，例：title=\"后台管理\"；模糊匹配不区分大小写。",
+      "tags": ["title", "后台"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-header",
+      "title": "HTTP 响应头",
+      "category": "HTTP 指纹",
+      "code": "http.header=\"{{keyword}}\"",
+      "desc": "在 HTTP 响应头中搜索关键词，用于定位特征头部字段。",
+      "tags": ["http.header", "响应头"],
+      "vars": [{ "name": "keyword", "label": "响应头关键词", "placeholder": "X-Powered-By", "example": "X-Powered-By" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-server",
+      "title": "Web 服务器",
+      "category": "HTTP 指纹",
+      "code": "http.header.server=\"{{server}}\"",
+      "desc": "按 HTTP 响应头中的 Server 字段筛选，官方示例 http.header.server=\"Nginx\"。",
+      "tags": ["server", "指纹"],
+      "vars": [{ "name": "server", "label": "服务器", "placeholder": "Nginx", "example": "Nginx" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-version",
+      "title": "HTTP 头版本号",
+      "category": "HTTP 指纹",
+      "code": "http.header.version=\"{{version}}\"",
+      "desc": "按 HTTP 头中识别到的版本号筛选，官方示例 http.header.version=\"1.2\"。",
+      "tags": ["version", "版本"],
+      "vars": [{ "name": "version", "label": "版本号", "placeholder": "1.2", "example": "1.2" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-status",
+      "title": "HTTP 状态码",
+      "category": "HTTP 指纹",
+      "code": "http.header.status_code=\"{{status}}\"",
+      "desc": "按 HTTP 响应状态码筛选，官方示例 http.header.status_code=\"200\"，也支持 302、404 等。",
+      "tags": ["status_code", "状态码"],
+      "vars": [{ "name": "status", "label": "状态码", "placeholder": "200", "example": "200" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-header-hash",
+      "title": "响应头哈希",
+      "category": "HTTP 指纹",
+      "code": "http.header_hash=\"{{hash}}\"",
+      "desc": "按 HTTP 响应头计算的哈希值筛选，例：http.header_hash=\"27f9973fe57298c3b63919259877a84d\"。",
+      "tags": ["header_hash", "同源"],
+      "vars": [{ "name": "hash", "label": "响应头哈希", "placeholder": "27f9973fe57298c3b63919259877a84d", "example": "27f9973fe57298c3b63919259877a84d" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-body",
+      "title": "网页正文",
+      "category": "HTTP 指纹",
+      "code": "http.body=\"{{keyword}}\"",
+      "desc": "在 HTML 正文中搜索关键词，例：http.body=\"document\"；正文数据权限可能依套餐而定。",
+      "tags": ["http.body", "正文"],
+      "vars": [{ "name": "keyword", "label": "正文关键词", "placeholder": "rememberMe", "example": "rememberMe" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-http-body-hash",
+      "title": "正文哈希",
+      "category": "HTTP 指纹",
+      "code": "http.body_hash=\"{{hash}}\"",
+      "desc": "按 HTML 正文计算的哈希值筛选，例：http.body_hash=\"84a18166fde3ee7e7c974b8d1e7e21b4\"。",
+      "tags": ["body_hash", "同源"],
+      "vars": [{ "name": "hash", "label": "正文哈希", "placeholder": "84a18166fde3ee7e7c974b8d1e7e21b4", "example": "84a18166fde3ee7e7c974b8d1e7e21b4" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ssl",
+      "title": "证书关键词",
+      "category": "证书与 TLS",
+      "code": "ssl=\"{{keyword}}\"",
+      "desc": "按证书内容搜索，可发现未直接暴露的关联站点；常按产品名或公司名搜索。",
+      "tags": ["ssl", "证书"],
+      "vars": [{ "name": "keyword", "label": "证书关键词", "placeholder": "example.com", "example": "example.com" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ssl-version",
+      "title": "TLS 协议版本",
+      "category": "证书与 TLS",
+      "code": "ssl.version=\"{{version}}\"",
+      "desc": "按 TLS/SSL 协议版本筛选，官方示例 ssl.version=\"TLSv1.3\"，常见值还有 TLSv1.2；仍启用旧版本协议通常意味着合规风险。",
+      "tags": ["ssl.version", "合规"],
+      "vars": [{ "name": "version", "label": "TLS 版本", "placeholder": "TLSv1.3", "example": "TLSv1.3" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-cert-cn",
+      "title": "证书主题 CN",
+      "category": "证书与 TLS",
+      "code": "ssl.cert.subject.cn=\"{{domain}}\"",
+      "desc": "按证书持有者 CN 搜索，官方示例 ssl.cert.subject.cn=\"example.com\"，可挖隐藏资产。",
+      "tags": ["ssl", "subject.cn", "隐藏资产"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-cert-issuer",
+      "title": "证书签发者 CN",
+      "category": "证书与 TLS",
+      "code": "ssl.cert.issuer.cn=\"{{name}}\"",
+      "desc": "按证书签发者 CN 搜索，官方示例 ssl.cert.issuer.cn=\"Example CA\"，可统计某 CA 签发的资产。",
+      "tags": ["ssl", "issuer.cn"],
+      "vars": [{ "name": "name", "label": "签发者名称", "placeholder": "Example CA", "example": "Example CA" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-cert-fingerprint",
+      "title": "证书指纹",
+      "category": "证书与 TLS",
+      "code": "ssl.cert.fingerprint=\"{{fp}}\"",
+      "desc": "按证书指纹精确匹配，官方示例 ssl.cert.fingerprint=\"F3C98F223D82CC41CF83D94671CCC6C69873FABF\"。",
+      "tags": ["ssl", "指纹"],
+      "vars": [{ "name": "fp", "label": "证书指纹", "placeholder": "F3C98F223D82CC41CF83D94671CCC6C69873FABF", "example": "F3C98F223D82CC41CF83D94671CCC6C69873FABF" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ja3s",
+      "title": "JA3S 指纹",
+      "category": "证书与 TLS",
+      "code": "ssl.ja3s=\"{{ja3s}}\"",
+      "desc": "按服务端 TLS 握手 JA3S 指纹筛选，需填写完整 JA3S 值，例：ssl.ja3s=\"45094d08156d110d8ee97b204143db14\"。",
+      "tags": ["ssl", "ja3s", "指纹"],
+      "vars": [{ "name": "ja3s", "label": "JA3S 哈希", "placeholder": "45094d08156d110d8ee97b204143db14", "example": "45094d08156d110d8ee97b204143db14" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-jarm",
+      "title": "JARM 指纹",
+      "category": "证书与 TLS",
+      "code": "ssl.jarm=\"{{jarm}}\"",
+      "desc": "按 JARM 主动 TLS 指纹筛选，可用于识别 C2、CDN 与同源 TLS 配置。",
+      "tags": ["ssl", "jarm", "指纹"],
+      "vars": [{ "name": "jarm", "label": "JARM 哈希", "placeholder": "29d29d15d29d29d00029d29d29d29dea0f89a2e5fb09e4d8e099befed92cfa", "example": "29d29d15d29d29d00029d29d29d29dea0f89a2e5fb09e4d8e099befed92cfa" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-after",
+      "title": "更新时间晚于",
+      "category": "时间与资产状态",
+      "code": "after=\"{{date}}\" && port={{port}}",
+      "desc": "筛选资产更新时间在指定日期之后的记录，官方示例 after=\"2026-01-01\" && service=\"https\"；时间过滤器需与其他过滤器组合使用。",
+      "tags": ["after", "时间"],
+      "vars": [
+        { "name": "date", "label": "起始日期", "placeholder": "2020-01-01", "example": "2020-01-01" },
+        { "name": "port", "label": "端口", "placeholder": "50050", "example": "50050" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-before",
+      "title": "更新时间早于",
+      "category": "时间与资产状态",
+      "code": "before=\"{{date}}\" && port={{port}}",
+      "desc": "筛选资产更新时间在指定日期之前的记录，例：before=\"2026-01-01\" && port=50050；时间过滤器需与其他过滤器组合使用。",
+      "tags": ["before", "时间"],
+      "vars": [
+        { "name": "date", "label": "截止日期", "placeholder": "2020-01-01", "example": "2020-01-01" },
+        { "name": "port", "label": "端口", "placeholder": "50050", "example": "50050" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-is-new",
+      "title": "新发现资产",
+      "category": "时间与资产状态",
+      "code": "is_new=true",
+      "desc": "筛选新发现的资产，适合增量监控与新增暴露面巡检。",
+      "tags": ["is_new", "增量"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-is-changed",
+      "title": "变更资产",
+      "category": "时间与资产状态",
+      "code": "is_changed=true",
+      "desc": "筛选近期发生变更（新增或更新）的资产。",
+      "tags": ["is_changed", "变更"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-iconhash-mh",
+      "title": "favicon 哈希（MMH3）",
+      "category": "哈希与漏洞",
+      "code": "iconhash=\"{{hash}}\"",
+      "desc": "按 favicon 的 MMH3 哈希筛选，例：iconhash=\"1941681276\"；不同平台的 icon hash 计算方式可能不同，跨平台结果不一定通用。",
+      "tags": ["iconhash", "同源"],
+      "vars": [{ "name": "hash", "label": "MMH3 哈希", "placeholder": "1941681276", "example": "1941681276" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-iconhash-md5",
+      "title": "favicon 哈希（MD5）",
+      "category": "哈希与漏洞",
+      "code": "iconhash=\"{{hash}}\"",
+      "desc": "iconhash 同样支持 MD5 形式的 favicon 哈希，例：iconhash=\"f3418a443e7d841097c714d69ec4b4b8\"。",
+      "tags": ["iconhash", "MD5"],
+      "vars": [{ "name": "hash", "label": "MD5 哈希", "placeholder": "f3418a443e7d841097c714d69ec4b4b8", "example": "f3418a443e7d841097c714d69ec4b4b8" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-filehash",
+      "title": "文件哈希",
+      "category": "哈希与漏洞",
+      "code": "filehash=\"{{hash}}\"",
+      "desc": "按解析文件数据的哈希筛选，例：filehash=\"0b5ce08db7fb8fffe4e14d05588d49d9\"；需使用当前界面支持的哈希类型。",
+      "tags": ["filehash", "文件"],
+      "vars": [{ "name": "hash", "label": "文件哈希", "placeholder": "0b5ce08db7fb8fffe4e14d05588d49d9", "example": "0b5ce08db7fb8fffe4e14d05588d49d9" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-dig",
+      "title": "DNS 解析记录（dig）",
+      "category": "哈希与漏洞",
+      "code": "dig=\"{{domain}} {{ip}}\"",
+      "desc": "按 dig 解析记录筛选，例：dig=\"example.com 203.0.113.10\"，可查某解析关系的资产。",
+      "tags": ["dig", "DNS"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "ip", "label": "IP 地址", "placeholder": "203.0.113.10", "example": "203.0.113.10" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-vul-cve",
+      "title": "按 CVE 筛选",
+      "category": "哈希与漏洞",
+      "code": "vul.cve=\"{{cve}}\"",
+      "desc": "筛选存在指定 CVE 漏洞的资产，官方示例 vul.cve=\"CVE-2021-44228\"。",
+      "tags": ["vul.cve", "CVE"],
+      "vars": [{ "name": "cve", "label": "CVE 编号", "placeholder": "CVE-2021-44228", "example": "CVE-2021-44228" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-is-bugbounty",
+      "title": "赏金计划资产",
+      "category": "哈希与漏洞",
+      "code": "is_bugbounty=true",
+      "desc": "筛选 ZoomEye 收录的漏洞赏金（Bug Bounty）范围内资产，白帽合法目标发现利器。",
+      "tags": ["bugbounty", "赏金"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-bugbounty-source",
+      "title": "赏金平台来源",
+      "category": "哈希与漏洞",
+      "code": "bugbounty.source=\"{{source}}\"",
+      "desc": "按赏金数据来源平台筛选，通常与 is_bugbounty=true 组合使用；具体取值以官方查询界面联想为准。",
+      "tags": ["bugbounty", "平台"],
+      "vars": [{ "name": "source", "label": "平台标识", "placeholder": "example-platform", "example": "example-platform" }],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-domain-title",
+      "title": "域名下的登录页",
+      "category": "组合查询",
+      "code": "domain=\"{{domain}}\" && title=\"{{keyword}}\"",
+      "desc": "域名与标题组合，快速收敛某单位的业务入口（新版用 && 连接条件）。",
+      "tags": ["组合", "登录"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "标题关键词", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "组合语法（基于 ZoomEye 官方运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-domain-port",
+      "title": "域名下的非标端口",
+      "category": "组合查询",
+      "code": "domain=\"{{domain}}\" && port={{port}}",
+      "desc": "定位业务域名在指定端口上的服务。",
+      "tags": ["组合", "端口"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "port", "label": "端口", "placeholder": "8080", "example": "8080" }
+      ],
+      "source": "组合语法（基于 ZoomEye 官方运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-org-exclude",
+      "title": "组织资产排除噪音",
+      "category": "组合查询",
+      "code": "org=\"{{org}}\" && title!=\"{{exclude}}\"",
+      "desc": "组织内排除默认页标题，快速过滤噪音资产。",
+      "tags": ["组合", "排除"],
+      "vars": [
+        { "name": "org", "label": "组织名称", "placeholder": "Example Corp", "example": "Example Corp" },
+        { "name": "exclude", "label": "排除标题", "placeholder": "404 Not Found", "example": "404 Not Found" }
+      ],
+      "source": "组合语法（基于 ZoomEye 官方运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-service-port",
+      "title": "服务 + 端口组合",
+      "category": "组合查询",
+      "code": "service=\"{{service}}\" && port={{port}}",
+      "desc": "服务协议与端口组合，用于进一步收敛指定端口上的服务类型。",
+      "tags": ["组合", "服务"],
+      "vars": [
+        { "name": "service", "label": "服务", "placeholder": "redis", "example": "redis" },
+        { "name": "port", "label": "端口", "placeholder": "6379", "example": "6379" }
+      ],
+      "source": "组合语法（基于 ZoomEye 官方运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-redis",
+      "title": "Redis 暴露",
+      "category": "攻防场景",
+      "code": "port=6379 && service=\"redis\"",
+      "desc": "按端口与服务定位 Redis，进一步确认未授权访问。",
+      "tags": ["Redis", "未授权"],
+      "vars": [],
+      "source": "公开服务特征",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-camera",
+      "title": "网络摄像头",
+      "category": "攻防场景",
+      "code": "device=\"camera\"",
+      "desc": "按设备类型筛选摄像头资产，用于物联网暴露面统计。",
+      "tags": ["IoT", "camera"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-honeypot",
+      "title": "蜜罐识别",
+      "category": "攻防场景",
+      "code": "is_honeypot=\"True\"",
+      "desc": "筛选已被识别为蜜罐的资产；渗透测试前先排除蜜罐可避免打草惊蛇。",
+      "tags": ["蜜罐", "is_honeypot"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-ssh-no-honeypot",
+      "title": "SSH 资产排除蜜罐",
+      "category": "攻防场景",
+      "code": "service=\"ssh\" && is_honeypot!=\"True\"",
+      "desc": "官方示例的排除写法：筛选 SSH 服务并排除已识别为蜜罐的资产，避免测试时误触蜜罐。",
+      "tags": ["组合", "蜜罐"],
+      "vars": [],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-vul-org",
+      "title": "某组织受漏洞影响资产",
+      "category": "攻防场景",
+      "code": "org=\"{{org}}\" && vul.cve=\"{{cve}}\"",
+      "desc": "组织与 CVE 组合，评估授权范围内单位受某漏洞影响的资产清单。",
+      "tags": ["组合", "CVE"],
+      "vars": [
+        { "name": "org", "label": "组织名称", "placeholder": "Example Corp", "example": "Example Corp" },
+        { "name": "cve", "label": "CVE 编号", "placeholder": "CVE-2021-44228", "example": "CVE-2021-44228" }
+      ],
+      "source": "组合语法（基于 ZoomEye 官方运算符）",
+      "risk": "recon"
+    }
+  ]
+}

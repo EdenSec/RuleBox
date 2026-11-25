@@ -1,0 +1,286 @@
+{
+  "platform": "tools",
+  "version": 1,
+  "categories": ["子域与资产", "端口与服务", "Web 探测", "漏洞验证", "请求与 DNS"],
+  "notice": "命令仅用于已授权的安全测试。参数可能随工具版本变化，执行前建议先查看 --help。",
+  "items": [
+    {
+      "id": "tool-subfinder",
+      "title": "subfinder 被动子域枚举",
+      "category": "子域与资产",
+      "code": "subfinder -d {{domain}} -all -silent -o subs.txt",
+      "desc": "使用被动数据源收集子域名，输出到 subs.txt。",
+      "tags": ["subfinder", "子域名"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "subfinder 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-amass",
+      "title": "amass 被动枚举",
+      "category": "子域与资产",
+      "code": "amass enum -passive -d {{domain}} -o amass.txt",
+      "desc": "被动模式枚举子域，适合在不开主动探测的前提下做资产梳理。",
+      "tags": ["amass", "子域名"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "amass 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-httpx",
+      "title": "httpx 存活与指纹",
+      "category": "子域与资产",
+      "code": "httpx -l subs.txt -title -status-code -tech-detect -o live.txt",
+      "desc": "批量探测 URL 存活，输出标题、状态码与技术栈，便于快速筛选。",
+      "tags": ["httpx", "存活"],
+      "vars": [],
+      "source": "httpx 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-naabu",
+      "title": "naabu 端口扫描",
+      "category": "端口与服务",
+      "code": "naabu -host {{target}} -top-ports 1000 -silent -o ports.txt",
+      "desc": "快速扫描常用端口，输出到 ports.txt。",
+      "tags": ["naabu", "端口"],
+      "vars": [{ "name": "target", "label": "目标", "placeholder": "example.com", "example": "example.com" }],
+      "source": "naabu 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-nmap-top",
+      "title": "nmap 常见端口 + 版本",
+      "category": "端口与服务",
+      "code": "nmap -sV -T4 --top-ports 1000 {{target}}",
+      "desc": "扫描常用端口并识别服务版本，-T4 提升速度但会增加噪音。",
+      "tags": ["nmap", "端口"],
+      "vars": [{ "name": "target", "label": "目标", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "nmap 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-nmap-full",
+      "title": "nmap 全端口扫描",
+      "category": "端口与服务",
+      "code": "nmap -p- -T4 --min-rate 2000 {{target}}",
+      "desc": "全端口扫描，建议在授权且带宽允许的情况下使用。",
+      "tags": ["nmap", "全端口"],
+      "vars": [{ "name": "target", "label": "目标", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "nmap 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-nmap-ping",
+      "title": "nmap 主机存活探测",
+      "category": "端口与服务",
+      "code": "nmap -sn {{cidr}}",
+      "desc": "-sn 只做主机发现不扫端口，适合快速确认网段内存活主机。",
+      "tags": ["nmap", "存活"],
+      "vars": [{ "name": "cidr", "label": "网段", "placeholder": "192.0.2.0/24", "example": "192.0.2.0/24" }],
+      "source": "nmap 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-nmap-vuln",
+      "title": "nmap 漏洞脚本",
+      "category": "漏洞验证",
+      "code": "nmap -sV --script vuln {{target}}",
+      "desc": "调用 nmap 漏洞检测脚本，可能产生明显流量，务必确认授权范围。",
+      "tags": ["nmap", "漏洞"],
+      "vars": [{ "name": "target", "label": "目标", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "nmap 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-ffuf-dir",
+      "title": "ffuf 目录爆破",
+      "category": "Web 探测",
+      "code": "ffuf -u https://{{host}}/FUZZ -w {{wordlist}} -mc 200,301,302,403",
+      "desc": "对目标做目录发现，只保留常见有效状态码。",
+      "tags": ["ffuf", "目录"],
+      "vars": [
+        { "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" },
+        { "name": "wordlist", "label": "字典路径", "placeholder": "/path/to/dict.txt", "example": "/path/to/dir.txt" }
+      ],
+      "source": "ffuf 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-ffuf-vhost",
+      "title": "ffuf 虚拟主机发现",
+      "category": "Web 探测",
+      "code": "ffuf -u http://{{ip}} -H \"Host: FUZZ.{{domain}}\" -w {{wordlist}} -fs {{size}}",
+      "desc": "通过 Host 头爆破发现内网或同 IP 上的隐藏站点，-fs 用于过滤默认响应长度。",
+      "tags": ["ffuf", "vhost"],
+      "vars": [
+        { "name": "ip", "label": "目标 IP", "placeholder": "192.0.2.1", "example": "192.0.2.1" },
+        { "name": "domain", "label": "主域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "wordlist", "label": "字典路径", "placeholder": "/path/to/dict.txt", "example": "/path/to/sub.txt" },
+        { "name": "size", "label": "过滤响应长度", "placeholder": "1234", "example": "1234" }
+      ],
+      "source": "ffuf 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-whatweb",
+      "title": "whatweb 指纹识别",
+      "category": "Web 探测",
+      "code": "whatweb -a 3 https://{{host}}",
+      "desc": "识别 CMS、框架、中间件与版本信息。",
+      "tags": ["whatweb", "指纹"],
+      "vars": [{ "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" }],
+      "source": "whatweb 官方用法",
+      "risk": "recon"
+    },
+    {
+      "id": "tool-curl-head",
+      "title": "curl 查看响应头",
+      "category": "请求与 DNS",
+      "code": "curl -I -k https://{{host}}",
+      "desc": "-I 只看响应头，-k 忽略证书校验，适合快速确认 Server 与安全头。",
+      "tags": ["curl", "响应头"],
+      "vars": [{ "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" }],
+      "source": "curl 官方用法",
+      "risk": "safe"
+    },
+    {
+      "id": "tool-curl-resolve",
+      "title": "curl 指定 IP 访问",
+      "category": "请求与 DNS",
+      "code": "curl -k --resolve {{host}}:443:{{ip}} https://{{host}}/",
+      "desc": "--resolve 把域名临时解析到指定 IP，可在不改 DNS 的情况下验证某台主机的服务。",
+      "tags": ["curl", "解析"],
+      "vars": [
+        { "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" },
+        { "name": "ip", "label": "指定 IP", "placeholder": "192.0.2.1", "example": "192.0.2.1" }
+      ],
+      "source": "curl 官方用法",
+      "risk": "safe"
+    },
+    {
+      "id": "tool-curl-post",
+      "title": "curl 发送 JSON 请求",
+      "category": "请求与 DNS",
+      "code": "curl -k -X POST https://{{host}}{{path}} -H \"Content-Type: application/json\" -d '{{body}}'",
+      "desc": "带 JSON 体的 POST 请求模板，-d 后内容按实际接口替换；Windows PowerShell 调用 curl 时双引号可能被剥离，建议改用 --data-raw 或转义后的双引号包裹。",
+      "tags": ["curl", "API"],
+      "vars": [
+        { "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" },
+        { "name": "path", "label": "接口路径", "placeholder": "/api/login", "example": "/api/login" },
+        { "name": "body", "label": "JSON 请求体", "placeholder": "{\"user\":\"test\"}", "example": "{\"user\":\"test\"}" }
+      ],
+      "source": "curl 官方用法",
+      "risk": "safe"
+    },
+    {
+      "id": "tool-nuclei",
+      "title": "nuclei 高危模板扫描",
+      "category": "漏洞验证",
+      "code": "nuclei -l live.txt -severity critical,high -o result.txt",
+      "desc": "对存活列表执行高危模板检测，输出结果到 result.txt。",
+      "tags": ["nuclei", "漏洞"],
+      "vars": [],
+      "source": "nuclei 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-nuclei-tags",
+      "title": "nuclei 按标签扫描",
+      "category": "漏洞验证",
+      "code": "nuclei -u https://{{host}} -tags {{tags}}",
+      "desc": "按标签选择模板，如 shiro、spring、thinkphp，减少无关请求。",
+      "tags": ["nuclei", "标签"],
+      "vars": [
+        { "name": "host", "label": "目标主机", "placeholder": "example.com", "example": "example.com" },
+        { "name": "tags", "label": "模板标签", "placeholder": "shiro,spring", "example": "shiro,spring" }
+      ],
+      "source": "nuclei 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-sqlmap-url",
+      "title": "sqlmap 基础检测",
+      "category": "漏洞验证",
+      "code": "sqlmap -u \"{{url}}\" --batch --level 3 --risk 2",
+      "desc": "对带参数的 URL 做 SQL 注入检测，--batch 使用默认应答避免交互阻塞。",
+      "tags": ["sqlmap", "SQL 注入"],
+      "vars": [{ "name": "url", "label": "目标 URL", "placeholder": "https://example.com/item?id=1", "example": "https://example.com/item?id=1" }],
+      "source": "sqlmap 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-sqlmap-request",
+      "title": "sqlmap 读取请求文件",
+      "category": "漏洞验证",
+      "code": "sqlmap -r request.txt -p \"{{param}}\" --batch --dbs",
+      "desc": "从 Burp 保存的请求文件测试指定参数，并枚举数据库。",
+      "tags": ["sqlmap", "请求文件"],
+      "vars": [{ "name": "param", "label": "测试参数", "placeholder": "id", "example": "id" }],
+      "source": "sqlmap 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-mysql-connect",
+      "title": "mysql 客户端连接",
+      "category": "漏洞验证",
+      "code": "mysql -h {{host}} -P {{port}} -u {{user}} -p",
+      "desc": "连接 MySQL 服务，-p 后不跟密码以便交互输入，避免密码进入历史记录。",
+      "tags": ["mysql", "数据库"],
+      "vars": [
+        { "name": "host", "label": "主机", "placeholder": "192.0.2.1", "example": "192.0.2.1" },
+        { "name": "port", "label": "端口", "placeholder": "3306", "example": "3306" },
+        { "name": "user", "label": "用户名", "placeholder": "root", "example": "root" }
+      ],
+      "source": "MySQL 官方客户端用法",
+      "risk": "safe"
+    },
+    {
+      "id": "tool-redis-cli",
+      "title": "redis-cli 未授权验证",
+      "category": "漏洞验证",
+      "code": "redis-cli -h {{host}} -p 6379 info",
+      "desc": "连接 Redis 并读取 info，用于确认是否存在未授权访问。",
+      "tags": ["redis", "未授权"],
+      "vars": [{ "name": "host", "label": "主机", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "Redis 官方客户端用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-dig",
+      "title": "dig 查询解析记录",
+      "category": "请求与 DNS",
+      "code": "dig +short {{domain}} A",
+      "desc": "快速查看 A 记录，把 A 换成 AAAA、MX、TXT、NS 可查询其他记录。",
+      "tags": ["dig", "DNS"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "dig 官方用法",
+      "risk": "safe"
+    },
+    {
+      "id": "tool-dig-axfr",
+      "title": "dig 域传送测试",
+      "category": "请求与 DNS",
+      "code": "dig axfr @{{ns}} {{domain}}",
+      "desc": "测试 DNS 服务器是否允许域传送，配置不当会直接泄露全部解析记录。",
+      "tags": ["dig", "AXFR"],
+      "vars": [
+        { "name": "ns", "label": "DNS 服务器", "placeholder": "ns1.example.com", "example": "ns1.example.com" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "dig 官方用法",
+      "risk": "attack"
+    },
+    {
+      "id": "tool-whois",
+      "title": "whois 查询",
+      "category": "请求与 DNS",
+      "code": "whois {{domain}}",
+      "desc": "查询域名注册信息、注册商与到期时间，辅助归属确认。",
+      "tags": ["whois", "归属"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "whois 通用用法",
+      "risk": "recon"
+    }
+  ]
+}

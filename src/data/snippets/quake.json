@@ -1,0 +1,929 @@
+{
+  "platform": "quake",
+  "version": 1,
+  "categories": ["运算符与匹配", "基础字段", "服务与组件", "页面元素", "证书与地理", "组合查询", "攻防场景"],
+  "items": [
+    {
+      "id": "quake-ip",
+      "title": "指定 IP",
+      "category": "基础字段",
+      "code": "ip:\"{{ip}}\"",
+      "desc": "查询单个 IP 的测绘结果，包含端口、协议与服务指纹。",
+      "tags": ["ip"],
+      "vars": [{ "name": "ip", "label": "IP 地址", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-cidr",
+      "title": "IP 段",
+      "category": "基础字段",
+      "code": "ip:\"{{cidr}}\"",
+      "desc": "按 CIDR 拉取整段资产，适合内网出口或云主机网段排查。",
+      "tags": ["ip", "cidr"],
+      "vars": [{ "name": "cidr", "label": "IP 段", "placeholder": "192.0.2.0/24", "example": "192.0.2.0/24" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-port",
+      "title": "指定端口",
+      "category": "基础字段",
+      "code": "port:{{port}}",
+      "desc": "Quake 端口为数字字段，不需要加引号。",
+      "tags": ["port"],
+      "vars": [{ "name": "port", "label": "端口", "placeholder": "443", "example": "443" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-title",
+      "title": "网页标题",
+      "category": "基础字段",
+      "code": "title:\"{{keyword}}\"",
+      "desc": "在页面标题中搜索关键词，中文与空格务必使用双引号包裹。",
+      "tags": ["title", "后台"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-domain",
+      "title": "域名",
+      "category": "基础字段",
+      "code": "domain:\"{{domain}}\"",
+      "desc": "按域名匹配资产，包含子域名。",
+      "tags": ["domain"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-body",
+      "title": "网页正文",
+      "category": "基础字段",
+      "code": "body:\"{{keyword}}\"",
+      "desc": "在响应正文中搜索指纹字符串，适合确认组件与敏感内容。",
+      "tags": ["body", "指纹"],
+      "vars": [{ "name": "keyword", "label": "正文关键词", "placeholder": "Shiro", "example": "Shiro" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-header",
+      "title": "响应头",
+      "category": "基础字段",
+      "code": "headers:\"{{keyword}}\"",
+      "desc": "在 HTTP 响应头中搜索特征，如 Server、X-Powered-By。",
+      "tags": ["header"],
+      "vars": [{ "name": "keyword", "label": "响应头关键词", "placeholder": "nginx", "example": "nginx" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-app",
+      "title": "应用 / 组件",
+      "category": "基础字段",
+      "code": "app:\"{{app}}\"",
+      "desc": "按识别到的应用名称筛选，如 nginx、Apache、Redis。",
+      "tags": ["app", "指纹"],
+      "vars": [{ "name": "app", "label": "应用名称", "placeholder": "nginx", "example": "nginx" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-app-version",
+      "title": "应用版本",
+      "category": "基础字段",
+      "code": "app:\"{{app}}\" AND app_version:\"{{version}}\"",
+      "desc": "应用名与版本组合，用于排查存在已知漏洞的特定版本。",
+      "tags": ["app_version", "漏洞"],
+      "vars": [
+        { "name": "app", "label": "应用名称", "placeholder": "nginx", "example": "nginx" },
+        { "name": "version", "label": "版本号", "placeholder": "1.18.0", "example": "1.18.0" }
+      ],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-service",
+      "title": "服务类型",
+      "category": "基础字段",
+      "code": "service:\"{{service}}\"",
+      "desc": "按服务名称筛选，如 http、ssh、ftp、rdp。",
+      "tags": ["service"],
+      "vars": [{ "name": "service", "label": "服务", "placeholder": "http", "example": "http" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-os",
+      "title": "操作系统",
+      "category": "基础字段",
+      "code": "os:\"{{os}}\"",
+      "desc": "按识别到的操作系统筛选资产。",
+      "tags": ["os"],
+      "vars": [{ "name": "os", "label": "操作系统", "placeholder": "windows", "example": "windows" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-status",
+      "title": "HTTP 状态码",
+      "category": "基础字段",
+      "code": "status_code:{{status}}",
+      "desc": "按状态码筛选存活服务，200 找正常页面，401/403 找受保护入口。",
+      "tags": ["status", "存活"],
+      "vars": [{ "name": "status", "label": "状态码", "placeholder": "200", "example": "200" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-cert",
+      "title": "证书内容",
+      "category": "证书与地理",
+      "code": "cert:\"{{keyword}}\"",
+      "desc": "在证书内容中搜索单位名或域名，发现未直接暴露的资产。",
+      "tags": ["cert", "证书"],
+      "vars": [{ "name": "keyword", "label": "证书关键词", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-country",
+      "title": "按国家筛选",
+      "category": "证书与地理",
+      "code": "country:\"{{country}}\"",
+      "desc": "按国家限定资产范围，常用值 China、United States。",
+      "tags": ["country"],
+      "vars": [{ "name": "country", "label": "国家", "placeholder": "China", "example": "China" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-location",
+      "title": "地理位置",
+      "category": "证书与地理",
+      "code": "country:\"{{country}}\" AND province:\"{{province}}\"",
+      "desc": "按国家与省份组合筛选，适合按地域圈定目标资产。",
+      "tags": ["location", "新版语法"],
+      "vars": [
+        { "name": "country", "label": "国家", "placeholder": "China", "example": "China" },
+        { "name": "province", "label": "省份", "placeholder": "Zhejiang", "example": "Zhejiang" }
+      ],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-domain-port",
+      "title": "域名下的指定端口",
+      "category": "组合查询",
+      "code": "domain:\"{{domain}}\" AND port:{{port}}",
+      "desc": "逻辑运算符必须大写，多个条件用 AND 连接。",
+      "tags": ["组合", "端口"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "port", "label": "端口", "placeholder": "8080", "example": "8080" }
+      ],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-title-login",
+      "title": "域名下的登录页",
+      "category": "组合查询",
+      "code": "domain:\"{{domain}}\" AND (title:\"登录\" OR title:\"login\")",
+      "desc": "用 OR 扩大登录页命中范围，括号保证条件组优先级。",
+      "tags": ["组合", "登录"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-exclude-title",
+      "title": "排除指定标题",
+      "category": "组合查询",
+      "code": "domain:\"{{domain}}\" AND NOT title:\"{{exclude}}\"",
+      "desc": "使用 NOT 排除默认页、错误页等噪音。",
+      "tags": ["组合", "排除"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "exclude", "label": "排除关键词", "placeholder": "404", "example": "404" }
+      ],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-ipv6",
+      "title": "IPv6 资产",
+      "category": "组合查询",
+      "code": "is_ipv6:\"true\" AND domain:\"{{domain}}\"",
+      "desc": "筛选目标域名下的 IPv6 资产，补充双栈暴露面。",
+      "tags": ["ipv6"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Quake 公开语法资料",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-shiro",
+      "title": "Shiro 站点",
+      "category": "攻防场景",
+      "code": "app:\"Shiro\" AND body:\"rememberMe\"",
+      "desc": "应用与正文特征组合，定位启用 Shiro 的站点。",
+      "tags": ["Shiro", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-redis",
+      "title": "Redis 暴露",
+      "category": "攻防场景",
+      "code": "port:6379 AND service:\"redis\"",
+      "desc": "端口与服务双条件定位 Redis，进一步确认未授权访问风险。",
+      "tags": ["Redis", "未授权"],
+      "vars": [],
+      "source": "公开服务特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-fortinet",
+      "title": "边界 VPN/防火墙设备",
+      "category": "攻防场景",
+      "code": "app:\"Fortinet\" OR title:\"FortiGate\"",
+      "desc": "通过设备指纹定位边界安全设备（如 FortiGate），适合排查 VPN 与防火墙暴露面。",
+      "tags": ["Fortinet", "边界设备"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-and",
+      "title": "AND 逻辑与",
+      "category": "运算符与匹配",
+      "code": "domain:\"{{domain}}\" AND port:{{port}}",
+      "desc": "逻辑连接符必须大写（AND / OR / NOT），小写会被当作普通关键词。",
+      "tags": ["运算符", "AND"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "port", "label": "端口", "placeholder": "443", "example": "443" }
+      ],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-or",
+      "title": "OR 逻辑或",
+      "category": "运算符与匹配",
+      "code": "title:\"{{keywordA}}\" OR title:\"{{keywordB}}\"",
+      "desc": "OR 用于合并同义关键词，配合括号可限定作用范围。",
+      "tags": ["运算符", "OR"],
+      "vars": [
+        { "name": "keywordA", "label": "关键词 A", "placeholder": "登录", "example": "登录" },
+        { "name": "keywordB", "label": "关键词 B", "placeholder": "login", "example": "login" }
+      ],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-not",
+      "title": "NOT 逻辑非",
+      "category": "运算符与匹配",
+      "code": "domain:\"{{domain}}\" AND NOT title:\"{{exclude}}\"",
+      "desc": "NOT 用于排除噪音结果，必须写在被排除条件之前。",
+      "tags": ["运算符", "NOT", "排除"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "exclude", "label": "排除关键词", "placeholder": "404", "example": "404" }
+      ],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-group",
+      "title": "括号控制优先级",
+      "category": "运算符与匹配",
+      "code": "port:{{port}} AND (title:\"{{keywordA}}\" OR title:\"{{keywordB}}\")",
+      "desc": "AND 与 OR 混用时不加括号会按默认优先级解析，容易得到非预期结果。",
+      "tags": ["运算符", "括号", "优先级"],
+      "vars": [
+        { "name": "port", "label": "端口", "placeholder": "443", "example": "443" },
+        { "name": "keywordA", "label": "关键词 A", "placeholder": "后台", "example": "后台" },
+        { "name": "keywordB", "label": "关键词 B", "placeholder": "admin", "example": "admin" }
+      ],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-bool",
+      "title": "布尔值写法",
+      "category": "运算符与匹配",
+      "code": "is_ipv6:\"true\"",
+      "desc": "true / false 为布尔值，官方示例中带引号与不带引号均有（如 is_ipv6:\"true\"、is_domain:true），建议按字段官方示例书写。",
+      "tags": ["运算符", "布尔"],
+      "vars": [],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-op-quote",
+      "title": "字符串值必须加引号",
+      "category": "运算符与匹配",
+      "code": "title:\"{{keyword}}\"",
+      "desc": "含中文、空格或特殊字符的值必须用双引号包裹；端口、状态码等数字字段不加引号。",
+      "tags": ["运算符", "引号"],
+      "vars": [{ "name": "keyword", "label": "关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "Quake 官方语法说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-hostname",
+      "title": "主机名",
+      "category": "基础字段",
+      "code": "hostname:\"{{hostname}}\"",
+      "desc": "按主机名（hostname）匹配资产，适合定位规范化命名的主机。",
+      "tags": ["hostname"],
+      "vars": [{ "name": "hostname", "label": "主机名", "placeholder": "mail.example.com", "example": "mail.example.com" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-transport",
+      "title": "传输层协议",
+      "category": "基础字段",
+      "code": "transport:\"{{transport}}\"",
+      "desc": "按传输层协议筛选，常用值 tcp、udp。",
+      "tags": ["transport", "协议"],
+      "vars": [{ "name": "transport", "label": "传输层协议", "placeholder": "tcp", "example": "tcp" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-asn",
+      "title": "ASN 自治系统",
+      "category": "基础字段",
+      "code": "asn:\"{{asn}}\"",
+      "desc": "按 ASN 编号筛选，官方示例不带 AS 前缀，用于圈定云厂商或运营商的整段资产。",
+      "tags": ["asn"],
+      "vars": [{ "name": "asn", "label": "ASN 编号", "placeholder": "64512", "example": "64512" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-org",
+      "title": "所属组织",
+      "category": "基础字段",
+      "code": "org:\"{{org}}\"",
+      "desc": "按 IP 归属组织筛选，常用于定位企业或云服务商资产。",
+      "tags": ["org", "归属"],
+      "vars": [{ "name": "org", "label": "组织名称", "placeholder": "Example Org", "example": "Example Org" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-service-http-server",
+      "title": "HTTP Server 头（精确）",
+      "category": "服务与组件",
+      "code": "service.http.server.keyword:\"{{server}}\"",
+      "desc": "精确匹配 Server 响应头，适合识别中间件与 Web 服务器。",
+      "tags": ["service.http.server", "中间件"],
+      "vars": [{ "name": "server", "label": "Server 值", "placeholder": "nginx", "example": "nginx" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-service-http-host",
+      "title": "HTTP Host 头",
+      "category": "服务与组件",
+      "code": "host:\"{{host}}\"",
+      "desc": "按请求 Host 头筛选，适合定位虚拟主机与反代后端。",
+      "tags": ["service.http.host"],
+      "vars": [{ "name": "host", "label": "Host 值", "placeholder": "admin.example.com", "example": "admin.example.com" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-favicon-hash",
+      "title": "Favicon 哈希",
+      "category": "服务与组件",
+      "code": "favicon:\"{{hash}}\"",
+      "desc": "按 favicon 的 MD5 值筛选，可批量发现使用同一套系统的资产。",
+      "tags": ["favicon", "同源"],
+      "vars": [
+        { "name": "hash", "label": "Favicon 哈希", "placeholder": "0488faca4c19046b94d07c3ee83cf9d6", "example": "0488faca4c19046b94d07c3ee83cf9d6" }
+      ],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-catalog",
+      "title": "产品分类",
+      "category": "服务与组件",
+      "code": "catalog:\"{{catalog}}\"",
+      "desc": "按产品分类筛选，如 区块链、数据库、工控设备。",
+      "tags": ["catalog", "分类"],
+      "vars": [{ "name": "catalog", "label": "产品分类", "placeholder": "区块链", "example": "区块链" }],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-product-type",
+      "title": "产品类型",
+      "category": "服务与组件",
+      "code": "type:\"{{type}}\"",
+      "desc": "按产品类型筛选，如 户外广告、网络设备。",
+      "tags": ["type", "分类"],
+      "vars": [{ "name": "type", "label": "产品类型", "placeholder": "户外广告", "example": "户外广告" }],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-tls-subject-cn",
+      "title": "TLS 证书 CN",
+      "category": "证书与地理",
+      "code": "tls_subject_CN:\"{{domain}}\"",
+      "desc": "按证书 Subject CN 精准筛选，比 cert 全文匹配更少误报，适合发现隐藏资产。",
+      "tags": ["tls_subject_CN", "证书"],
+      "vars": [{ "name": "domain", "label": "证书 CN", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-icp-keywords",
+      "title": "ICP 备案关键词",
+      "category": "证书与地理",
+      "code": "icp_keywords:\"{{keyword}}\"",
+      "desc": "按备案主体关键词筛选，比完整备案号更适合按单位名称扩展资产。",
+      "tags": ["icp_keywords", "备案"],
+      "vars": [{ "name": "keyword", "label": "备案关键词", "placeholder": "科技有限公司", "example": "科技有限公司" }],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-location-district",
+      "title": "区县（中文）",
+      "category": "证书与地理",
+      "code": "district:\"{{district}}\"",
+      "desc": "按区县筛选，如 朝阳区。",
+      "tags": ["district", "地理"],
+      "vars": [{ "name": "district", "label": "区县", "placeholder": "朝阳区", "example": "朝阳区" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-combo-org-port",
+      "title": "组织 + 端口",
+      "category": "组合查询",
+      "code": "org:\"{{org}}\" AND port:{{port}}",
+      "desc": "按组织圈定范围后筛选端口，适合快速盘点云上暴露服务。",
+      "tags": ["组合", "org", "端口"],
+      "vars": [
+        { "name": "org", "label": "组织名称", "placeholder": "Example Org", "example": "Example Org" },
+        { "name": "port", "label": "端口", "placeholder": "443", "example": "443" }
+      ],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-combo-asn-cidr",
+      "title": "ASN + IP 段",
+      "category": "组合查询",
+      "code": "asn:\"{{asn}}\" AND ip:\"{{cidr}}\"",
+      "desc": "先按 ASN 归集再限定网段，避免大范围 ASN 结果过多。",
+      "tags": ["组合", "asn", "CIDR"],
+      "vars": [
+        { "name": "asn", "label": "ASN 编号", "placeholder": "64512", "example": "64512" },
+        { "name": "cidr", "label": "IP 段", "placeholder": "192.0.2.0/24", "example": "192.0.2.0/24" }
+      ],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-combo-cert-exclude",
+      "title": "域名下排除指定证书",
+      "category": "组合查询",
+      "code": "domain:\"{{domain}}\" AND NOT cert:\"{{exclude}}\"",
+      "desc": "在目标域名范围内排除证书包含指定值的资产，用于过滤共享证书带来的噪音。",
+      "tags": ["组合", "证书", "排除"],
+      "vars": [
+        { "name": "domain", "label": "目标域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "exclude", "label": "排除的证书关键词", "placeholder": "example.net", "example": "example.net" }
+      ],
+      "source": "组合语法（基于 Quake 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-mongodb-noauth",
+      "title": "MongoDB 未开启认证",
+      "category": "攻防场景",
+      "code": "service:\"mongodb\" AND service.mongodb.authentication:false",
+      "desc": "按协议字段判断 MongoDB 是否关闭认证，可直接定位未授权实例。",
+      "tags": ["MongoDB", "未授权"],
+      "vars": [],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-hive-default",
+      "title": "Hive 默认库",
+      "category": "攻防场景",
+      "code": "service.hive.hive_dbs.dbname:\"default\"",
+      "desc": "按 Hive 数据库名筛选，用于发现暴露的大数据组件。",
+      "tags": ["Hive", "大数据"],
+      "vars": [],
+      "source": "Quake 官方语法文章",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-spring-actuator",
+      "title": "Spring 报错页",
+      "category": "攻防场景",
+      "code": "body:\"Whitelabel Error Page\"",
+      "desc": "Spring Boot 默认错误页特征，可用于定位未收敛的 Java 应用。",
+      "tags": ["Spring", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-elasticsearch",
+      "title": "Elasticsearch 暴露",
+      "category": "攻防场景",
+      "code": "port:9200 AND app:\"Elasticsearch\"",
+      "desc": "端口与应用双条件定位 ES，进一步确认是否存在未授权访问。",
+      "tags": ["Elasticsearch", "未授权"],
+      "vars": [],
+      "source": "公开服务特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-vpn-portal",
+      "title": "VPN 登录入口",
+      "category": "攻防场景",
+      "code": "port:443 AND (title:\"SSL VPN\" OR title:\"VPN\")",
+      "desc": "定位常见 VPN 门户，适合核对边界设备暴露面与版本风险。",
+      "tags": ["VPN", "边界设备"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-port-range",
+      "title": "端口区间",
+      "category": "基础字段",
+      "code": "port:[{{min}} TO {{max}}]",
+      "desc": "查询开放端口落在指定区间内的资产，方括号与 TO 均为固定写法且 TO 必须大写。",
+      "tags": ["port", "区间"],
+      "vars": [
+        { "name": "min", "label": "起始端口", "placeholder": "50", "example": "50" },
+        { "name": "max", "label": "结束端口", "placeholder": "60", "example": "60" }
+      ],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-response",
+      "title": "端口原生响应",
+      "category": "基础字段",
+      "code": "response:\"{{keyword}}\"",
+      "desc": "在端口原生返回数据中搜索关键词，可跨协议匹配 Banner 内容。",
+      "tags": ["response", "banner"],
+      "vars": [{ "name": "keyword", "label": "响应关键词", "placeholder": "OpenSSH", "example": "OpenSSH" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-level",
+      "title": "应用层级",
+      "category": "服务与组件",
+      "code": "level:\"{{level}}\"",
+      "desc": "按应用层级筛选，如硬件设备层、软件应用层；该字段属于会员能力。",
+      "tags": ["level", "层级"],
+      "vars": [{ "name": "level", "label": "应用层级", "placeholder": "硬件设备层", "example": "硬件设备层" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-vendor",
+      "title": "应用厂商",
+      "category": "服务与组件",
+      "code": "vendor:\"{{vendor}}\"",
+      "desc": "按应用生产商筛选；多个厂商可用 OR 连接。该字段属于会员能力。",
+      "tags": ["vendor", "厂商"],
+      "vars": [{ "name": "vendor", "label": "厂商名称", "placeholder": "Apache", "example": "Apache" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-country-cn",
+      "title": "中文国家",
+      "category": "证书与地理",
+      "code": "country_cn:\"{{country}}\"",
+      "desc": "按中文国家名称筛选；英文写法使用 country。",
+      "tags": ["国家", "地理"],
+      "vars": [{ "name": "country", "label": "国家（中文）", "placeholder": "中国", "example": "中国" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-province",
+      "title": "英文省份",
+      "category": "证书与地理",
+      "code": "province:\"{{province}}\"",
+      "desc": "按英文省份名称筛选；中文写法见 province_cn。",
+      "tags": ["省份", "地理"],
+      "vars": [{ "name": "province", "label": "省份（英文）", "placeholder": "Sichuan", "example": "Sichuan" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-province-cn",
+      "title": "中文省份",
+      "category": "证书与地理",
+      "code": "province_cn:\"{{province}}\"",
+      "desc": "按中文省份名称筛选，适合直接从控制台筛选条件复制后修改。",
+      "tags": ["省份", "地理"],
+      "vars": [{ "name": "province", "label": "省份（中文）", "placeholder": "四川", "example": "四川" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-city",
+      "title": "英文城市",
+      "category": "证书与地理",
+      "code": "city:\"{{city}}\"",
+      "desc": "按英文城市名称筛选；中文写法使用 city_cn。",
+      "tags": ["城市", "地理"],
+      "vars": [{ "name": "city", "label": "城市（英文）", "placeholder": "Chengdu", "example": "Chengdu" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-city-cn",
+      "title": "中文城市",
+      "category": "证书与地理",
+      "code": "city_cn:\"{{city}}\"",
+      "desc": "按中文城市名称筛选，常与省份条件组合缩小范围。",
+      "tags": ["城市", "地理"],
+      "vars": [{ "name": "city", "label": "城市（中文）", "placeholder": "成都", "example": "成都" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-owner",
+      "title": "IP 归属单位",
+      "category": "证书与地理",
+      "code": "owner:\"{{domain}}\"",
+      "desc": "按 IP 归属单位筛选，常用于归集企业自有网段与云上资产。",
+      "tags": ["owner", "归属"],
+      "vars": [{ "name": "domain", "label": "归属单位", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-isp",
+      "title": "归属运营商",
+      "category": "证书与地理",
+      "code": "isp:\"{{isp}}\"",
+      "desc": "按 IP 归属运营商筛选，如 中国电信、中国联通。",
+      "tags": ["isp", "运营商"],
+      "vars": [{ "name": "isp", "label": "运营商", "placeholder": "中国电信", "example": "中国电信" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-icp",
+      "title": "ICP 备案号",
+      "category": "证书与地理",
+      "code": "icp:\"{{icp}}\"",
+      "desc": "按页面 ICP 备案号筛选，中文与空格需用双引号包裹。",
+      "tags": ["ICP", "备案"],
+      "vars": [{ "name": "icp", "label": "备案号", "placeholder": "京ICP备00000000号", "example": "京ICP备00000000号" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-icp-nature",
+      "title": "备案主体性质",
+      "category": "证书与地理",
+      "code": "icp_nature:\"{{nature}}\"",
+      "desc": "按备案主体性质筛选，常见值：企业、个人、事业单位、政府机关。",
+      "tags": ["ICP", "主体性质"],
+      "vars": [{ "name": "nature", "label": "主体性质", "placeholder": "企业", "example": "企业" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-script-variable",
+      "title": "脚本变量",
+      "category": "页面元素",
+      "code": "script_variable:\"{{name}}\"",
+      "desc": "查询页面 script 标签变量中包含指定名称的资产，用于识别前端框架与全局变量。",
+      "tags": ["script", "变量"],
+      "vars": [{ "name": "name", "label": "变量名", "placeholder": "csrfToken", "example": "csrfToken" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-script-function",
+      "title": "脚本函数",
+      "category": "页面元素",
+      "code": "script_function:\"{{name}}\"",
+      "desc": "查询页面 script 标签函数中包含指定名称的资产，可辅助判断前端技术栈。",
+      "tags": ["script", "函数"],
+      "vars": [{ "name": "name", "label": "函数名", "placeholder": "indexOf", "example": "indexOf" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-css-class",
+      "title": "CSS 类选择器",
+      "category": "页面元素",
+      "code": "css_class:\"{{name}}\"",
+      "desc": "查询 CSS class 选择器中包含指定名称的资产，适合做同类系统聚类。",
+      "tags": ["CSS", "class"],
+      "vars": [{ "name": "name", "label": "class 名称", "placeholder": "login", "example": "login" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-css-id",
+      "title": "CSS ID 选择器",
+      "category": "页面元素",
+      "code": "css_id:\"{{name}}\"",
+      "desc": "查询 CSS id 选择器中包含指定名称的资产，常与 class 条件配合使用。",
+      "tags": ["CSS", "id"],
+      "vars": [{ "name": "name", "label": "id 名称", "placeholder": "login", "example": "login" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-iframe-title",
+      "title": "iframe 标题",
+      "category": "页面元素",
+      "code": "iframe_title:\"{{keyword}}\"",
+      "desc": "按 iframe 链接标题筛选，常用于识别嵌入的统一登录页或第三方组件。",
+      "tags": ["iframe", "标题"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "登录", "example": "登录" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-iframe-url",
+      "title": "iframe 地址",
+      "category": "页面元素",
+      "code": "iframe_url:\"{{path}}\"",
+      "desc": "按 iframe 链接地址筛选，可发现嵌入式单点登录与外部组件。",
+      "tags": ["iframe", "URL"],
+      "vars": [{ "name": "path", "label": "URL 片段", "placeholder": "/sso/login", "example": "/sso/login" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-url-load",
+      "title": "页面加载流",
+      "category": "页面元素",
+      "code": "url_load:\"{{path}}\"",
+      "desc": "查询网页加载流中包含指定路径的资产，可发现异步加载的接口与资源。",
+      "tags": ["url_load", "加载"],
+      "vars": [{ "name": "path", "label": "路径片段", "placeholder": "/login", "example": "/login" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-page-type",
+      "title": "页面类型",
+      "category": "页面元素",
+      "code": "page_type:\"{{type}}\"",
+      "desc": "按页面类型筛选，如门户网站、登录页面；该字段属于会员能力。",
+      "tags": ["page_type", "页面"],
+      "vars": [{ "name": "type", "label": "页面类型", "placeholder": "门户网站", "example": "门户网站" }],
+      "source": "Quake 官方字段说明",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-is-latest",
+      "title": "仅最新测绘结果",
+      "category": "基础字段",
+      "code": "is_latest:\"true\"",
+      "desc": "仅保留最近一次测绘结果，避免历史存量数据干扰。",
+      "tags": ["is_latest", "筛选"],
+      "vars": [],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-ports",
+      "title": "端口集合",
+      "category": "基础字段",
+      "code": "ports:\"{{p1}},{{p2}}\"",
+      "desc": "按主机开放的端口集合筛选，多端口用英文逗号分隔。",
+      "tags": ["ports", "端口"],
+      "vars": [
+        { "name": "p1", "label": "端口一", "placeholder": "80", "example": "80" },
+        { "name": "p2", "label": "端口二", "placeholder": "443", "example": "443" }
+      ],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-is-domain",
+      "title": "拥有域名的资产",
+      "category": "基础字段",
+      "code": "is_domain:true",
+      "desc": "筛选拥有域名的资产；取反可用于查找纯 IP 暴露的服务。",
+      "tags": ["is_domain", "筛选"],
+      "vars": [],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-sys-tag",
+      "title": "系统标签",
+      "category": "基础字段",
+      "code": "sys_tag:\"{{tag}}\"",
+      "desc": "按系统标签筛选设备类型，如路由器、摄像头、防火墙。",
+      "tags": ["sys_tag", "设备"],
+      "vars": [{ "name": "tag", "label": "系统标签", "placeholder": "路由器", "example": "路由器" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-http-path",
+      "title": "HTTP 请求路径",
+      "category": "页面元素",
+      "code": "http_path:\"{{path}}\"",
+      "desc": "按 HTTP 请求路径筛选，用于定位特定后台或接口路径。",
+      "tags": ["http_path", "路径"],
+      "vars": [{ "name": "path", "label": "请求路径", "placeholder": "/admin", "example": "/admin" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-meta-keywords",
+      "title": "页面 meta keywords",
+      "category": "页面元素",
+      "code": "meta_keywords:\"{{keyword}}\"",
+      "desc": "按页面 meta keywords 内容筛选，可辅助识别建站系统与行业站点。",
+      "tags": ["meta_keywords", "页面"],
+      "vars": [{ "name": "keyword", "label": "关键词", "placeholder": "管理", "example": "管理" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-powered-by",
+      "title": "页面技术栈特征",
+      "category": "页面元素",
+      "code": "powered_by:\"{{lang}}\"",
+      "desc": "按页面暴露的技术栈特征筛选，如 PHP、ASP.NET。",
+      "tags": ["powered_by", "技术栈"],
+      "vars": [{ "name": "lang", "label": "技术栈", "placeholder": "PHP", "example": "PHP" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-copyright",
+      "title": "页面版权信息",
+      "category": "页面元素",
+      "code": "copyright:\"{{keyword}}\"",
+      "desc": "按页面版权信息筛选，可批量归集同一单位或建站服务商的站点。",
+      "tags": ["copyright", "版权"],
+      "vars": [{ "name": "keyword", "label": "版权关键词", "placeholder": "某某公司", "example": "某某公司" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-mail",
+      "title": "页面邮箱地址",
+      "category": "页面元素",
+      "code": "mail:\"{{mail}}\"",
+      "desc": "按页面中出现的邮箱地址筛选，用于发现组织联系入口。",
+      "tags": ["mail", "邮箱"],
+      "vars": [{ "name": "mail", "label": "邮箱地址", "placeholder": "admin@example.com", "example": "admin@example.com" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-img-ocr",
+      "title": "图片 OCR 文字",
+      "category": "页面元素",
+      "code": "img_ocr:\"{{keyword}}\"",
+      "desc": "按图片 OCR 识别出的文字筛选，适合识别登录页标题与验证码页面。",
+      "tags": ["img_ocr", "OCR"],
+      "vars": [{ "name": "keyword", "label": "识别关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "quake-img-tag",
+      "title": "图片标签",
+      "category": "页面元素",
+      "code": "img_tag:\"{{tag}}\"",
+      "desc": "按页面图片的标签识别结果筛选，可辅助判断登录页、设备管理页等页面类型。",
+      "tags": ["img_tag", "图像"],
+      "vars": [{ "name": "tag", "label": "图像标签", "placeholder": "登录", "example": "登录" }],
+      "source": "Quake 官方查询语法",
+      "risk": "recon"
+    }
+  ]
+}

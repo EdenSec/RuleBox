@@ -1,0 +1,176 @@
+{
+  "platform": "alpha",
+  "version": 1,
+  "categories": ["常用模板", "告警筛选", "IP 与资产", "自定义组合"],
+  "notice": "Alpha 官方未公开检索语法文档，以下字段参考常见态势感知平台的告警检索语法整理，不同部署版本可能存在字段差异，请在平台字典中确认后再使用。",
+  "items": [
+    {
+      "id": "alpha-high-risk",
+      "title": "高危告警（基础排除）",
+      "category": "常用模板",
+      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\" AND destAddress != \"192.0.2.10\"",
+      "desc": "筛选纵向流量中的中高危告警，剔除 rule-a 等噪音规则与指定目的地址（示例值）。",
+      "tags": ["高危", "排除噪音"],
+      "vars": [],
+      "source": "基于平台字典整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-high-risk-ok",
+      "title": "高危且判定为 OK",
+      "category": "常用模板",
+      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\" AND alarmStatus != \"processed\" AND destAddress != \"192.0.2.10\" AND alarmResults == \"OK\"",
+      "desc": "在基础排除上增加“未处置”与“判定结果 OK”，用于聚焦仍然有效的告警。",
+      "tags": ["高危", "未处置", "OK"],
+      "vars": [],
+      "source": "基于平台字典整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-high-risk-unprocessed",
+      "title": "高危未处置告警",
+      "category": "常用模板",
+      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\" AND destAddress != \"192.0.2.10\" AND alarmStatus != \"processed\"",
+      "desc": "只保留尚未处置的中高危告警，适合值班巡检与日报汇总。",
+      "tags": ["高危", "巡检"],
+      "vars": [],
+      "source": "基于平台字典整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-response-200",
+      "title": "响应码 200 的告警",
+      "category": "常用模板",
+      "code": "responseCode == \"200\" AND alarmName != \"rule-a\" AND direction == \"10\" AND alarmResults in [\"UNKNOWN\",\"OK\"]",
+      "desc": "查询响应码为 200 的纵向流量告警，并限定判定结果为 UNKNOWN 或 OK。",
+      "tags": ["响应码", "200"],
+      "vars": [],
+      "source": "基于平台字典整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-response-code",
+      "title": "指定响应码告警",
+      "category": "告警筛选",
+      "code": "responseCode == \"{{code}}\" AND alarmName != \"rule-a\" AND direction == \"{{direction}}\"",
+      "desc": "把响应码与流量方向抽成变量，便于快速切换 200、403、500 等场景。",
+      "tags": ["响应码", "变量"],
+      "vars": [
+        { "name": "code", "label": "响应码", "placeholder": "200", "example": "200" },
+        { "name": "direction", "label": "流量方向", "placeholder": "10", "example": "10" }
+      ],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-severity-only",
+      "title": "仅按威胁等级筛选",
+      "category": "告警筛选",
+      "code": "threatSeverity in [\"High\"] AND direction == \"10\"",
+      "desc": "只看高危等级告警，适合先做高优处置。",
+      "tags": ["威胁等级", "High"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-alarm-name",
+      "title": "指定告警名称",
+      "category": "告警筛选",
+      "code": "alarmName == \"{{name}}\" AND direction == \"10\"",
+      "desc": "精确查询某一类告警名称，便于单类告警的专项分析。",
+      "tags": ["alarmName", "专项"],
+      "vars": [{ "name": "name", "label": "告警名称", "placeholder": "WebShell上传", "example": "WebShell上传" }],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-exclude-block",
+      "title": "排除封禁类告警",
+      "category": "告警筛选",
+      "code": "alarmName != \"rule-a\" AND alarmName != \"rule-b\" AND alarmName != \"rule-c\" AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "仅保留排除逻辑，可作为一个可复用的前缀，与其他条件组合。",
+      "tags": ["排除", "噪音"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-unprocessed",
+      "title": "全部未处置告警",
+      "category": "告警筛选",
+      "code": "alarmStatus != \"processed\" AND direction == \"10\"",
+      "desc": "不区分等级，先拉取所有未处置告警，再做二次筛选。",
+      "tags": ["未处置", "巡检"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-result-unknown",
+      "title": "判定结果未知的告警",
+      "category": "告警筛选",
+      "code": "alarmResults in [\"UNKNOWN\"] AND direction == \"10\"",
+      "desc": "聚焦系统尚未给出明确判定的告警，适合人工复核。",
+      "tags": ["UNKNOWN", "人工复核"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-dest-ip",
+      "title": "按目的 IP 查询",
+      "category": "IP 与资产",
+      "code": "destAddress == \"{{ip}}\" AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "查询打向某个资产的中高危告警，适合应急时确认单台主机受影响情况。",
+      "tags": ["destAddress", "应急"],
+      "vars": [{ "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-src-ip",
+      "title": "按源 IP 查询",
+      "category": "IP 与资产",
+      "code": "srcAddress == \"{{ip}}\" AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "追溯某个源 IP 触发的告警。srcAddress 为常见字段名，使用前请在平台字典确认。",
+      "tags": ["srcAddress", "溯源"],
+      "vars": [{ "name": "ip", "label": "源 IP", "placeholder": "198.51.100.20", "example": "198.51.100.20" }],
+      "source": "基于示例字段的组合（字段需平台确认）",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-dest-port",
+      "title": "按目的端口查询",
+      "category": "IP 与资产",
+      "code": "destPort == \"{{port}}\" AND direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"]",
+      "desc": "聚焦特定业务端口的告警。destPort 为常见字段名，使用前请确认。",
+      "tags": ["destPort", "业务端口"],
+      "vars": [{ "name": "port", "label": "目的端口", "placeholder": "443", "example": "443" }],
+      "source": "基于示例字段的组合（字段需平台确认）",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-response-200-unprocessed",
+      "title": "响应 200 且未处置",
+      "category": "自定义组合",
+      "code": "responseCode == \"200\" AND alarmName != \"rule-a\" AND direction == \"10\" AND alarmStatus != \"processed\" AND alarmResults in [\"UNKNOWN\",\"OK\"]",
+      "desc": "在 200 响应码模板上叠加未处置条件，适合值班时快速定位有效告警。",
+      "tags": ["200", "未处置"],
+      "vars": [],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    },
+    {
+      "id": "alpha-high-risk-ip",
+      "title": "高危 + 指定资产",
+      "category": "自定义组合",
+      "code": "direction == \"10\" AND threatSeverity in [\"Medium\",\"High\"] AND destAddress == \"{{ip}}\" AND alarmName != \"rule-a\"",
+      "desc": "把常用排除逻辑与目标资产组合，适合应急响应时只看单台主机。",
+      "tags": ["高危", "资产"],
+      "vars": [{ "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }],
+      "source": "基于示例字段的组合",
+      "risk": "safe"
+    }
+  ]
+}

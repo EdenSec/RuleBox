@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "updated": "2026-10-22",
+  "groups": [
+    {
+      "id": "recon",
+      "name": "资产测绘",
+      "prompts": [
+        {
+          "id": "recon-subdomain",
+          "title": "查某域名全部子域",
+          "text": "帮我生成 FOFA 与 Hunter 语法：查询 example.com 下的全部子域名资产，并尽量排除 CDN 节点，说明每个字段的含义。"
+        },
+        {
+          "id": "recon-title",
+          "title": "按标题关键字找资产",
+          "text": "帮我生成 FOFA、Hunter、Quake 三种语法：查找网页标题中包含“后台管理”的资产，只保留 200 状态码。"
+        },
+        {
+          "id": "recon-icp",
+          "title": "按备案主体查资产",
+          "text": "帮我生成 Hunter 语法：查询备案主体名称包含“某某科技有限公司”的全部资产，并输出对应的 IP 与端口。"
+        },
+        {
+          "id": "recon-cert",
+          "title": "按证书组织查资产",
+          "text": "帮我生成 FOFA 与 Hunter 语法：通过证书主题中的组织名称定位同一主体下的资产。"
+        },
+        {
+          "id": "recon-icon",
+          "title": "按图标哈希找同源系统",
+          "text": "帮我生成 FOFA 与 Hunter 语法：用 favicon 图标哈希查找使用同一套系统的资产，并说明如何获取图标哈希。"
+        }
+      ]
+    },
+    {
+      "id": "exposure",
+      "name": "暴露面排查",
+      "prompts": [
+        {
+          "id": "exposure-unauth",
+          "title": "找未授权访问组件",
+          "text": "帮我生成 FOFA 语法：找出公网暴露的 Redis、Elasticsearch、MongoDB、Docker API、Kubernetes API，按协议与端口区分。"
+        },
+        {
+          "id": "exposure-actuator",
+          "title": "找 Spring Actuator 暴露",
+          "text": "帮我生成 FOFA 与 Hunter 语法：定位对外暴露 Spring Boot Actuator 的资产，重点关注 env、heapdump 端点。"
+        },
+        {
+          "id": "exposure-panel",
+          "title": "找登录后台入口",
+          "text": "帮我生成语法：定位常见运维面板（Jenkins、GitLab、Grafana、Zabbix、RabbitMQ）的登录入口，并给出判断依据。"
+        },
+        {
+          "id": "exposure-file",
+          "title": "找敏感文件泄露",
+          "text": "帮我生成 Google Hacking 与 FOFA 语法：排查 .env、.git/config、备份压缩包、Swagger 文档等敏感文件暴露。"
+        }
+      ]
+    },
+    {
+      "id": "soc",
+      "name": "告警与研判",
+      "prompts": [
+        {
+          "id": "soc-response-200",
+          "title": "查询响应码 200 的告警",
+          "text": "帮我生成 Alpha 态势感知查询语句：查询响应码为 200 的告警，同时排除 alarmName 为 rule-a、rule-b、rule-c 的记录，并排除目标地址 192.0.2.10。"
+        },
+        {
+          "id": "soc-high-severity",
+          "title": "查询中高危未处理告警",
+          "text": "帮我生成 Alpha 态势感知查询语句：查询方向为 10、威胁等级为 Medium 或 High、且 alarmStatus 不等于 processed 的告警。"
+        },
+        {
+          "id": "soc-ok-result",
+          "title": "查询结果为 OK 的攻击告警",
+          "text": "帮我生成 Alpha 态势感知查询语句：查询 alarmResults 为 OK 且方向为 10 的中高危告警，排除常见噪声告警名。"
+        },
+        {
+          "id": "soc-unknown",
+          "title": "查询结果未知的告警",
+          "text": "帮我生成 Alpha 态势感知查询语句：查询 alarmResults 为 UNKNOWN 或 OK、响应码 200、方向为 10 的告警，排除噪声告警名。"
+        },
+        {
+          "id": "soc-ip",
+          "title": "查询指定 IP 相关告警",
+          "text": "帮我生成 Alpha 态势感知查询语句：查询源地址或目的地址为 192.0.2.10 的全部告警，并按威胁等级降序排列。"
+        }
+      ]
+    },
+    {
+      "id": "payload",
+      "name": "Payload 定制",
+      "prompts": [
+        {
+          "id": "payload-sqli-bypass",
+          "title": "SQL 注入绕过 WAF",
+          "text": "目标使用 MySQL，存在单引号注入点但被 WAF 拦截 UNION SELECT。请给出 5 种可验证的绕过写法，并说明每种写法的原理与适用条件。"
+        },
+        {
+          "id": "payload-xss-context",
+          "title": "按上下文构造 XSS",
+          "text": "输入点位于 HTML 属性值内部（双引号包裹），尖括号被过滤。请给出可用的 XSS payload 及构造思路。"
+        },
+        {
+          "id": "payload-ssrf-params",
+          "title": "SSRF 常见参数与验证",
+          "text": "请列出 SSRF 常见的参数名、可用的协议与内网探测目标，并给出无回显时的验证方法。"
+        },
+        {
+          "id": "payload-upload-bypass",
+          "title": "文件上传绕过思路",
+          "text": "目标只允许上传 jpg/png，且会校验 Content-Type。请给出完整的绕过验证思路与对应测试步骤。"
+        }
+      ]
+    },
+    {
+      "id": "explain",
+      "name": "语法解释",
+      "prompts": [
+        {
+          "id": "explain-snippet",
+          "title": "解释这段语法",
+          "text": "请逐段解释下面这段查询语法的每个字段、运算符与逻辑关系，并指出可能的语法错误：\n"
+        },
+        {
+          "id": "explain-convert",
+          "title": "语法跨平台转换",
+          "text": "请把下面这段 FOFA 语法转换成 Hunter、Quake 与 ZoomEye 的等价写法，并说明字段映射差异：\n"
+        }
+      ]
+    }
+  ]
+}

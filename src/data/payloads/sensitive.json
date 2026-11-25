@@ -1,0 +1,162 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "敏感文件与信息泄露",
+  "categories": ["源码与配置", "版本控制", "环境与密钥", "备份与日志", "云与容器"],
+  "items": [
+    {
+      "id": "sensitive-git-config",
+      "title": ".git/config 泄露",
+      "category": "版本控制",
+      "code": "/.git/config",
+      "desc": "版本库目录暴露可导致源码泄露，先用该文件确认仓库存在。",
+      "tags": ["sensitive", "git", "source"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-git-head",
+      "title": ".git/HEAD 探测",
+      "category": "版本控制",
+      "code": "/.git/HEAD",
+      "desc": "返回 ref: refs/heads/main 说明存在 Git 仓库。",
+      "tags": ["sensitive", "git", "detect"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-svn",
+      "title": ".svn/entries",
+      "category": "版本控制",
+      "code": "/.svn/entries",
+      "desc": "SVN 元数据泄露同样可还原源码。",
+      "tags": ["sensitive", "svn"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-env",
+      "title": ".env 环境变量",
+      "category": "环境与密钥",
+      "code": "/.env",
+      "desc": "常包含数据库口令、云密钥、第三方 Token，属最高优先级排查项。",
+      "tags": ["sensitive", "env", "secret"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-config-files",
+      "title": "常见配置文件",
+      "category": "源码与配置",
+      "code": "/config.php /config.json /application.yml /application.properties /web.config /settings.py",
+      "desc": "逐个尝试，注意不同框架的默认配置位置。",
+      "tags": ["sensitive", "config", "checklist"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-spring-actuator",
+      "title": "Spring Actuator",
+      "category": "源码与配置",
+      "code": "/actuator/env",
+      "desc": "未授权时可读取环境变量与配置，/actuator/heapdump 可导出堆内存。",
+      "tags": ["sensitive", "spring", "actuator"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Spring Boot 官方文档"
+    },
+    {
+      "id": "sensitive-swagger",
+      "title": "Swagger 接口文档",
+      "category": "源码与配置",
+      "code": "/swagger-ui.html /v2/api-docs /v3/api-docs",
+      "desc": "接口文档暴露可快速梳理攻击面。",
+      "tags": ["sensitive", "swagger", "api"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Swagger 官方文档"
+    },
+    {
+      "id": "sensitive-backup",
+      "title": "备份文件",
+      "category": "备份与日志",
+      "code": "/www.zip /wwwroot.zip /backup.sql /db.sql /web.tar.gz",
+      "desc": "备份文件常包含完整源码与数据库，优先排查。",
+      "tags": ["sensitive", "backup"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-swap",
+      "title": "编辑器临时文件",
+      "category": "备份与日志",
+      "code": "/index.php.swp /index.php~ /index.php.bak",
+      "desc": "编辑器异常退出或备份习惯可能残留源码。",
+      "tags": ["sensitive", "backup", "editor"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-logs",
+      "title": "日志文件暴露",
+      "category": "备份与日志",
+      "code": "/logs/access.log /log/error.log /debug.log",
+      "desc": "日志可能包含接口路径、Token、内部 IP 等。",
+      "tags": ["sensitive", "log"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-ds-store",
+      "title": "macOS 目录索引",
+      "category": "备份与日志",
+      "code": "/.DS_Store",
+      "desc": "可还原目录结构，辅助发现隐藏路径。",
+      "tags": ["sensitive", "ds_store"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    },
+    {
+      "id": "sensitive-kubernetes",
+      "title": "K8s 配置与令牌",
+      "category": "云与容器",
+      "code": "/var/run/secrets/kubernetes.io/serviceaccount/token",
+      "desc": "容器内常见挂载路径，拿到令牌可进一步访问 API Server。",
+      "tags": ["sensitive", "kubernetes", "cloud"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Kubernetes 官方文档"
+    },
+    {
+      "id": "sensitive-docker-sock",
+      "title": "Docker Socket",
+      "category": "云与容器",
+      "code": "/var/run/docker.sock",
+      "desc": "可读写该套接字等同于宿主机 root 权限，属于高危配置。",
+      "tags": ["sensitive", "docker", "privilege"],
+      "vars": [],
+      "risk": "danger",
+      "source": "Docker 官方安全文档"
+    },
+    {
+      "id": "sensitive-phpinfo",
+      "title": "phpinfo 信息泄露",
+      "category": "环境与密钥",
+      "code": "/phpinfo.php /info.php /test.php",
+      "desc": "暴露绝对路径、扩展、环境变量，为后续利用提供信息。",
+      "tags": ["sensitive", "php", "info"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    }
+  ]
+}

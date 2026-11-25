@@ -1,0 +1,1321 @@
+{
+  "platform": "fofa",
+  "version": 1,
+  "categories": ["运算符与匹配", "基础字段", "标记与分类", "协议与Banner", "网站内容", "证书与指纹", "归属与地理", "时间与变更", "独立IP筛选", "组合查询", "攻防场景"],
+  "items": [
+    {
+      "id": "fofa-op-plain",
+      "title": "全文关键词检索",
+      "category": "运算符与匹配",
+      "code": "\"{{keyword}}\"",
+      "desc": "直接输入查询语句（不带字段），将从标题、html 内容、http 头信息、url 字段中搜索。",
+      "tags": ["运算符", "全文检索"],
+      "vars": [{ "name": "keyword", "label": "关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-wildcard",
+      "title": "通配符模糊匹配（*=）",
+      "category": "运算符与匹配",
+      "code": "title*=\"{{pattern}}\"",
+      "desc": "*= 为模糊匹配，值中可使用 * 或 ? 作为通配符，适合只记得部分关键词的场景。",
+      "tags": ["运算符", "通配符"],
+      "vars": [{ "name": "pattern", "label": "通配符表达式", "placeholder": "j?va*", "example": "j?va*" }],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-priority",
+      "title": "括号优先级分组",
+      "category": "运算符与匹配",
+      "code": "(title=\"{{k1}}\" || title=\"{{k2}}\") && country=\"CN\"",
+      "desc": "括号内容优先级最高；查询表达式有多个与或关系时，尽量在外面用（）包含起来，避免优先级歧义。",
+      "tags": ["运算符", "优先级"],
+      "vars": [
+        { "name": "k1", "label": "关键词一", "placeholder": "管理后台", "example": "管理后台" },
+        { "name": "k2", "label": "关键词二", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-field-null",
+      "title": "查询字段不存在或为空",
+      "category": "运算符与匹配",
+      "code": "{{field}}=\"\"",
+      "desc": "使用 =\"\" 时，可查询不存在该字段或者字段值为空的资产，常用于排查缺失标题、缺失备案的资产。",
+      "tags": ["运算符", "空值"],
+      "vars": [{ "name": "field", "label": "字段名", "placeholder": "title", "example": "title" }],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-field-empty",
+      "title": "查询字段存在且为空",
+      "category": "运算符与匹配",
+      "code": "{{field}}==\"\"",
+      "desc": "使用 ==\"\" 时，可查询字段存在且值为空的资产，与 =\"\"（不存在或为空）语义不同。",
+      "tags": ["运算符", "空值"],
+      "vars": [{ "name": "field", "label": "字段名", "placeholder": "title", "example": "title" }],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-field-notnull",
+      "title": "查询字段值不为空",
+      "category": "运算符与匹配",
+      "code": "{{field}}!=\"\"",
+      "desc": "使用 !=\"\" 时，可查询值不为空的情况，如 title!=\"\" 表示标题非空的资产。",
+      "tags": ["运算符", "空值"],
+      "vars": [{ "name": "field", "label": "字段名", "placeholder": "title", "example": "title" }],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-not-match",
+      "title": "不匹配（!=）",
+      "category": "运算符与匹配",
+      "code": "{{field}}!=\"{{value}}\"",
+      "desc": "!= 为不匹配，查询字段值不等于指定值的资产，常用于剔除登录页、错误页等干扰项。",
+      "tags": ["运算符", "排除"],
+      "vars": [
+        { "name": "field", "label": "字段名", "placeholder": "title", "example": "title" },
+        { "name": "value", "label": "排除值", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-op-exact-match",
+      "title": "完全匹配（==）",
+      "category": "运算符与匹配",
+      "code": "{{field}}==\"{{value}}\"",
+      "desc": "单个 = 为包含匹配；== 为完全匹配（字段整值等于指定值），用于排除仅包含该字符串的无关资产。",
+      "tags": ["运算符", "精确匹配"],
+      "vars": [
+        { "name": "field", "label": "字段名", "placeholder": "title", "example": "title" },
+        { "name": "value", "label": "匹配值", "placeholder": "后台管理", "example": "后台管理" }
+      ],
+      "source": "FOFA 官方查询语法",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-domain",
+      "title": "根域名资产",
+      "category": "基础字段",
+      "code": "domain=\"{{domain}}\"",
+      "desc": "查询根域名包含指定值的资产，适合从主域名快速扩展到全部子域与旁站。",
+      "tags": ["domain", "资产发现"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-domain-exact",
+      "title": "根域名精确匹配",
+      "category": "基础字段",
+      "code": "domain==\"{{domain}}\"",
+      "desc": "使用 == 完全匹配根域名，排除仅包含该字符串的无关资产。",
+      "tags": ["domain", "精确匹配"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-host",
+      "title": "主机名 / 子域名",
+      "category": "基础字段",
+      "code": "host=\"{{host}}\"",
+      "desc": "host 字段覆盖子域名，适合定位某一业务子域，如 oa、vpn、mail。",
+      "tags": ["host", "子域名"],
+      "vars": [{ "name": "host", "label": "主机名关键词", "placeholder": "oa.example.com", "example": "oa.example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip",
+      "title": "指定 IP 资产",
+      "category": "基础字段",
+      "code": "ip=\"{{ip}}\"",
+      "desc": "通过单一 IPv4 地址进行查询，可看到该 IP 上被测绘到的全部服务与端口。",
+      "tags": ["ip"],
+      "vars": [{ "name": "ip", "label": "IP 地址", "placeholder": "192.0.2.1", "example": "192.0.2.1" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cidr",
+      "title": "IPv4 C 段资产",
+      "category": "基础字段",
+      "code": "ip=\"{{cidr}}\"",
+      "desc": "通过 IPv4 C 段（CIDR）进行查询，适合整段排查目标网段的暴露面。",
+      "tags": ["ip", "cidr"],
+      "vars": [{ "name": "cidr", "label": "IP 段", "placeholder": "192.0.2.0/24", "example": "192.0.2.0/24" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ipv6",
+      "title": "IPv6 地址资产",
+      "category": "基础字段",
+      "code": "ip=\"{{ipv6}}\"",
+      "desc": "通过单一 IPv6 地址进行查询；如需只看 IPv6 资产可改用 is_ipv6=true 筛选。",
+      "tags": ["ip", "ipv6"],
+      "vars": [{ "name": "ipv6", "label": "IPv6 地址", "placeholder": "2001:db8::1", "example": "2001:db8::1" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-port",
+      "title": "指定端口",
+      "category": "基础字段",
+      "code": "port=\"{{port}}\"",
+      "desc": "通过端口号进行查询，常用于定位管理后台、数据库与中间件。",
+      "tags": ["port"],
+      "vars": [{ "name": "port", "label": "端口", "placeholder": "8080", "example": "8080" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-os",
+      "title": "操作系统",
+      "category": "基础字段",
+      "code": "os=\"{{os}}\"",
+      "desc": "通过操作系统进行查询，常见值 centos、Windows、Linux。",
+      "tags": ["os"],
+      "vars": [{ "name": "os", "label": "操作系统", "placeholder": "Windows", "example": "centos" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-server",
+      "title": "服务器类型",
+      "category": "基础字段",
+      "code": "server=\"{{server}}\"",
+      "desc": "通过服务器进行查询，即 Server 响应头，如 Microsoft-IIS/10、nginx。",
+      "tags": ["server"],
+      "vars": [{ "name": "server", "label": "服务器", "placeholder": "nginx", "example": "Microsoft-IIS/10" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-asn",
+      "title": "按 ASN 筛选",
+      "category": "基础字段",
+      "code": "asn=\"{{asn}}\"",
+      "desc": "通过自治系统号进行搜索，定位运营商或云厂商网段内的资产。",
+      "tags": ["asn"],
+      "vars": [{ "name": "asn", "label": "ASN", "placeholder": "64512", "example": "64512" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-org",
+      "title": "按组织筛选",
+      "category": "基础字段",
+      "code": "org=\"{{org}}\"",
+      "desc": "通过所属组织进行查询，适合定位企业专线与自建机房资产。",
+      "tags": ["org", "归属"],
+      "vars": [{ "name": "org", "label": "组织名称", "placeholder": "Example Corp", "example": "Example Corp" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-domain",
+      "title": "拥有域名的资产",
+      "category": "基础字段",
+      "code": "is_domain=true",
+      "desc": "筛选拥有域名的资产，可与 port、country 组合快速圈定域名型业务。",
+      "tags": ["is_domain", "筛选"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-domain-false",
+      "title": "没有域名的资产",
+      "category": "基础字段",
+      "code": "is_domain=false",
+      "desc": "筛选没有域名的资产，多为纯 IP 暴露的服务（数据库、中间件、物联网设备）。",
+      "tags": ["is_domain", "筛选"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-ipv6",
+      "title": "IPv6 资产",
+      "category": "基础字段",
+      "code": "is_ipv6=true",
+      "desc": "筛选是 IPv6 的资产，常用于梳理目标的双栈暴露面。",
+      "tags": ["is_ipv6", "筛选"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-ipv6-false",
+      "title": "IPv4 资产",
+      "category": "基础字段",
+      "code": "is_ipv6=false",
+      "desc": "筛选是 IPv4 的资产。",
+      "tags": ["is_ipv6", "筛选"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-app",
+      "title": "应用 / 组件",
+      "category": "标记与分类",
+      "code": "app=\"{{app}}\"",
+      "desc": "通过 FOFA 整理的规则进行查询，如 Microsoft-Exchange、Apache-Shiro；建站软件可参考官方组件列表。",
+      "tags": ["app", "指纹"],
+      "vars": [{ "name": "app", "label": "应用名称", "placeholder": "Apache Shiro", "example": "Microsoft-Exchange" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-fid",
+      "title": "按资产 ID 回溯",
+      "category": "标记与分类",
+      "code": "fid=\"{{fid}}\"",
+      "desc": "通过 FOFA 聚合的站点指纹进行查询，可精确定位同指纹资产，便于复查与留存证据。",
+      "tags": ["fid", "指纹"],
+      "vars": [{ "name": "fid", "label": "资产 FID", "placeholder": "a1b2c3d4", "example": "a1b2c3d4e5f6g7h8==" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "safe"
+    },
+    {
+      "id": "fofa-fidv2",
+      "title": "资产 ID（fidv2）",
+      "category": "标记与分类",
+      "code": "fidv2=\"{{fidv2}}\"",
+      "desc": "fidv2 为 FOFA 新一代站点指纹，与 fid 用法一致，可用于精确回溯同指纹资产。",
+      "tags": ["fidv2", "指纹"],
+      "vars": [{ "name": "fidv2", "label": "资产 FIDv2", "placeholder": "a1b2c3d4e5f6g7h8", "example": "a1b2c3d4e5f6g7h8" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "safe"
+    },
+    {
+      "id": "fofa-product",
+      "title": "产品名",
+      "category": "标记与分类",
+      "code": "product=\"{{product}}\"",
+      "desc": "通过 FOFA 标记的产品名进行查询，如 NGINX、MySQL，偏产品维度识别。",
+      "tags": ["product", "指纹"],
+      "vars": [{ "name": "product", "label": "产品名", "placeholder": "NGINX", "example": "NGINX" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-product-version",
+      "title": "产品名 + 版本号",
+      "category": "标记与分类",
+      "code": "product=\"{{product}}\" && product.version=\"{{version}}\"",
+      "desc": "通过 FOFA 标记的产品名与版本号进行精确查询（商业版及以上可用），适合锁定存在已知漏洞的版本。",
+      "tags": ["product.version", "版本"],
+      "vars": [
+        { "name": "product", "label": "产品名", "placeholder": "NGINX", "example": "Roundcube-Webmail" },
+        { "name": "version", "label": "版本号", "placeholder": "1.6.10", "example": "1.6.10" }
+      ],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-category",
+      "title": "资产分类",
+      "category": "标记与分类",
+      "code": "category=\"{{category}}\"",
+      "desc": "通过 FOFA 标记的分类进行查询，如“服务”“数据库”（个人版及以上可用）。",
+      "tags": ["category", "分类"],
+      "vars": [{ "name": "category", "label": "分类", "placeholder": "服务", "example": "服务" }],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-type-service",
+      "title": "协议资产",
+      "category": "标记与分类",
+      "code": "type=\"service\"",
+      "desc": "筛选协议资产（非网站类），可与 protocol、banner 组合定位 SSH、FTP、RDP 等非 Web 服务。",
+      "tags": ["type", "协议资产"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-subdomain",
+      "title": "网站类（子域名）资产",
+      "category": "标记与分类",
+      "code": "type=\"subdomain\"",
+      "desc": "筛选服务（网站类）资产，可再与 domain=\"example.com\" 组合，快速梳理主域下的子域清单。",
+      "tags": ["type", "子域名"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cloud-name",
+      "title": "云服务商",
+      "category": "标记与分类",
+      "code": "cloud_name=\"{{cloud}}\"",
+      "desc": "通过云服务商名称进行查询，用于圈定目标部署在云上的资产。",
+      "tags": ["cloud_name", "云资产"],
+      "vars": [{ "name": "cloud", "label": "云服务商", "placeholder": "Example-Cloud", "example": "Example-Cloud" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-cloud",
+      "title": "云服务资产",
+      "category": "标记与分类",
+      "code": "is_cloud=true",
+      "desc": "筛选是云服务的资产。",
+      "tags": ["is_cloud", "云资产"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-cloud-false",
+      "title": "非云服务资产",
+      "category": "标记与分类",
+      "code": "is_cloud=false",
+      "desc": "筛选不是云服务的资产，更接近自建机房与物理机。",
+      "tags": ["is_cloud", "云资产"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-fraud",
+      "title": "仿冒垃圾站群",
+      "category": "标记与分类",
+      "code": "is_fraud=true",
+      "desc": "筛选是仿冒垃圾站群的资产（专业版及以上可用），用于仿冒站点与黑产排查；默认结果已筛除仿冒站。",
+      "tags": ["is_fraud", "仿冒"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（专业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-fraud-false",
+      "title": "非仿冒垃圾站群",
+      "category": "标记与分类",
+      "code": "is_fraud=false",
+      "desc": "筛选不是仿冒垃圾站群的资产（FOFA 默认已筛选，此写法用于显式声明排除条件）。",
+      "tags": ["is_fraud", "仿冒"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（已默认筛选）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-honeypot",
+      "title": "蜜罐资产",
+      "category": "标记与分类",
+      "code": "is_honeypot=true",
+      "desc": "筛选是蜜罐的资产（专业版及以上可用），攻防演练中用于识别并排除蜜罐干扰；默认结果已筛除蜜罐。",
+      "tags": ["is_honeypot", "蜜罐"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（专业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-is-honeypot-false",
+      "title": "非蜜罐资产",
+      "category": "标记与分类",
+      "code": "is_honeypot=false",
+      "desc": "筛选不是蜜罐的资产（FOFA 默认已筛选，此写法用于显式声明排除条件）。",
+      "tags": ["is_honeypot", "蜜罐"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（已默认筛选）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-protocol",
+      "title": "指定协议",
+      "category": "协议与Banner",
+      "code": "protocol=\"{{protocol}}\"",
+      "desc": "通过协议名称进行查询，如 http、quic、ftp、redis；属协议类（type=service）字段，可再叠加 type=\"service\" 收紧范围。",
+      "tags": ["protocol"],
+      "vars": [{ "name": "protocol", "label": "协议", "placeholder": "https", "example": "quic" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-base-protocol-udp",
+      "title": "UDP 传输层资产",
+      "category": "协议与Banner",
+      "code": "base_protocol=\"udp\"",
+      "desc": "查询传输层为 UDP 协议的资产，可配合 protocol 定位 QUIC、DNS 等 UDP 业务。",
+      "tags": ["base_protocol", "udp"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-base-protocol-tcp",
+      "title": "TCP 传输层资产",
+      "category": "协议与Banner",
+      "code": "base_protocol=\"tcp\"",
+      "desc": "查询传输层为 TCP 协议的资产。",
+      "tags": ["base_protocol", "tcp"],
+      "vars": [],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-banner",
+      "title": "协议返回信息（Banner）",
+      "category": "协议与Banner",
+      "code": "banner=\"{{keyword}}\"",
+      "desc": "通过协议返回信息进行查询（注册用户及以上可用），适合 SSH、FTP、RDP 等非 HTTP 服务的指纹定位。",
+      "tags": ["banner", "指纹"],
+      "vars": [{ "name": "keyword", "label": "Banner 关键词", "placeholder": "OpenSSH", "example": "OpenSSH_7.4" }],
+      "source": "FOFA 官方字段文档（注册用户及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-banner-hash",
+      "title": "Banner 哈希",
+      "category": "协议与Banner",
+      "code": "banner_hash=\"{{hash}}\"",
+      "desc": "通过协议响应体计算的哈希值进行查询（个人版及以上可用），比关键词更精确地定位同版本服务。",
+      "tags": ["banner_hash", "指纹"],
+      "vars": [{ "name": "hash", "label": "Banner 哈希", "placeholder": "7330105010150477363", "example": "7330105010150477363" }],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-banner-fid",
+      "title": "Banner 指纹值",
+      "category": "协议与Banner",
+      "code": "banner_fid=\"{{fid}}\"",
+      "desc": "通过协议返回信息结构计算的指纹值进行查询（个人版及以上可用）。",
+      "tags": ["banner_fid", "指纹"],
+      "vars": [{ "name": "fid", "label": "Banner 指纹", "placeholder": "zRpqmn0FXQRjZpH8MjMX55zpMy9SgsW8", "example": "zRpqmn0FXQRjZpH8MjMX55zpMy9SgsW8" }],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-title",
+      "title": "标题关键词",
+      "category": "网站内容",
+      "code": "title=\"{{keyword}}\"",
+      "desc": "在 HTTP 响应标题中搜索关键词，是定位后台、OA、VPN 最常用的入口。",
+      "tags": ["title", "后台"],
+      "vars": [{ "name": "keyword", "label": "标题关键词", "placeholder": "后台管理", "example": "后台管理" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-body",
+      "title": "正文关键词",
+      "category": "网站内容",
+      "code": "body=\"{{keyword}}\"",
+      "desc": "在 HTML 正文中搜索特征字符串（注册用户及以上可用），适合指纹确认与敏感信息定位。",
+      "tags": ["body", "指纹"],
+      "vars": [{ "name": "keyword", "label": "正文关键词", "placeholder": "管理后台", "example": "管理后台" }],
+      "source": "FOFA 官方字段文档（注册用户及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-header",
+      "title": "响应头关键词",
+      "category": "网站内容",
+      "code": "header=\"{{keyword}}\"",
+      "desc": "在 HTTP 响应头中搜索特征（注册用户及以上可用），用于识别框架、中间件与自定义头。",
+      "tags": ["header", "指纹"],
+      "vars": [{ "name": "keyword", "label": "响应头关键词", "placeholder": "thinkphp", "example": "elastic" }],
+      "source": "FOFA 官方字段文档（注册用户及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-header-hash",
+      "title": "响应头哈希",
+      "category": "网站内容",
+      "code": "header_hash=\"{{hash}}\"",
+      "desc": "通过 HTTP/HTTPS 响应头计算的哈希值进行查询（个人版及以上可用），批量定位同指纹响应头的资产。",
+      "tags": ["header_hash", "指纹"],
+      "vars": [{ "name": "hash", "label": "响应头哈希", "placeholder": "1234567890", "example": "1234567890" }],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-body-hash",
+      "title": "正文哈希",
+      "category": "网站内容",
+      "code": "body_hash=\"{{hash}}\"",
+      "desc": "通过 HTML 正文计算的哈希值进行查询（个人版及以上可用），比 body 关键词更精确。",
+      "tags": ["body_hash", "指纹"],
+      "vars": [{ "name": "hash", "label": "正文哈希", "placeholder": "-123456789", "example": "-123456789" }],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-js-name",
+      "title": "引用的 JS 文件名",
+      "category": "网站内容",
+      "code": "js_name=\"{{js}}\"",
+      "desc": "通过 HTML 正文包含的 JS 进行查询，适合找同源或同厂商产品。",
+      "tags": ["js_name", "同源"],
+      "vars": [{ "name": "js", "label": "JS 文件名", "placeholder": "jquery.js", "example": "js/jquery.js" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-js-md5",
+      "title": "JS 源码 MD5",
+      "category": "网站内容",
+      "code": "js_md5=\"{{md5}}\"",
+      "desc": "通过 JS 源码 MD5 进行查询，用于定位使用同一份前端代码的资产（同源站点发现）。",
+      "tags": ["js_md5", "同源"],
+      "vars": [{ "name": "md5", "label": "JS MD5", "placeholder": "82ac3f14327a8b7ba49baa208d4eaa15", "example": "82ac3f14327a8b7ba49baa208d4eaa15" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cname",
+      "title": "CNAME 记录",
+      "category": "网站内容",
+      "code": "cname=\"{{cname}}\"",
+      "desc": "通过别名记录进行查询，定位托管在同一云服务或 SaaS 平台的资产。",
+      "tags": ["cname", "云资产"],
+      "vars": [{ "name": "cname", "label": "CNAME", "placeholder": "example.cdn.com", "example": "cdn.example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cname-domain",
+      "title": "CNAME 解析主域",
+      "category": "网站内容",
+      "code": "cname_domain=\"{{domain}}\"",
+      "desc": "通过别名记录解析的主域名进行查询，发现托管在同一 SaaS 平台的资产。",
+      "tags": ["cname_domain", "云资产"],
+      "vars": [{ "name": "domain", "label": "主域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-icon-hash",
+      "title": "favicon 图标哈希",
+      "category": "网站内容",
+      "code": "icon_hash=\"{{hash}}\"",
+      "desc": "通过网站图标的哈希值进行查询，定位同一套系统，常用于找同源资产与影子资产。",
+      "tags": ["icon_hash", "同源"],
+      "vars": [{ "name": "hash", "label": "图标哈希", "placeholder": "-123456789", "example": "-123456789" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-status",
+      "title": "HTTP 状态码",
+      "category": "网站内容",
+      "code": "status_code=\"{{status}}\"",
+      "desc": "筛选服务状态为指定状态码的服务（网站）资产，200 找存活业务，401/403 找受保护入口。",
+      "tags": ["status_code", "存活"],
+      "vars": [{ "name": "status", "label": "状态码", "placeholder": "200", "example": "200" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-icp",
+      "title": "ICP 备案号",
+      "category": "网站内容",
+      "code": "icp=\"{{icp}}\"",
+      "desc": "通过 HTML 正文包含的 ICP 备案号进行查询，定位同一主体的资产，适合攻防演练中的归属扩展。",
+      "tags": ["icp", "归属"],
+      "vars": [{ "name": "icp", "label": "备案号", "placeholder": "京ICP备00000000号", "example": "京ICP备00000000号" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-sdk-hash",
+      "title": "第三方 SDK 哈希",
+      "category": "网站内容",
+      "code": "sdk_hash=\"{{hash}}\"",
+      "desc": "通过网站嵌入的第三方代码计算的哈希值进行查询（商业版及以上可用），如统计、客服 SDK 指纹。",
+      "tags": ["sdk_hash", "指纹"],
+      "vars": [{ "name": "hash", "label": "SDK 哈希", "placeholder": "AbCdEfGhIjKlMnOpQrStUvWxYz012345", "example": "AbCdEfGhIjKlMnOpQrStUvWxYz012345" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert",
+      "title": "证书内容",
+      "category": "证书与指纹",
+      "code": "cert=\"{{keyword}}\"",
+      "desc": "通过证书进行模糊查询（注册用户及以上可用），证书中的域名与组织名是发现隐藏资产的高价值入口。",
+      "tags": ["cert", "证书"],
+      "vars": [{ "name": "keyword", "label": "证书关键词", "placeholder": "example", "example": "example" }],
+      "source": "FOFA 官方字段文档（注册用户及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-subject",
+      "title": "证书主题",
+      "category": "证书与指纹",
+      "code": "cert.subject=\"{{keyword}}\"",
+      "desc": "通过证书的持有者进行查询，主题常包含企业名或域名，是发现隐藏资产的高价值入口。",
+      "tags": ["cert", "证书"],
+      "vars": [{ "name": "keyword", "label": "证书主题关键词", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-issuer",
+      "title": "证书颁发者",
+      "category": "证书与指纹",
+      "code": "cert.issuer=\"{{issuer}}\"",
+      "desc": "通过证书的颁发者进行查询，可用于发现自签证书或特定 CA 签发的资产。",
+      "tags": ["cert", "issuer"],
+      "vars": [{ "name": "issuer", "label": "颁发者", "placeholder": "Let's Encrypt", "example": "Let's Encrypt" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-subject-org",
+      "title": "证书持有者组织",
+      "category": "证书与指纹",
+      "code": "cert.subject.org=\"{{org}}\"",
+      "desc": "通过证书持有者的组织（O 字段）进行查询，可一次拉出企业全部证书资产。",
+      "tags": ["cert", "组织"],
+      "vars": [{ "name": "org", "label": "持有者组织", "placeholder": "Example Corp", "example": "Example Corp" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-subject-cn",
+      "title": "证书持有者通用名称",
+      "category": "证书与指纹",
+      "code": "cert.subject.cn=\"{{cn}}\"",
+      "desc": "通过证书主题的通用名称（CN）进行查询，常为域名或主机名，如 example.com。",
+      "tags": ["cert", "cn"],
+      "vars": [{ "name": "cn", "label": "持有者 CN", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-issuer-org",
+      "title": "证书颁发者组织",
+      "category": "证书与指纹",
+      "code": "cert.issuer.org=\"{{org}}\"",
+      "desc": "通过证书颁发者的组织进行查询，如 Let's Encrypt。",
+      "tags": ["cert", "组织"],
+      "vars": [{ "name": "org", "label": "颁发者组织", "placeholder": "Let's Encrypt", "example": "Let's Encrypt" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-issuer-cn",
+      "title": "证书颁发者通用名称",
+      "category": "证书与指纹",
+      "code": "cert.issuer.cn=\"{{cn}}\"",
+      "desc": "通过证书颁发者的通用名称进行查询，如 Example CA。",
+      "tags": ["cert", "cn"],
+      "vars": [{ "name": "cn", "label": "颁发者 CN", "placeholder": "Example CA", "example": "Example CA" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-domain",
+      "title": "证书持有者根域名",
+      "category": "证书与指纹",
+      "code": "cert.domain=\"{{domain}}\"",
+      "desc": "通过证书持有者的根域名进行查询，发现主域下的全部证书资产。",
+      "tags": ["cert", "域名"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-is-equal",
+      "title": "颁发者与持有者相同",
+      "category": "证书与指纹",
+      "code": "cert.is_equal=true",
+      "desc": "筛选证书颁发者和持有者匹配的资产（个人版及以上可用），自签证书排查常用。",
+      "tags": ["cert", "自签"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-is-equal-false",
+      "title": "颁发者与持有者不相同",
+      "category": "证书与指纹",
+      "code": "cert.is_equal=false",
+      "desc": "筛选证书颁发者和持有者不匹配的资产（个人版及以上可用），可排除自签证书干扰。",
+      "tags": ["cert", "自签"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-valid",
+      "title": "证书有效资产",
+      "category": "证书与指纹",
+      "code": "cert.is_valid=true",
+      "desc": "筛选证书是有效证书的资产（个人版及以上可用），排除过期与自签干扰；可再叠加 domain=\"example.com\" 限定范围。",
+      "tags": ["cert", "https"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-invalid",
+      "title": "证书无效资产",
+      "category": "证书与指纹",
+      "code": "cert.is_valid=false",
+      "desc": "筛选证书是无效证书的资产（个人版及以上可用），常对应过期、自签或链路不完整的 HTTPS 服务。",
+      "tags": ["cert", "https"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-is-match",
+      "title": "证书与域名匹配",
+      "category": "证书与指纹",
+      "code": "cert.is_match=true",
+      "desc": "筛选证书和域名匹配的资产（个人版及以上可用），排除证书与站点不一致的异常资产。",
+      "tags": ["cert", "匹配"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-is-match-false",
+      "title": "证书与域名不匹配",
+      "category": "证书与指纹",
+      "code": "cert.is_match=false",
+      "desc": "筛选证书和域名不匹配的资产（个人版及以上可用），常见于证书错配、默认证书与共享 IP 站点。",
+      "tags": ["cert", "匹配"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-is-expired",
+      "title": "证书已过期",
+      "category": "证书与指纹",
+      "code": "cert.is_expired=true",
+      "desc": "筛选证书已过期的资产（个人版及以上可用），过期证书常伴随遗留系统与失修业务。",
+      "tags": ["cert", "过期"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-not-expired",
+      "title": "证书未过期",
+      "category": "证书与指纹",
+      "code": "cert.is_expired=false",
+      "desc": "筛选证书未过期的资产（个人版及以上可用），用于聚焦仍在正常维护的 HTTPS 站点。",
+      "tags": ["cert", "过期"],
+      "vars": [],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-sn",
+      "title": "证书序列号",
+      "category": "证书与指纹",
+      "code": "cert.sn=\"{{sn}}\"",
+      "desc": "通过证书序列号进行查询，用于追踪特定证书的部署与扩散情况。",
+      "tags": ["cert", "序列号"],
+      "vars": [
+        { "name": "sn", "label": "序列号", "placeholder": "000000000000000000000000000000000000000000", "example": "000000000000000000000000000000000000000000" }
+      ],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-not-after-after",
+      "title": "到期日晚于指定日期",
+      "category": "证书与指纹",
+      "code": "cert.not_after.after=\"{{date}}\"",
+      "desc": "筛选证书到期日在指定日期之后的资产。",
+      "tags": ["cert", "到期时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
+      "source": "FOFA 证书时间字段（可用性视套餐而定）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-not-after-before",
+      "title": "到期日早于指定日期",
+      "category": "证书与指纹",
+      "code": "cert.not_after.before=\"{{date}}\"",
+      "desc": "筛选证书到期日在指定日期之前的资产，用于发现已过期或即将到期的站点。",
+      "tags": ["cert", "到期时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
+      "source": "FOFA 证书时间字段（可用性视套餐而定）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-not-before-after",
+      "title": "生效日晚于指定日期",
+      "category": "证书与指纹",
+      "code": "cert.not_before.after=\"{{date}}\"",
+      "desc": "筛选证书生效日在指定日期之后的资产，用于发现新上线业务。",
+      "tags": ["cert", "生效时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
+      "source": "FOFA 证书时间字段（可用性视套餐而定）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-cert-not-before-before",
+      "title": "生效日早于指定日期",
+      "category": "证书与指纹",
+      "code": "cert.not_before.before=\"{{date}}\"",
+      "desc": "筛选证书生效日在指定日期之前的资产。",
+      "tags": ["cert", "生效时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
+      "source": "FOFA 证书时间字段（可用性视套餐而定）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-jarm",
+      "title": "JARM TLS 指纹",
+      "category": "证书与指纹",
+      "code": "jarm=\"{{jarm}}\"",
+      "desc": "通过 JARM 指纹进行查询，可用于识别同一类 TLS 服务端实现，辅助发现关联资产。",
+      "tags": ["jarm", "指纹"],
+      "vars": [
+        { "name": "jarm", "label": "JARM 指纹", "placeholder": "29d29d15d29d29d21c...", "example": "2ad2ad0002ad2ad22c2ad2ad2ad2ad2eac92ec34bcc0cf7520e97547f83e81" }
+      ],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-tls-version",
+      "title": "TLS 协议版本",
+      "category": "证书与指纹",
+      "code": "tls.version=\"{{version}}\"",
+      "desc": "通过 TLS 的协议版本进行查询，如 TLS 1.3、TLS 1.2，用于梳理弱协议暴露面。",
+      "tags": ["tls.version", "协议"],
+      "vars": [{ "name": "version", "label": "TLS 版本", "placeholder": "TLS 1.3", "example": "TLS 1.3" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-tls-ja3s",
+      "title": "TLS ja3s 指纹",
+      "category": "证书与指纹",
+      "code": "tls.ja3s=\"{{ja3s}}\"",
+      "desc": "通过 TLS 的 ja3s 指纹进行查询，识别同一类 TLS 服务端实现。",
+      "tags": ["tls.ja3s", "指纹"],
+      "vars": [{ "name": "ja3s", "label": "ja3s 指纹", "placeholder": "15af977ce25de452b96affa2addb1036", "example": "15af977ce25de452b96affa2addb1036" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-country",
+      "title": "按国家筛选",
+      "category": "归属与地理",
+      "code": "country=\"{{country}}\"",
+      "desc": "通过国家的简称代码或中文名称进行查询，如 CN、中国。",
+      "tags": ["country"],
+      "vars": [{ "name": "country", "label": "国家", "placeholder": "CN", "example": "CN" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-region",
+      "title": "按省份筛选",
+      "category": "归属与地理",
+      "code": "region=\"{{region}}\"",
+      "desc": "通过省份/地区英文名称或中文名称进行查询（中文仅支持中国地区），如 Zhejiang、浙江。",
+      "tags": ["region"],
+      "vars": [{ "name": "region", "label": "省份", "placeholder": "Zhejiang", "example": "Zhejiang" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-city",
+      "title": "按城市筛选",
+      "category": "归属与地理",
+      "code": "city=\"{{city}}\"",
+      "desc": "通过城市英文名称进行查询，如 Hangzhou，常与 org、domain 组合缩小范围。",
+      "tags": ["city"],
+      "vars": [{ "name": "city", "label": "城市", "placeholder": "Hangzhou", "example": "Hangzhou" }],
+      "source": "FOFA 官方字段文档",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-after",
+      "title": "指定日期后更新",
+      "category": "时间与变更",
+      "code": "domain=\"{{domain}}\" && after=\"{{date}}\"",
+      "desc": "筛选某一时间之后有更新的资产（个人版及以上可用），适合跟踪新上线业务。",
+      "tags": ["after", "时间"],
+      "vars": [
+        { "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "date", "label": "起始日期", "placeholder": "2026-01-01", "example": "2023-01-01" }
+      ],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-before",
+      "title": "指定日期前更新",
+      "category": "时间与变更",
+      "code": "domain=\"{{domain}}\" && before=\"{{date}}\"",
+      "desc": "筛选某一时间之前有更新的资产（个人版及以上可用），用于对比新旧变化、发现遗留系统。",
+      "tags": ["before", "时间"],
+      "vars": [
+        { "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "date", "label": "截止日期", "placeholder": "2025-01-01", "example": "2023-12-01" }
+      ],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-after-before",
+      "title": "时间区间内更新",
+      "category": "时间与变更",
+      "code": "after=\"{{start}}\" && before=\"{{end}}\"",
+      "desc": "筛选某一时间区间有更新的资产（个人版及以上可用），用于对比窗口期内的资产变化。",
+      "tags": ["after", "before", "时间区间"],
+      "vars": [
+        { "name": "start", "label": "起始日期", "placeholder": "2026-01-01", "example": "2023-01-01" },
+        { "name": "end", "label": "截止日期", "placeholder": "2026-12-01", "example": "2023-12-01" }
+      ],
+      "source": "FOFA 官方字段文档（个人版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-filter",
+      "title": "同源 IP 多特征匹配",
+      "category": "独立IP筛选",
+      "code": "ip_filter(banner=\"{{banner}}\") && ip_filter(icon_hash=\"{{hash}}\")",
+      "desc": "独立 IP 语法（商业版及以上可用）：同一 IP 上同时存在多类资产特征时命中，适合精准定位复合型靶标。",
+      "tags": ["ip_filter", "同源IP"],
+      "vars": [
+        { "name": "banner", "label": "Banner 特征", "placeholder": "SSH-2.0-OpenSSH_6.7p2", "example": "SSH-2.0-OpenSSH_6.7p2" },
+        { "name": "hash", "label": "图标哈希", "placeholder": "-123456789", "example": "-123456789" }
+      ],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-exclude",
+      "title": "同源 IP 特征排除",
+      "category": "独立IP筛选",
+      "code": "ip_filter(banner=\"{{banner}}\" && asn=\"{{asn}}\") && ip_exclude(title=\"{{title}}\")",
+      "desc": "独立 IP 语法（商业版及以上可用）：命中 ip_filter 内特征的同时，排除 ip_exclude 内特征的资产。",
+      "tags": ["ip_exclude", "同源IP"],
+      "vars": [
+        { "name": "banner", "label": "Banner 特征", "placeholder": "SSH-2.0-OpenSSH_6.7p2", "example": "SSH-2.0-OpenSSH_6.7p2" },
+        { "name": "asn", "label": "ASN", "placeholder": "3462", "example": "3462" },
+        { "name": "title", "label": "排除的标题", "placeholder": "EdgeOS", "example": "EdgeOS" }
+      ],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-port-size",
+      "title": "端口数等于 N 的独立 IP",
+      "category": "独立IP筛选",
+      "code": "port_size=\"{{count}}\"",
+      "desc": "筛选开放端口数量等于指定值的独立 IP（商业版及以上可用）。",
+      "tags": ["port_size", "端口"],
+      "vars": [{ "name": "count", "label": "端口数量", "placeholder": "6", "example": "6" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-port-size-gt",
+      "title": "端口数大于 N 的独立 IP",
+      "category": "独立IP筛选",
+      "code": "port_size_gt=\"{{count}}\"",
+      "desc": "筛选开放端口数量大于指定值的独立 IP（商业版及以上可用），端口数越多越可能是边界设备或蜜罐。",
+      "tags": ["port_size_gt", "端口"],
+      "vars": [{ "name": "count", "label": "端口数量", "placeholder": "6", "example": "6" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-port-size-lt",
+      "title": "端口数小于 N 的独立 IP",
+      "category": "独立IP筛选",
+      "code": "port_size_lt=\"{{count}}\"",
+      "desc": "筛选开放端口数量小于指定值的独立 IP（商业版及以上可用）。",
+      "tags": ["port_size_lt", "端口"],
+      "vars": [{ "name": "count", "label": "端口数量", "placeholder": "12", "example": "12" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-ports",
+      "title": "同时开放多端口的独立 IP",
+      "category": "独立IP筛选",
+      "code": "ip_ports=\"{{ports}}\"",
+      "desc": "筛选同时开放指定不同端口的独立 IP（商业版及以上可用），如 80,161 表示同时开放 80 与 161。",
+      "tags": ["ip_ports", "端口"],
+      "vars": [{ "name": "ports", "label": "端口列表", "placeholder": "80,161", "example": "80,161" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-country",
+      "title": "独立 IP 按国家筛选",
+      "category": "独立IP筛选",
+      "code": "ip_country=\"{{country}}\"",
+      "desc": "通过国家的简称代码查询独立 IP（商业版及以上可用），需配合 ip_filter 或 ip_exclude 组合使用。",
+      "tags": ["ip_country", "地理"],
+      "vars": [{ "name": "country", "label": "国家代码", "placeholder": "CN", "example": "CN" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-region",
+      "title": "独立 IP 按省份筛选",
+      "category": "独立IP筛选",
+      "code": "ip_region=\"{{region}}\"",
+      "desc": "通过省份/地区英文名称查询独立 IP（商业版及以上可用），需配合 ip_filter 或 ip_exclude 组合使用。",
+      "tags": ["ip_region", "地理"],
+      "vars": [{ "name": "region", "label": "省份", "placeholder": "Zhejiang", "example": "Zhejiang" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-city",
+      "title": "独立 IP 按城市筛选",
+      "category": "独立IP筛选",
+      "code": "ip_city=\"{{city}}\"",
+      "desc": "通过城市英文名称查询独立 IP（商业版及以上可用），需配合 ip_filter 或 ip_exclude 组合使用。",
+      "tags": ["ip_city", "地理"],
+      "vars": [{ "name": "city", "label": "城市", "placeholder": "Hangzhou", "example": "Hangzhou" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-after",
+      "title": "指定日期后更新的独立 IP",
+      "category": "独立IP筛选",
+      "code": "ip_after=\"{{date}}\"",
+      "desc": "筛选某一时间之后有更新的独立 IP（商业版及以上可用），需配合 ip_filter 或 ip_exclude 组合使用。",
+      "tags": ["ip_after", "时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2026-01-01", "example": "2021-03-18" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-ip-before",
+      "title": "指定日期前更新的独立 IP",
+      "category": "独立IP筛选",
+      "code": "ip_before=\"{{date}}\"",
+      "desc": "筛选某一时间之前有更新的独立 IP（商业版及以上可用），需配合 ip_filter 或 ip_exclude 组合使用。",
+      "tags": ["ip_before", "时间"],
+      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-01-01", "example": "2019-09-09" }],
+      "source": "FOFA 官方字段文档（商业版及以上）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-admin-panel",
+      "title": "某域后台入口",
+      "category": "组合查询",
+      "code": "domain=\"{{domain}}\" && (title=\"后台\" || title=\"管理\" || title=\"login\")",
+      "desc": "在目标根域下批量发现后台登录入口，括号保证 or 条件优先组合。",
+      "tags": ["后台", "组合"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "组合语法（基于 FOFA 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-live-web",
+      "title": "存活 Web 资产",
+      "category": "组合查询",
+      "code": "domain=\"{{domain}}\" && status_code=\"200\" && protocol=\"https\"",
+      "desc": "锁定域名下 HTTPS 且状态码 200 的存活 Web 服务，减少无效目标。",
+      "tags": ["存活", "组合"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "组合语法（基于 FOFA 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-nonstandard-port",
+      "title": "非标准端口 Web",
+      "category": "组合查询",
+      "code": "domain=\"{{domain}}\" && port!=\"80\" && port!=\"443\" && status_code=\"200\"",
+      "desc": "排除 80/443，寻找跑在非常规端口上的 Web 业务与测试环境。",
+      "tags": ["端口", "组合"],
+      "vars": [{ "name": "domain", "label": "根域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "组合语法（基于 FOFA 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-edu-icp",
+      "title": "教育单位备案资产",
+      "category": "组合查询",
+      "code": "icp=\"{{icp}}\" && title=\"{{keyword}}\"",
+      "desc": "备案号加标题关键词组合，适合在攻防演练中精确圈定单位资产。",
+      "tags": ["icp", "组合"],
+      "vars": [
+        { "name": "icp", "label": "备案号", "placeholder": "京ICP备00000000号", "example": "京ICP备00000000号" },
+        { "name": "keyword", "label": "标题关键词", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "组合语法（基于 FOFA 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-title-exclude",
+      "title": "标题命中并排除噪音",
+      "category": "组合查询",
+      "code": "title=\"{{keyword}}\" && title!=\"{{exclude}}\"",
+      "desc": "命中目标关键词的同时排除常见误报页面，提高结果信噪比。",
+      "tags": ["title", "排除"],
+      "vars": [
+        { "name": "keyword", "label": "目标关键词", "placeholder": "管理后台", "example": "管理后台" },
+        { "name": "exclude", "label": "排除关键词", "placeholder": "404", "example": "404" }
+      ],
+      "source": "组合语法（基于 FOFA 运算符）",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-thinkphp",
+      "title": "ThinkPHP 站点",
+      "category": "攻防场景",
+      "code": "header=\"thinkphp\" || header=\"think_template\"",
+      "desc": "通过响应头特征定位 ThinkPHP 框架站点，便于进一步做版本与漏洞排查。",
+      "tags": ["ThinkPHP", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-shiro",
+      "title": "Shiro 站点",
+      "category": "攻防场景",
+      "code": "app=\"Apache Shiro\" && header=\"rememberMe\"",
+      "desc": "组合应用指纹与 rememberMe 响应头，定位启用 Shiro 认证的站点。",
+      "tags": ["Shiro", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-spring-whitelabel",
+      "title": "Spring Boot 默认错误页",
+      "category": "攻防场景",
+      "code": "title=\"Whitelabel Error Page\"",
+      "desc": "定位使用 Spring Boot 默认错误页的应用，可进一步排查 Actuator 暴露。",
+      "tags": ["Spring", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-actuator",
+      "title": "Spring Actuator 暴露",
+      "category": "攻防场景",
+      "code": "body=\"actuator\" && body=\"_links\" && status_code=\"200\"",
+      "desc": "正文同时出现 actuator 与 _links，常见于 Actuator 端点可访问的场景。",
+      "tags": ["Spring", "Actuator"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-jenkins",
+      "title": "Jenkins 面板",
+      "category": "攻防场景",
+      "code": "title=\"Dashboard [Jenkins]\"",
+      "desc": "定位 Jenkins 控制台，进一步确认是否匿名可读或存在弱口令。",
+      "tags": ["Jenkins", "CI"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-swagger",
+      "title": "Swagger UI 文档",
+      "category": "攻防场景",
+      "code": "title=\"Swagger UI\" && status_code=\"200\"",
+      "desc": "寻找对外暴露的接口文档，便于梳理未授权接口与参数结构。",
+      "tags": ["Swagger", "API"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-redis",
+      "title": "Redis 服务暴露",
+      "category": "攻防场景",
+      "code": "port=\"6379\" && protocol=\"redis\"",
+      "desc": "按端口与协议双条件定位 Redis，再确认是否未授权访问。",
+      "tags": ["Redis", "未授权"],
+      "vars": [],
+      "source": "公开服务特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-elasticsearch",
+      "title": "Elasticsearch 暴露",
+      "category": "攻防场景",
+      "code": "port=\"9200\" && body=\"You Know, for Search\"",
+      "desc": "通过 9200 端口与默认欢迎语定位 Elasticsearch，排查未授权数据访问。",
+      "tags": ["Elasticsearch", "未授权"],
+      "vars": [],
+      "source": "公开服务特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-vpn",
+      "title": "SSL VPN 入口",
+      "category": "攻防场景",
+      "code": "title=\"SSL VPN Service\" || title=\"VPN\"",
+      "desc": "定位 VPN 登录入口，注意仅做授权范围内的暴露面梳理。",
+      "tags": ["VPN", "入口"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-grafana",
+      "title": "Grafana 面板",
+      "category": "攻防场景",
+      "code": "title=\"Grafana\" && status_code=\"200\"",
+      "desc": "定位 Grafana，进一步确认是否开启匿名访问或存在弱口令。",
+      "tags": ["Grafana", "监控"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-zabbix",
+      "title": "Zabbix 面板",
+      "category": "攻防场景",
+      "code": "title=\"Zabbix\" && status_code=\"200\"",
+      "desc": "定位 Zabbix 监控系统，排查默认口令与版本漏洞。",
+      "tags": ["Zabbix", "监控"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-fortinet",
+      "title": "SSL VPN 设备页面",
+      "category": "攻防场景",
+      "code": "body=\"FortiGate\" || title=\"FortiGate\"",
+      "desc": "通过设备登录页特征定位边界 SSL VPN 设备，适合排查边界设备暴露面。",
+      "tags": ["Fortinet", "边界设备"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    },
+    {
+      "id": "fofa-hikvision",
+      "title": "视频监控设备页面",
+      "category": "攻防场景",
+      "code": "body=\"Hikvision\" || title=\"Hikvision\"",
+      "desc": "通过设备页面特征定位视频监控设备，此类设备常用于物联网暴露面统计。",
+      "tags": ["IoT", "指纹"],
+      "vars": [],
+      "source": "公开指纹特征",
+      "risk": "recon"
+    }
+  ]
+}

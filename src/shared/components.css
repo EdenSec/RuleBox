@@ -1,0 +1,392 @@
+/* RuleBox 共享组件样式：空状态 / 提示 / 弹窗 / 表单字段 */
+
+/* 筛选控件统一为下拉（见 components.js 的 syncFilterSelect）。
+   2026-10-23 已删除 .rb-chips / .rb-chip 整套样式：原先 4 个筛选位点各是一条
+   横向滚动 chips，在 420px 宽的 popup 里既看不到全部选项、还叠出多条滚动条。
+   禁止再引入可横向滚动的筛选条，否则会退回同样的问题。 */
+
+/* 空状态 */
+.rb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 18px;
+  text-align: center;
+}
+
+.rb-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--rb-border);
+  border-radius: 50%;
+  background: var(--rb-bg-elev);
+  color: var(--rb-fg-subtle);
+  margin-bottom: 2px;
+}
+
+.rb-empty-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rb-fg);
+}
+
+.rb-empty-desc {
+  margin: 0;
+  max-width: 320px;
+  font-size: 12px;
+  color: var(--rb-fg-muted);
+}
+
+.rb-empty .rb-btn {
+  margin-top: 6px;
+}
+
+/* 轻提示 */
+.rb-toast-holder {
+  position: fixed;
+  left: 50%;
+  bottom: 46px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 60;
+  pointer-events: none;
+  width: max-content;
+  max-width: 92vw;
+}
+
+.rb-toast {
+  padding: 7px 12px;
+  border: 1px solid var(--rb-border-strong);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg-elev-2);
+  color: var(--rb-fg);
+  font-size: 12px;
+  box-shadow: var(--rb-shadow-sm);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.rb-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rb-toast--success {
+  border-color: var(--rb-accent-border);
+  color: var(--rb-accent);
+}
+
+.rb-toast--warn {
+  border-color: rgba(210, 153, 34, 0.4);
+  color: var(--rb-warn);
+}
+
+.rb-toast--danger {
+  border-color: rgba(248, 81, 73, 0.4);
+  color: var(--rb-danger);
+}
+
+/* 遮罩与弹窗 */
+.rb-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(1, 4, 9, 0.62);
+  z-index: 50;
+}
+
+.rb-dialog {
+  width: 100%;
+  max-width: 420px;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-lg);
+  background: var(--rb-bg-elev);
+  box-shadow: var(--rb-shadow);
+  overflow: hidden;
+}
+
+.rb-dialog--sm {
+  max-width: 340px;
+}
+
+.rb-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rb-border);
+}
+
+.rb-dialog-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rb-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.rb-dialog-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rb-fg-muted);
+  line-height: 1.7;
+}
+
+.rb-dialog-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--rb-border);
+  background: var(--rb-bg);
+}
+
+/* 表单字段 */
+.rb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rb-field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--rb-fg);
+}
+
+.rb-field-hint {
+  font-size: 11px;
+  color: var(--rb-fg-subtle);
+  font-weight: 400;
+}
+
+/* 表单里的外链入口，如「去供应商控制台获取 API Key」 */
+.rb-field-link {
+  color: var(--rb-accent);
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+  white-space: nowrap;
+}
+
+.rb-field-link:hover {
+  opacity: 0.8;
+}
+
+/* 变量弹窗：复制效果预览 */
+.rb-dialog-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rb-dialog-preview-label {
+  font-size: 11px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-dialog-preview-code {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg-input);
+  color: var(--rb-fg);
+  font-family: var(--rb-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 110px;
+  overflow: auto;
+}
+
+.rb-dialog-preview-code.is-empty {
+  color: var(--rb-fg-subtle);
+}
+
+.rb-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rb-border);
+}
+
+.rb-field-row:last-child {
+  border-bottom: none;
+}
+
+.rb-field-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rb-field-row-title {
+  font-size: 12px;
+  color: var(--rb-fg);
+}
+
+.rb-field-row-desc {
+  font-size: 11px;
+  color: var(--rb-fg-muted);
+  line-height: 1.6;
+}
+
+/* 表单网格（设置页与面板共用弹窗） */
+.rb-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* 面板 420px 宽时强制单列，避免两列输入框被挤成一条缝 */
+.rb-form-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rb-field--wide {
+  grid-column: 1 / -1;
+}
+
+.rb-field--stack {
+  margin-top: 4px;
+}
+
+/* .rb-field 为 flex 布局，会覆盖 UA 的 [hidden]，需显式隐藏 */
+.rb-field[hidden] {
+  display: none;
+}
+
+.rb-dialog--wide {
+  max-width: 560px;
+}
+
+.rb-dialog-body .rb-form-grid {
+  gap: 10px 12px;
+}
+
+.rb-form-error {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--rb-danger);
+}
+
+.rb-form-error:empty {
+  display: none;
+}
+
+/* 高级选项折叠区 */
+.rb-adv {
+  margin: 12px 0 0;
+  padding: 0 12px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg);
+}
+
+.rb-adv > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 0;
+  font-size: 12px;
+  color: var(--rb-fg);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.rb-adv > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rb-adv > summary::before {
+  content: '▸';
+  font-size: 10px;
+  color: var(--rb-fg-muted);
+  transition: transform 0.15s ease;
+}
+
+.rb-adv[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.rb-adv-title {
+  font-weight: 600;
+}
+
+.rb-adv-hint {
+  font-size: 11px;
+  color: var(--rb-fg-muted);
+}
+
+.rb-adv-grid {
+  padding-bottom: 4px;
+}
+
+.rb-adv--sub {
+  margin: 4px 0 12px;
+  padding: 0 10px;
+}
+
+.rb-adv--sub > summary {
+  padding: 8px 0;
+}
+
+.rb-adv .rb-note {
+  padding-bottom: 10px;
+}
+
+@media (max-width: 640px) {
+  .rb-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .rb-dialog--wide {
+    max-width: 100%;
+  }
+}
+
+/* 快捷键提示 */
+.rb-kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--rb-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--rb-bg-elev);
+  color: var(--rb-fg-subtle);
+  font-family: var(--rb-mono);
+  font-size: 10px;
+  white-space: nowrap;
+}

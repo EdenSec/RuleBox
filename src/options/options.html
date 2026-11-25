@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RuleBox 设置</title>
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/components.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="rb-opt">
+    <!-- 顶部栏 -->
+    <header class="rb-opt-head">
+      <div class="rb-opt-brand">
+        <span class="rb-opt-logo" aria-hidden="true">&gt;_</span>
+        <div class="rb-opt-brand-text">
+          <h1>RuleBox 设置</h1>
+          <p>安全语法与 Payload 速取 · 本地优先，密钥不出本机</p>
+        </div>
+      </div>
+      <div class="rb-opt-head-actions">
+        <span id="save-status" class="rb-save-status">修改会自动保存</span>
+        <button id="btn-shortcuts" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">快捷键</button>
+        <button id="btn-theme" class="rb-btn rb-btn--ghost rb-btn--icon" type="button"
+          title="切换主题" aria-label="切换主题">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor"
+            stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="3"></circle>
+            <path d="M8 1.4v1.4M8 13.2v1.4M1.4 8h1.4M13.2 8h1.4M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="rb-opt-body">
+      <!-- 分区导航 -->
+      <nav class="rb-opt-nav" id="opt-nav" aria-label="设置分区">
+        <button class="rb-opt-nav-item is-active" type="button" data-section="general">通用</button>
+        <button class="rb-opt-nav-item" type="button" data-section="ai">AI 助手</button>
+        <button class="rb-opt-nav-item" type="button" data-section="data">自定义数据</button>
+        <button class="rb-opt-nav-item" type="button" data-section="import">导入导出</button>
+        <button class="rb-opt-nav-item" type="button" data-section="about">关于</button>
+      </nav>
+
+      <main class="rb-opt-main">
+        <!-- 通用 -->
+        <section class="rb-opt-section" data-section="general">
+          <header class="rb-section-head">
+            <h2>通用</h2>
+            <p>界面行为与复制格式，修改后立即生效。</p>
+          </header>
+
+          <div class="rb-card">
+            <h3 class="rb-card-title">界面</h3>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">主题</span>
+                <span class="rb-opt-row-desc">跟随系统时会自动匹配操作系统的深浅色。</span>
+              </div>
+              <label class="rb-opt-control">
+                <select id="opt-theme" class="rb-select" aria-label="主题">
+                  <option value="auto">跟随系统</option>
+                  <option value="dark">深色</option>
+                  <option value="light">浅色</option>
+                </select>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">默认打开的标签页</span>
+                <span class="rb-opt-row-desc">每次打开面板时优先展示的内容。</span>
+              </div>
+              <label class="rb-opt-control">
+                <select id="opt-default-tab" class="rb-select" aria-label="默认标签页">
+                  <option value="snippets">语法库</option>
+                  <option value="payloads">Payload</option>
+                  <option value="ai">AI 助手</option>
+                </select>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">复制格式</span>
+                <span class="rb-opt-row-desc">“代码块”适合粘贴到 Markdown 文档，“标题 + 代码”便于记录。</span>
+              </div>
+              <label class="rb-opt-control">
+                <select id="opt-copy-format" class="rb-select" aria-label="复制格式">
+                  <option value="code">仅代码</option>
+                  <option value="markdown">Markdown 代码块</option>
+                  <option value="title-code">标题 + 代码</option>
+                </select>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">最近使用保留条数</span>
+                <span class="rb-opt-row-desc">范围 5 - 100，仅保存在本地。</span>
+              </div>
+              <label class="rb-opt-control">
+                <input id="opt-recents-limit" class="rb-input rb-input--num" type="number" min="5" max="100" step="5"
+                  aria-label="最近使用保留条数">
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">复制后自动关闭弹窗</span>
+                <span class="rb-opt-row-desc">仅在浏览器工具栏弹窗中生效；侧边栏不会关闭。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-close-after-copy" type="checkbox" aria-label="复制后自动关闭弹窗">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">显示条目说明</span>
+                <span class="rb-opt-row-desc">在卡片中显示用途与注意事项。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-show-desc" type="checkbox" aria-label="显示条目说明">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">显示风险等级</span>
+                <span class="rb-opt-row-desc">标注低风险、攻击载荷与高危条目。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-show-risk" type="checkbox" aria-label="显示风险等级">
+                <span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="rb-card">
+            <h3 class="rb-card-title">功能开关</h3>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">侧边栏</span>
+                <span class="rb-opt-row-desc">允许把面板固定在浏览器右侧（Chrome 116+）。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-side-panel" type="checkbox" aria-label="启用侧边栏">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">右键菜单</span>
+                <span class="rb-opt-row-desc">选中网页文本后右键，可直接把关键词带入 RuleBox 搜索框。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-context-menu" type="checkbox" aria-label="启用右键菜单">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">AI 助手</span>
+                <span class="rb-opt-row-desc">关闭后 AI 标签页仍可见，但不会发起任何网络请求。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-ai-feature" type="checkbox" aria-label="启用 AI 助手">
+                <span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- AI -->
+        <section class="rb-opt-section" data-section="ai" hidden>
+          <header class="rb-section-head">
+            <h2>AI 助手</h2>
+            <p>使用任意 OpenAI 兼容的 Chat Completions 接口，按目标平台字段生成可直接粘贴的语句。</p>
+          </header>
+
+          <div class="rb-card">
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">启用 AI 助手</span>
+                <span class="rb-opt-row-desc">需要填写可用的接口地址、模型与 API Key（Ollama 可留空）。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-ai-enabled" type="checkbox" aria-label="启用 AI 助手">
+                <span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">接口档案</h3>
+              <div class="rb-inline">
+                <label class="rb-inline-label" for="opt-ai-profile">当前档案</label>
+                <select id="opt-ai-profile" class="rb-select rb-select--auto" aria-label="接口档案"></select>
+                <button id="btn-ai-profile-add" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">新增</button>
+                <button id="btn-ai-profile-del" class="rb-btn rb-btn--danger rb-btn--sm" type="button">删除</button>
+              </div>
+            </div>
+
+            <div class="rb-form-grid">
+              <label class="rb-field">
+                <span class="rb-field-label">档案名称</span>
+                <input id="opt-ai-name" class="rb-input" type="text" maxlength="40" autocomplete="off"
+                  placeholder="例如：工作用 DeepSeek">
+              </label>
+              <label class="rb-field">
+                <span class="rb-field-label">供应商预设</span>
+                <select id="opt-ai-provider" class="rb-select"></select>
+              </label>
+              <label class="rb-field rb-field--wide">
+                <span class="rb-field-label">
+                  <span>Base URL</span>
+                  <span class="rb-field-hint">末尾不要带 /chat/completions</span>
+                </span>
+                <input id="opt-ai-baseurl" class="rb-input rb-mono" type="url" autocomplete="off"
+                  spellcheck="false" placeholder="https://api.deepseek.com/v1">
+              </label>
+              <label class="rb-field">
+                <span class="rb-field-label">模型</span>
+                <input id="opt-ai-model" class="rb-input rb-mono" type="text" list="opt-ai-models"
+                  autocomplete="off" spellcheck="false" placeholder="deepseek-chat">
+                <datalist id="opt-ai-models"></datalist>
+              </label>
+              <label class="rb-field">
+                <span class="rb-field-label">
+                  <span>API Key</span>
+                  <span class="rb-field-hint">仅存本机，不写入导出文件</span>
+                </span>
+                <span class="rb-secret">
+                  <input id="opt-ai-key" class="rb-input rb-mono" type="password" autocomplete="new-password"
+                    spellcheck="false" placeholder="sk-...">
+                  <button id="btn-ai-key-toggle" class="rb-btn rb-btn--ghost rb-btn--sm" type="button"
+                    aria-label="显示或隐藏 API Key">显示</button>
+                </span>
+                <span class="rb-field-hint">
+                  <a id="opt-ai-key-link" class="rb-field-link" href="#" target="_blank"
+                    rel="noopener noreferrer" hidden>去供应商控制台获取 API Key</a>
+                </span>
+              </label>
+            </div>
+
+            <details class="rb-adv">
+              <summary>
+                <span class="rb-adv-title">高级选项</span>
+                <span class="rb-adv-hint">温度、最大 Token、超时、思考模式</span>
+              </summary>
+              <div class="rb-form-grid rb-adv-grid">
+                <label class="rb-field">
+                  <span class="rb-field-label">
+                    <span>温度</span>
+                    <span class="rb-field-hint">0 - 2</span>
+                  </span>
+                  <input id="opt-ai-temperature" class="rb-input" type="number" min="0" max="2" step="0.1">
+                  <span class="rb-field-hint">越低越稳定。生成查询语法建议 0.2，需要解释分析时可用 0.7。</span>
+                </label>
+                <label class="rb-field">
+                  <span class="rb-field-label">
+                    <span>最大 Token</span>
+                    <span class="rb-field-hint">单次回复上限</span>
+                  </span>
+                  <input id="opt-ai-max-tokens" class="rb-input" type="number" min="128" max="8192" step="128">
+                  <span class="rb-field-hint">语法生成 1024 - 2048 足够，长解释可调到 4096。</span>
+                </label>
+                <label class="rb-field">
+                  <span class="rb-field-label">
+                    <span>超时（毫秒）</span>
+                    <span class="rb-field-hint">5000 - 180000</span>
+                  </span>
+                  <input id="opt-ai-timeout" class="rb-input" type="number" min="5000" max="180000" step="1000">
+                  <span class="rb-field-hint">网络较慢或使用本地模型时适当加大。</span>
+                </label>
+                <label id="opt-ai-thinking-field" class="rb-field" hidden>
+                  <span class="rb-field-label">
+                    <span>思考模式</span>
+                    <span class="rb-field-hint" id="opt-ai-thinking-hint">按供应商适配</span>
+                  </span>
+                  <select id="opt-ai-thinking" class="rb-select"></select>
+                  <span class="rb-field-hint">开启后先推理再回答，速度更慢但更严谨。</span>
+                </label>
+              </div>
+              <p id="opt-ai-thinking-note" class="rb-note" hidden></p>
+
+              <details class="rb-adv rb-adv--sub">
+                <summary>
+                  <span class="rb-adv-title">自定义请求参数</span>
+                  <span class="rb-adv-hint">进阶，了解 JSON 再填</span>
+                </summary>
+                <label class="rb-field rb-field--wide">
+                  <span class="rb-field-label">
+                    <span>额外请求参数（JSON）</span>
+                    <span class="rb-field-hint">可选</span>
+                  </span>
+                  <textarea id="opt-ai-extra-body" class="rb-textarea rb-mono" rows="2" spellcheck="false"
+                    placeholder='{"top_p": 0.9}'></textarea>
+                  <span class="rb-field-hint">多数情况不用填。需要 top_p、top_k 等供应商专有参数时才用；model / messages / temperature 等基础字段不允许覆盖。</span>
+                </label>
+              </details>
+            </details>
+
+            <div class="rb-inline rb-inline--end">
+              <button id="btn-ai-authorize" class="rb-btn rb-btn--ghost" type="button">保存并授权域名</button>
+              <button id="btn-ai-test" class="rb-btn rb-btn--primary" type="button">测试连接</button>
+            </div>
+            <p id="ai-test-result" class="rb-test-result" role="status"></p>
+            <p class="rb-note">
+              自定义域名需要在点击“保存并授权域名”时授予网络访问权限；扩展只会在你主动发送消息时请求该地址。
+              API Key 使用浏览器本地存储保存，任何页面脚本都无法读取。
+            </p>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">生成参数</h3>
+            </div>
+            <div class="rb-form-grid">
+              <label class="rb-field">
+                <span class="rb-field-label">
+                  <span>携带历史条数</span>
+                  <span class="rb-field-hint">0 - 20</span>
+                </span>
+                <input id="opt-ai-history-limit" class="rb-input" type="number" min="0" max="20" step="1">
+              </label>
+              <label class="rb-field">
+                <span class="rb-field-label">
+                  <span>请求最小间隔（毫秒）</span>
+                  <span class="rb-field-hint">防止误触刷接口</span>
+                </span>
+                <input id="opt-ai-min-interval" class="rb-input" type="number" min="0" max="60000" step="500">
+              </label>
+              <label class="rb-field">
+                <span class="rb-field-label">
+                  <span>每日请求上限</span>
+                  <span class="rb-field-hint">0 表示不限制</span>
+                </span>
+                <input id="opt-ai-daily-limit" class="rb-input" type="number" min="0" max="100000" step="10">
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">流式输出</span>
+                <span class="rb-opt-row-desc">逐字显示回复；个别自建网关不支持时可关闭。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-ai-stream" type="checkbox" aria-label="启用流式输出">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">携带平台字段上下文</span>
+                <span class="rb-opt-row-desc">把目标平台的字段与运算符说明一起发给模型，生成结果更准确。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-ai-context" type="checkbox" aria-label="携带平台字段上下文">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">携带库内写法示例</span>
+                <span class="rb-opt-row-desc">在本地检索最相关的 5 条库内条目作为参考发给模型；不联网，也不发送全库。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-ai-library" type="checkbox" aria-label="携带库内写法示例">
+                <span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">系统提示词</h3>
+              <span id="ai-system-prompt-state" class="rb-badge">内置默认</span>
+            </div>
+            <p class="rb-note">
+              这是发给模型的角色与输出规则，修改后对所有 AI 对话生效。平台字段上下文与库内示例会由扩展自动拼接，不需要在这里重复；
+              「禁止编造字段」「授权边界」两条底线要求会始终附加，无法通过修改这里删除。
+            </p>
+            <label class="rb-field rb-field--stack">
+              <span class="rb-field-label">
+                <span>基础提示词</span>
+                <span class="rb-field-hint">清空或“恢复默认”即使用内置版本</span>
+              </span>
+              <textarea id="opt-ai-system-prompt" class="rb-textarea rb-mono" rows="14" spellcheck="false"></textarea>
+            </label>
+            <label class="rb-field rb-field--stack">
+              <span class="rb-field-label">
+                <span>追加要求</span>
+                <span class="rb-field-hint">可选，拼接在基础提示词之后</span>
+              </span>
+              <textarea id="opt-ai-system-append" class="rb-textarea" rows="3" spellcheck="false"
+                placeholder="例如：只输出一条最终语句，不要解释。"></textarea>
+            </label>
+            <div class="rb-inline">
+              <button id="btn-ai-system-reset" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">恢复默认</button>
+            </div>
+            <p class="rb-note">
+              修改会即时保存到本地浏览器，不会上传；导出配置时会一并导出（API Key 始终置空）。
+            </p>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">今日用量</h3>
+              <span id="ai-usage" class="rb-badge">—</span>
+            </div>
+            <p class="rb-note">
+              用量仅用于本地限流，不会上传。达到每日上限后需要等到次日或调高上限。
+            </p>
+            <div class="rb-inline">
+              <button id="btn-ai-clear-history" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空 AI 对话历史</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 自定义数据 -->
+        <section class="rb-opt-section" data-section="data" hidden>
+          <header class="rb-section-head">
+            <h2>自定义数据</h2>
+            <p>把团队内部平台、常用语句补充进本地库；条目支持 <code class="rb-mono">{{变量}}</code> 占位符。</p>
+          </header>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">自定义平台</h3>
+              <button id="btn-platform-add" class="rb-btn rb-btn--primary rb-btn--sm" type="button">新增平台</button>
+            </div>
+            <div id="custom-platform-list" class="rb-data-list"></div>
+            <p class="rb-note">
+              自定义平台会出现在语法库的平台筛选中，可为其添加自定义语法条目。
+            </p>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">自定义条目</h3>
+              <button id="btn-item-add" class="rb-btn rb-btn--primary rb-btn--sm" type="button">新增条目</button>
+            </div>
+            <div id="custom-item-list" class="rb-data-list"></div>
+            <p class="rb-note">
+              语法与 Payload 共用同一套字段；变量会根据代码中的 <code class="rb-mono">{{变量}}</code> 自动识别。
+            </p>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">内置条目显示</h3>
+              <span id="builtin-hidden-count" class="rb-badge">已隐藏 0 条</span>
+            </div>
+            <p class="rb-note">
+              隐藏只是不在面板里展示，内置数据不会被删除，也不会被导出或上传，随时可以在这里恢复。
+            </p>
+            <div class="rb-inline">
+              <input id="builtin-search" class="rb-input rb-input--search" type="search"
+                placeholder="搜索标题、代码或标签" aria-label="搜索内置条目">
+              <label class="rb-check">
+                <input id="builtin-only-hidden" type="checkbox">
+                <span>只看已隐藏</span>
+              </label>
+              <button id="btn-hidden-restore-all" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">全部恢复</button>
+            </div>
+            <div id="builtin-item-list" class="rb-data-list"></div>
+            <div class="rb-inline rb-inline--end">
+              <button id="btn-builtin-more" class="rb-btn rb-btn--ghost rb-btn--sm" type="button" hidden>显示更多</button>
+            </div>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">本地数据维护</h3>
+            </div>
+            <div class="rb-inline">
+              <button id="btn-clear-recents" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空最近使用</button>
+              <button id="btn-clear-variables" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空变量记忆</button>
+              <button id="btn-clear-favorites" class="rb-btn rb-btn--ghost rb-btn--sm" type="button">清空收藏</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 导入导出 -->
+        <section class="rb-opt-section" data-section="import" hidden>
+          <header class="rb-section-head">
+            <h2>导入导出</h2>
+            <p>配置可在多台设备之间迁移。导出文件不包含 API Key。</p>
+          </header>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">配置文件</h3>
+            </div>
+            <div class="rb-inline">
+              <button id="btn-export" class="rb-btn rb-btn--primary" type="button">导出配置</button>
+              <button id="btn-import" class="rb-btn" type="button">导入配置</button>
+              <input id="import-file" class="rb-sr-only" type="file" accept="application/json,.json">
+            </div>
+            <p class="rb-note">
+              导入会覆盖设置、自定义平台与条目、收藏与变量记忆；API Key 需要重新填写。
+              单文件大小上限 500 KB，自定义条目上限 500 条。
+            </p>
+          </div>
+
+          <div class="rb-card rb-card--danger">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">危险操作</h3>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">重置全部本地数据</span>
+                <span class="rb-opt-row-desc">包含设置、API Key、收藏、最近使用、变量记忆与自定义条目，操作不可撤销。</span>
+              </div>
+              <label class="rb-opt-control">
+                <button id="btn-reset" class="rb-btn rb-btn--danger" type="button">重置全部</button>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- 关于 -->
+        <section class="rb-opt-section" data-section="about" hidden>
+          <header class="rb-section-head">
+            <h2>关于</h2>
+            <p>RuleBox 是面向安全测试场景的本地速取面板，不收集任何使用数据。</p>
+          </header>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">版本信息</h3>
+              <span id="about-version" class="rb-badge">—</span>
+            </div>
+            <p class="rb-note">
+              内置语法与 Payload 均整理自各平台公开文档与公开测试资料，仅用于获得授权的安全测试、教学与防御研究。
+              使用前请自行核对字段与语法，因误用造成的后果由使用者承担。
+            </p>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">数据来源</h3>
+            </div>
+            <div id="about-sources" class="rb-source-list"></div>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">隐私与安全</h3>
+            </div>
+            <ul class="rb-about-list">
+              <li>所有语法、Payload、收藏与设置均保存在浏览器本地，不上传服务器。</li>
+              <li>API Key 仅保存在本机扩展存储中，不写入导出文件，也不会出现在日志里。</li>
+              <li>AI 请求只发送到你填写的 Base URL；扩展不会把 Key 发往其他地址。</li>
+              <li>扩展不注入网页脚本，不读取网页内容，除非你主动使用右键菜单。</li>
+            </ul>
+          </div>
+
+          <div class="rb-card">
+            <div class="rb-card-head">
+              <h3 class="rb-card-title">异常提示</h3>
+            </div>
+            <p class="rb-note">
+              额度不足、Key 失效、触发限流等异常会直接在 AI 对话里提示具体原因和处理建议，不额外记录，也不向任何第三方推送。
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="../ui/options.js"></script>
+</body>
+</html>

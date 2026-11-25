@@ -1,0 +1,365 @@
+{
+  "platform": "google",
+  "version": 1,
+  "categories": ["基础语法", "敏感文件", "暴露面发现"],
+  "notice": "Google 当前官方帮助仅明确列出 site:、filetype:、before:/after:、英文双引号与 - 排除；intitle:、inurl:、intext:、allintitle:、allinurl:、allintext:、inanchor:、OR、.. 数字范围与 * 通配符仍被广泛使用，但未在当前官方帮助单列，效果可能随检索策略变化。cache: 已于 2024 年 9 月 24 日停用。",
+  "items": [
+    {
+      "id": "google-site",
+      "title": "限定站点",
+      "category": "基础语法",
+      "code": "site:{{domain}} {{keyword}}",
+      "desc": "把搜索范围限定在目标域名内，是最常用的资产与信息发现语法。",
+      "tags": ["site"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "后台", "example": "后台" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-intitle",
+      "title": "标题搜索",
+      "category": "基础语法",
+      "code": "intitle:\"{{keyword}}\" site:{{domain}}",
+      "desc": "在页面标题中搜索关键词，适合定位登录页与后台。",
+      "tags": ["intitle"],
+      "vars": [
+        { "name": "keyword", "label": "标题关键词", "placeholder": "登录", "example": "登录" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-inurl",
+      "title": "URL 搜索",
+      "category": "基础语法",
+      "code": "inurl:{{keyword}} site:{{domain}}",
+      "desc": "在 URL 中搜索关键词，适合发现管理路径与功能模块。",
+      "tags": ["inurl"],
+      "vars": [
+        { "name": "keyword", "label": "URL 关键词", "placeholder": "admin", "example": "admin" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-intext",
+      "title": "正文搜索",
+      "category": "基础语法",
+      "code": "intext:\"{{keyword}}\" site:{{domain}}",
+      "desc": "在页面正文中搜索关键词，适合找敏感说明、内部文档与报错信息。",
+      "tags": ["intext"],
+      "vars": [
+        { "name": "keyword", "label": "正文关键词", "placeholder": "内部使用", "example": "内部使用" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-multi-keyword",
+      "title": "多关键词组合",
+      "category": "基础语法",
+      "code": "site:{{domain}} \"{{kw1}}\" \"{{kw2}}\"",
+      "desc": "双引号精确短语，多个短语以空格连接表示同时满足。",
+      "tags": ["组合", "精确短语"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "kw1", "label": "关键词 1", "placeholder": "用户名", "example": "用户名" },
+        { "name": "kw2", "label": "关键词 2", "placeholder": "密码", "example": "密码" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-or",
+      "title": "逻辑或",
+      "category": "基础语法",
+      "code": "site:{{domain}} (inurl:admin OR inurl:manage OR inurl:login)",
+      "desc": "用 OR 与括号组合多个入口关键词，减少重复检索次数。",
+      "tags": ["OR", "入口"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-exclude",
+      "title": "排除子域或路径",
+      "category": "基础语法",
+      "code": "site:{{domain}} -site:www.{{domain}} -inurl:blog",
+      "desc": "排除常见子域与博客路径，把注意力集中在业务系统上。",
+      "tags": ["排除"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-index-of",
+      "title": "目录列表",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} intitle:\"index of\"",
+      "desc": "发现开启目录浏览的站点，可能直接暴露备份与源码文件。",
+      "tags": ["目录浏览", "信息泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-sql-error",
+      "title": "SQL 报错信息",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} \"SQL syntax\" OR \"mysql_fetch\" OR \"ORA-\"",
+      "desc": "搜索常见数据库报错特征，辅助发现错误回显点。",
+      "tags": ["报错", "SQL"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-swagger",
+      "title": "接口文档暴露",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (inurl:swagger OR inurl:api-docs OR inurl:v2/api-docs)",
+      "desc": "搜索常见接口文档路径，便于梳理未授权接口。",
+      "tags": ["Swagger", "API"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-env-file",
+      "title": ".env 配置文件",
+      "category": "敏感文件",
+      "code": "site:{{domain}} filetype:env \"DB_\"",
+      "desc": "搜索误部署的 .env 配置文件，注意仅做授权范围内的泄露排查。",
+      "tags": ["敏感文件", ".env"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-sql-backup",
+      "title": "SQL 备份文件",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:sql OR filetype:bak OR filetype:backup)",
+      "desc": "排查暴露在 Web 目录下的数据库备份与备份文件。",
+      "tags": ["备份", "敏感文件"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-excel",
+      "title": "表格与通讯录泄露",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:xlsx OR filetype:xls OR filetype:csv)",
+      "desc": "搜索暴露的表格文件，常包含人员、资产与业务数据。",
+      "tags": ["表格", "敏感文件"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-pdf",
+      "title": "PDF 文档泄露",
+      "category": "敏感文件",
+      "code": "site:{{domain}} filetype:pdf \"{{keyword}}\"",
+      "desc": "从公开 PDF 中检索内部制度、方案与账号信息。",
+      "tags": ["PDF", "敏感文件"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "文档关键词", "placeholder": "内部", "example": "内部" }
+      ],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-email",
+      "title": "邮箱与人员信息",
+      "category": "敏感文件",
+      "code": "site:{{domain}} \"@{{domain}}\"",
+      "desc": "搜索站点上公开的邮箱，用于社工面梳理与资产归属确认。",
+      "tags": ["邮箱", "OSINT"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-login-page",
+      "title": "登录与后台入口",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} (intitle:\"登录\" OR intitle:\"后台\" OR intitle:\"管理系统\")",
+      "desc": "批量发现目标域名下的登录入口与后台页面。",
+      "tags": ["登录", "后台"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-allintitle",
+      "title": "标题包含全部关键词",
+      "category": "基础语法",
+      "code": "allintitle:{{kw1}} {{kw2}}",
+      "desc": "要求标题中同时包含全部关键词，比 intitle 多词组合更严格，适合精准定位特定系统页面。",
+      "tags": ["allintitle"],
+      "vars": [
+        { "name": "kw1", "label": "关键词 1", "placeholder": "管理", "example": "管理" },
+        { "name": "kw2", "label": "关键词 2", "placeholder": "登录", "example": "登录" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-allinurl",
+      "title": "URL 包含全部关键词",
+      "category": "基础语法",
+      "code": "allinurl:{{kw1}} {{kw2}}",
+      "desc": "要求 URL 中同时包含全部关键词，适合定位多级路径的功能页面。",
+      "tags": ["allinurl"],
+      "vars": [
+        { "name": "kw1", "label": "URL 关键词 1", "placeholder": "admin", "example": "admin" },
+        { "name": "kw2", "label": "URL 关键词 2", "placeholder": "upload", "example": "upload" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-allintext",
+      "title": "正文包含全部关键词",
+      "category": "基础语法",
+      "code": "allintext:{{kw1}} {{kw2}}",
+      "desc": "要求正文中同时包含全部关键词，排查文档与说明页时比 intext 更严格。",
+      "tags": ["allintext"],
+      "vars": [
+        { "name": "kw1", "label": "关键词 1", "placeholder": "username", "example": "username" },
+        { "name": "kw2", "label": "关键词 2", "placeholder": "password", "example": "password" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-filetype-ext",
+      "title": "多文件类型组合",
+      "category": "基础语法",
+      "code": "site:{{domain}} (filetype:{{ext1}} OR filetype:{{ext2}})",
+      "desc": "官方 filetype: 运算符可用 OR 组合多种扩展名；ext: 属于第三方常用别名，官方帮助未列出，不建议依赖。",
+      "tags": ["filetype", "ext", "组合"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "ext1", "label": "类型 1", "placeholder": "log", "example": "log" },
+        { "name": "ext2", "label": "类型 2", "placeholder": "conf", "example": "conf" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-before",
+      "title": "时间范围（before/after）",
+      "category": "基础语法",
+      "code": "site:{{domain}} {{keyword}} after:{{after}} before:{{before}}",
+      "desc": "官方操作符：限定页面收录/更新时间区间，年份或具体日期均可，如 after:2024 before:2025。",
+      "tags": ["before", "after", "时间"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "公告", "example": "公告" },
+        { "name": "after", "label": "起始日期", "placeholder": "2024-01-01", "example": "2024-01-01" },
+        { "name": "before", "label": "截止日期", "placeholder": "2025-01-01", "example": "2025-01-01" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-numrange",
+      "title": "数字范围",
+      "category": "基础语法",
+      "code": "site:{{domain}} \"{{keyword}}\" {{min}}..{{max}}",
+      "desc": "两点表示数字区间，可检索编号、金额、年份等连续值，如 2020..2024。",
+      "tags": ["数字范围", ".."],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "keyword", "label": "关键词", "placeholder": "报告", "example": "报告" },
+        { "name": "min", "label": "最小值", "placeholder": "2020", "example": "2020" },
+        { "name": "max", "label": "最大值", "placeholder": "2024", "example": "2024" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-wildcard",
+      "title": "* 通配符",
+      "category": "基础语法",
+      "code": "site:{{domain}} \"{{kw1}} * {{kw2}}\"",
+      "desc": "短语中的 * 匹配任意一个词，适合拼接可能被改写的固定表述。",
+      "tags": ["*", "通配"],
+      "vars": [
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" },
+        { "name": "kw1", "label": "前词", "placeholder": "powered", "example": "powered" },
+        { "name": "kw2", "label": "后词", "placeholder": "by", "example": "by" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-inanchor",
+      "title": "锚文本搜索",
+      "category": "基础语法",
+      "code": "inanchor:\"{{keyword}}\" site:{{domain}}",
+      "desc": "在指向页面的链接锚文本中搜索关键词，用于梳理站内引用关系与外部提及。",
+      "tags": ["inanchor"],
+      "vars": [
+        { "name": "keyword", "label": "锚文本", "placeholder": "点击下载", "example": "点击下载" },
+        { "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }
+      ],
+      "source": "Google 搜索运算符",
+      "risk": "recon"
+    },
+    {
+      "id": "google-git-expose",
+      "title": ".git 目录暴露",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} inurl:\".git\" (intitle:\"index of\" OR intitle:\"config\")",
+      "desc": "发现误部署的 .git 目录，可能导致源码泄露；仅用于授权范围内的泄露排查。",
+      "tags": ["git", "源码泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-config-file",
+      "title": "日志与配置文件",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:log OR filetype:conf OR filetype:ini)",
+      "desc": "排查暴露在 Web 目录下的日志与配置文件，可能包含路径、账号与内部地址。",
+      "tags": ["配置", "日志", "敏感文件"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-archive-file",
+      "title": "压缩包与源码归档",
+      "category": "敏感文件",
+      "code": "site:{{domain}} (filetype:zip OR filetype:rar OR filetype:7z OR filetype:tar)",
+      "desc": "发现公开可下载的压缩包，常包含源码、备份或批量导出数据。",
+      "tags": ["压缩包", "备份", "敏感文件"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    },
+    {
+      "id": "google-phpinfo",
+      "title": "phpinfo 与探针页面",
+      "category": "暴露面发现",
+      "code": "site:{{domain}} inurl:phpinfo",
+      "desc": "定位遗留的 phpinfo 或环境探针页面，可泄露路径、组件版本与配置信息。",
+      "tags": ["phpinfo", "信息泄露"],
+      "vars": [{ "name": "domain", "label": "域名", "placeholder": "example.com", "example": "example.com" }],
+      "source": "公开 Google Hacking 用法",
+      "risk": "recon"
+    }
+  ]
+}

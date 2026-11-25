@@ -1,0 +1,32 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+
+# 本地环境与密钥
+.env
+.env.*
+*.pem
+*.p12
+*.pfx
+*.key
+
+# 本地工具与编辑器
+.screenshots/
+.trae-html-share-packages/
+.trae/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志与临时文件
+*.log
+*.tmp
+*.bak
+*.zip
+
+# 本地数据库与备份
+*.sqlite
+*.db

@@ -1,0 +1,123 @@
+/* RuleBox 设计令牌：深色终端风 + 绿色强调，无渐变 */
+
+:root {
+  /* 原生控件（主要是筛选下拉的选项面板）跟随主题着色：
+     不声明 color-scheme 时，深色下拉展开后是白底 + 浅色字，选项几乎看不清 */
+  color-scheme: dark;
+
+  /* 背景层级 */
+  --rb-bg: #0d1117;
+  --rb-bg-elev: #161b22;
+  --rb-bg-elev-2: #1c2128;
+  --rb-bg-input: #0b0f14;
+  --rb-bg-hover: #21262d;
+
+  /* 文本 */
+  --rb-fg: #e6edf3;
+  --rb-fg-muted: #8b949e;
+  --rb-fg-subtle: #6e7681;
+
+  /* 线条 */
+  --rb-border: #30363d;
+  --rb-border-strong: #3d444d;
+
+  /* 强调色 */
+  --rb-accent: #3fb950;
+  --rb-accent-hover: #46c05a;
+  --rb-accent-contrast: #07130a;
+  --rb-accent-weak: rgba(63, 185, 80, 0.12);
+  --rb-accent-border: rgba(63, 185, 80, 0.35);
+
+  /* 语义色 */
+  --rb-danger: #f85149;
+  --rb-danger-weak: rgba(248, 81, 73, 0.12);
+  --rb-warn: #d29922;
+  --rb-warn-weak: rgba(210, 153, 34, 0.12);
+  --rb-info: #58a6ff;
+  --rb-info-weak: rgba(88, 166, 255, 0.12);
+
+  /* 尺寸 */
+  --rb-radius: 8px;
+  --rb-radius-sm: 6px;
+  --rb-radius-lg: 12px;
+  --rb-gap: 8px;
+  --rb-pad: 12px;
+
+  /* 字体 */
+  --rb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --rb-mono: "JetBrains Mono", "Cascadia Code", Consolas, "SFMono-Regular", Menlo, "Courier New", monospace;
+
+  /* 阴影 */
+  --rb-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --rb-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 亮色主题 */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --rb-bg: #ffffff;
+  --rb-bg-elev: #f6f8fa;
+  --rb-bg-elev-2: #eef1f4;
+  --rb-bg-input: #ffffff;
+  --rb-bg-hover: #eaeef2;
+
+  --rb-fg: #1f2328;
+  --rb-fg-muted: #59636e;
+  --rb-fg-subtle: #818b98;
+
+  --rb-border: #d1d9e0;
+  --rb-border-strong: #b7c0c9;
+
+  --rb-accent: #1a7f37;
+  --rb-accent-hover: #1c8139;
+  --rb-accent-contrast: #ffffff;
+  --rb-accent-weak: rgba(26, 127, 55, 0.1);
+  --rb-accent-border: rgba(26, 127, 55, 0.3);
+
+  --rb-danger: #cf222e;
+  --rb-danger-weak: rgba(207, 34, 46, 0.1);
+  --rb-warn: #9a6700;
+  --rb-warn-weak: rgba(154, 103, 0, 0.1);
+  --rb-info: #0969da;
+  --rb-info-weak: rgba(9, 105, 218, 0.1);
+
+  --rb-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+  --rb-shadow-sm: 0 2px 8px rgba(31, 35, 40, 0.08);
+}
+
+/* 跟随系统（默认 auto） */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] {
+    color-scheme: light;
+
+    --rb-bg: #ffffff;
+    --rb-bg-elev: #f6f8fa;
+    --rb-bg-elev-2: #eef1f4;
+    --rb-bg-input: #ffffff;
+    --rb-bg-hover: #eaeef2;
+
+    --rb-fg: #1f2328;
+    --rb-fg-muted: #59636e;
+    --rb-fg-subtle: #818b98;
+
+    --rb-border: #d1d9e0;
+    --rb-border-strong: #b7c0c9;
+
+    --rb-accent: #1a7f37;
+    --rb-accent-hover: #1c8139;
+    --rb-accent-contrast: #ffffff;
+    --rb-accent-weak: rgba(26, 127, 55, 0.1);
+    --rb-accent-border: rgba(26, 127, 55, 0.3);
+
+    --rb-danger: #cf222e;
+    --rb-danger-weak: rgba(207, 34, 46, 0.1);
+    --rb-warn: #9a6700;
+    --rb-warn-weak: rgba(154, 103, 0, 0.1);
+    --rb-info: #0969da;
+    --rb-info-weak: rgba(9, 105, 218, 0.1);
+
+    --rb-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+    --rb-shadow-sm: 0 2px 8px rgba(31, 35, 40, 0.08);
+  }
+}
