@@ -28,12 +28,13 @@ src\
 │   ├─ storage.js                 # chrome.storage.local 封装 + localStorage 回退 + 各业务键读写
 │   ├─ data.js                    # JSON 数据加载、归一化、缓存（loadAll / invalidateCache）
 │   ├─ search.js                  # 搜索与分类统计（searchItems / filterByCategory / countCategories）
+│   ├─ retrieve.js                # 本地示例召回（retrieveExamples：为 AI 挑选库内近似条目，纯本地、不联网）
 │   ├─ template.js               # {{变量}} 提取 / 填充 / 校验（applyVars / extractVars / missingVars / describeVar）
 │   ├─ clipboard.js               # 复制格式化（formatCopy：code | markdown | title-code）
-│   ├─ providers.js               # AI 供应商预设（PROVIDERS 数组，7 家 + custom）
+│   ├─ providers.js               # AI 供应商预设（PROVIDERS 数组，6 家预设 + custom，共 7 项）
 │   ├─ ai-client.js               # OpenAI 兼容 Chat Completions 客户端（SSE 流式、testConnection、hasEndpointPermission）
-│   ├─ logger.js                  # 日志
-│   └─ utils.js                    # $、$$、el、uid、clamp、safeParse、debounce、copyText、truncate、mask、isAllowedEndpoint 等
+│   ├─ logger.js                  # 日志与敏感信息脱敏（mask）
+│   └─ utils.js                    # $、$$、el、uid、clamp、safeParse、debounce、copyText、truncate、sanitizeFilename、isAllowedEndpoint 等
 ├─ data\                          # 内置数据（schema 见第 3 节）
 │   ├─ index.json                 # 数据索引（snippets/payloads 文件路径清单 + version + updated）
 │   ├─ platforms.json             # 平台注册表
@@ -254,7 +255,7 @@ src\
 - `theme`：`auto | dark | light`
 - `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`showRiskBadges`、`copyFormat`、`showDesc`
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
-- `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`、`notifyOnQuotaError`
+- `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
 - 系统提示词由 [`ai-client.js`](../src/core/ai-client.js) 的 `DEFAULT_SYSTEM_PROMPT` 提供基准：设置页展示并允许编辑，与内置文本完全一致或留空时存空字符串，保证扩展升级默认提示词后能自动生效；平台字段上下文与 `systemPromptAppend` 始终由 `buildSystemPrompt()` 拼接，不受用户编辑影响。
 - `limits`：`maxImportBytes`、`maxCustomItems`
 
@@ -350,7 +351,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 27. **AI 错误样式类挂在消息节点**：`is-error` 必须加到 `.rb-ai-msg` 自身（`aiMessageNode()`），CSS 选择器是 `.rb-ai-msg.is-assistant.is-error`；加到 `.rb-ai-body` 不会生效。
 28. **代码块正则两处必须同步**：`ai-client.js` 的 `extractCodeBlocks` 与 `app.js` 的 `renderRichText` 都要写成 `/```([a-zA-Z0-9_+-]*)\r?\n([\s\S]*?)```/g`，否则 Windows 换行（CRLF）的模型回复既提不出代码块也渲染不出高亮。SSE 分帧同理，用 `/\r?\n\r?\n/`。
 29. **IME 输入保护**：中文输入法回车确认候选词时会触发 `keydown` / `keyup`，所有“回车提交 / 回车复制”的监听必须先判 `event.isComposing`（或 `keyCode === 229`）再执行，否则会误触发搜索或复制。
-30. **异常通知只做本地记录**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，Windows 上常静默失败。群机器人 Webhook 同样要用户自建通道、失败难排查，对“用户主动发起对话、失败当场可见”的形态收益有限，两者均已于 2026-11-24 移除。因此通知只有两层：面板内错误提示（错误码 + 控制台入口）+ 本地告警记录（可复制内容，最多 50 条，`mask` 脱敏）。历史配置中的 `adminEmail` / `alertWebhookUrl` 会在 `mergeSettings()` 里被清理，不要再加回来。
+30. **异常提示只做面板内反馈**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，Windows 上常静默失败。群机器人 Webhook 同样要用户自建通道、失败难排查，对“用户主动发起对话、失败当场可见”的形态收益有限。**邮箱、Webhook 与本地告警记录（`rb.alerts`、`src/core/notify.js`）均已移除，不要再加回来**。现在额度 / 鉴权 / 限流等错误只在 AI 对话内显示可读提示（含错误码与控制台入口），不落库、不上报。历史配置里的 `adminEmail` / `alertWebhookUrl` / `notifyOnQuotaError` 由 `mergeSettings()` 兜底清理。
 31. **条目的 `vars` 必须与 `code` 里的 `{{占位符}}` 一一对应**：替换只认 `{{name}}`（`template.js` 的 `VAR_PATTERN`），`applyVars()` / `missingVars()` / `extractVars()` 都不识别 `<xxx>`、`{xxx}`、`$xxx` 等其它写法。声明了 `vars` 却把 `code` 写成 `<域名>` 字面量，用户填的值会被**静默丢弃**，复制出去仍是占位文本；反过来 `code` 里有 `{{}}` 而 `vars` 没声明，`normalizeVars()` 会自动补一个无名变量（无标签、无示例），体验同样差。另：`desc` 不参与变量替换，**禁止在 `desc` 里写 `{{}}`**。
 32. **数据规范化是白名单式的**：`normalizeSnippet()` / `normalizePayload()`（`src/core/data.js`）只复制显式列出的字段，任何新字段（如 `file`、`filePrefix`）不同时加进这两个函数就会被静默丢弃，表现为「数据里明明有、UI 上就是不出现」。自定义条目也走同一套规范化，所以设置页表单新字段也要在这条链路上打通。新增字段时同步补 3.x schema 与本表。
 33. **二进制文件头不能用纯文本凑**：`GIF89a` 恰好是 6 个 ASCII 字符，所以 GIF 图片马可以写成文本；PNG 的签名（`89 50 4E 47 0D 0A 1A 0A`）与 IHDR 带 CRC 校验，写 `PNG<?php ...` 只会得到一个坏图。这类样本必须用 `filePrefix`（Base64 真实字节）承载体，且 `code` 只放可读的代码片段——不要把整段 Base64 塞进 `code`，否则复制出去是一串乱码，卡片预览也不可读。
@@ -384,7 +385,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 ### 8.5 未来方向（已预留，未实现）
 
-- 接入各测绘平台 API Key 直接查询（仅记录于 README 愿景，尚未开发——动手前先检索避免重复设计）。
+- 接入各测绘平台 API Key 直接查询（尚未开发——动手前先检索避免重复设计）。
 
 ## 9. 变更纪律
 
@@ -413,7 +414,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 | 2026-10-23 | 空状态文案按场景区分：已有收藏但当前筛选无命中、最近为空、平台 / 类型 / 分类为空分别给出准确提示；复制后「最近」chip 计数即时同步（定向更新计数，不重建 chips） | `src/ui/app.js` |
 | 2026-10-23 | 第二轮细节打磨（交互与可达性）：4 处输入监听补 `isComposing` 保护；搜索框「清空」按钮随输入即时显隐；列表移除 `aria-live` 改由页脚 `role="status"` 播报结果条数；弹窗焦点陷阱与归还统一为 `manageDialogFocus()`；设置页表单弹窗支持 Enter 提交、校验失败自动聚焦首个错误项；快捷键文案随平台（`isMacPlatform()` 唯一实现） | `src/ui/app.js`、`src/ui/components.js`、`src/ui/options.js`、`src/core/utils.js`、`src/popup/popup.html` |
 | 2026-10-23 | 第二轮细节打磨（数据与主题一致性）：平台 / 语法分类 / Payload 类型 / AI 提示词组四处筛选值失效回落 `'all'`；自定义平台加载期按 ID 去重；AI 历史过滤失败与生成中消息；AI 错误样式类改挂消息节点；新增 `--rb-accent-contrast` 令牌修复浅色主题实心按钮对比度；管理员邮箱收敛到 `DEFAULT_ADMIN_EMAIL`（设置页占位符统一使用通用示例值） | `src/core/data.js`、`src/core/defaults.js`、`src/core/notify.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`src/shared/tokens.css`、`src/shared/base.css` |
-| 2026-10-23 | **数据语法 / Payload 全量审计**：①`payloads/` 12 个文件修正「声明 `vars` 但 `code` 用 `<xxx>` 字面量」的占位符错位（xxe 12 / ssrf 16 / jndi 11 / shell 12 / rce 16 / lfi 16 / jwt 12 / nosql 11 / redirect 11 / deserialization 12 / ldap 11 / webshell 13 条全部对齐）；②语义 / 语法硬伤：redirect.js 8 条 var-code 不对齐、deserialization 3 处（`<dnslog 域名>` 未替换、phar 路径反斜杠、CVE-2016-7124 标题与版本区间不符）、nosql 2 处（`$or` 第二分支非恒真、`$where` 放在 query-string 顶层不可行）、ldap `admin)(&(...` 非绕过改 `admin)(|(...`、webshell `find` 的 `-o`/`-type f`/`-mtime` 优先级与 ASHX 处理器不完整、gopher RESP 长度 `%2434`→`%2422`、xxe 未定义实体 `&send;`、jndi 重复条目、shell-php fd3 依赖；③`snippets/tools.json` 21 条 CLI（subfinder/amass/httpx/naabu/nmap/ffuf/whatweb/curl/nuclei/sqlmap/mysql/redis-cli/dig/whois）逐条核对**无错误**，未改动；④`snippets/fofa.json` 4 条 `cert.not_after/not_before` 时间字段无官方证据，desc 改为「可用性视套餐而定」并给出 `cert.is_expired` / `after-before` 降级写法；⑤新增第 7 节陷阱 31（vars 与 `{{}}` 必须一一对应，desc 禁止出现 `{{}}`） | `src/data/payloads/*.json`、`src/data/snippets/fofa.json`、`docs/DEVELOPMENT.md` |
+| 2026-10-23 | **数据语法 / Payload 全量审计**：①`payloads/` 12 个文件修正「声明 `vars` 但 `code` 用 `<xxx>` 字面量」的占位符错位（xxe 12 / ssrf 16 / jndi 11 / shell 12 / rce 16 / lfi 16 / jwt 12 / nosql 11 / redirect 11 / deserialization 12 / ldap 11 / webshell 13 条全部对齐）；②语义 / 语法硬伤：redirect.js 8 条 var-code 不对齐、deserialization 3 处（`<dnslog 域名>` 未替换、phar 路径反斜杠、CVE-2016-7124 标题与版本区间不符）、nosql 2 处（`$or` 第二分支非恒真、`$where` 放在 query-string 顶层不可行）、ldap `admin)(&(...` 非绕过改 `admin)(\|(...`、webshell `find` 的 `-o`/`-type f`/`-mtime` 优先级与 ASHX 处理器不完整、gopher RESP 长度 `%2434`→`%2422`、xxe 未定义实体 `&send;`、jndi 重复条目、shell-php fd3 依赖；③`snippets/tools.json` 21 条 CLI（subfinder/amass/httpx/naabu/nmap/ffuf/whatweb/curl/nuclei/sqlmap/mysql/redis-cli/dig/whois）逐条核对**无错误**，未改动；④`snippets/fofa.json` 4 条 `cert.not_after/not_before` 时间字段无官方证据，desc 改为「可用性视套餐而定」并给出 `cert.is_expired` / `after-before` 降级写法；⑤新增第 7 节陷阱 31（vars 与 `{{}}` 必须一一对应，desc 禁止出现 `{{}}`） | `src/data/payloads/*.json`、`src/data/snippets/fofa.json`、`docs/DEVELOPMENT.md` |
 | 2026-10-23 | **条目「存为文件」**：新增可选字段 `file`（建议文件名）。`utils.js` 增 `sanitizeFilename()` / `downloadText()`（Blob + `<a download>`，不申请 `downloads` 权限，4s 后 revoke）；`components.js` 把原 `copyWithVariables` 拆为 `resolveItemText()` + `copyWithVariables()` / `downloadWithVariables()`，复制与下载共用同一套变量流程；`itemCard()` 增 `onDownload`，仅 `item.file` 非空时渲染下载图标，星标按钮改用 `data-action="favorite"` 精确定位；`payloads/webshell.json` 9 条可执行样本补 `file`（`shell.php` / `shell.gif.php` / `shell.jsp` / `shell-echo.jsp` / `shell.jspx` / `shell.aspx` / `shell.ashx` 等）；设置页自定义条目表单增「文件名」输入；`options.js` 导出配置改用 `downloadText()` 消除重复下载实现 | `src/core/utils.js`、`src/ui/icons.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/app.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
 | 2026-10-23 | **筛选区重构（替代 2026-10-23 的 chips 方案）**：popup 里两条堆叠的横向滚动 chips 在 420px 宽下只露出 3 项、无溢出提示、滚轮纵向滚动“滑不动”，且 AI 页还有第三条。四处筛选位点（平台 / 语法分类 / Payload 类型 / Payload 分类）统一改为一行并排的两个 `<select>`，AI 提示词场景改为单个下拉；删除 `chips()` / `replaceChips()` 与 `components.css` 整套 `.rb-chips/.rb-chip` 样式，新增唯一筛选实现 `syncFilterSelect()`（选项签名比对、失效值回落、`allLabel:null` 支持“必选一项”）。筛选区高度约 70px → 32px，插件内不再出现任何横向滚动条；`tokens.css` 三处补 `color-scheme`，修复深色主题下下拉选项面板白底浅字不可读 | `src/ui/components.js`、`src/ui/app.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/shared/components.css`、`src/shared/tokens.css`、`docs/DEVELOPMENT.md` |
 | 2026-10-23 | **图片马支持真二进制**：新增可选字段 `filePrefix`（Base64 二进制前缀），下载时 `base64ToBytes()` 解码后拼在 `code` 之前写入 Blob，用于 PNG 这类无法用纯文本伪造文件头的样本（GIF 的 `GIF89a` 属特例）。`utils.js` 抽出 `downloadBlob()` 供 `downloadText()` 复用，新增 `base64ToBytes()`（兼容 data URL 前缀、非法输入返回 null）；`webshell.json` 新增「PNG 图片马（真图成品）」（真实 1×1 PNG 70 字节 + 尾部一句话，`file: shell.png`），可执行样本 9 → 10 条；设置页自定义条目表单增「二进制前缀（Base64）」文本域，含 Base64 合法性、必须同时填文件名的校验；补充第 7 节陷阱 33（二进制头不能用纯文本凑） | `src/core/utils.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
@@ -428,5 +429,6 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 | 2026-11-25 | **内置条目软隐藏**：新增 `rb.hidden`（`kind:id` 数组）与 `getHidden / setHidden`；面板在数据入口 `applyHidden()` 统一过滤并重算平台 / 分组条数，保证列表、搜索、计数口径一致；设置页新增「内置条目显示」卡片，支持搜索、只看已隐藏、逐条隐藏 / 恢复与「全部恢复」（二次确认）；面板与设置页通过 `chrome.storage.onChanged` 实时同步 | `src/core/defaults.js`、`src/core/storage.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`src/options/options.css`、`docs/DEVELOPMENT.md` |
 | 2026-11-25 | **新增条目表单简化**：隐藏类型选择（由入口决定语法 / Payload）、分类改为「分类 / 类型」并给出说明、标签与说明补充用途提示、`{{变量}}` 输入实时提示、底部增加与面板一致的卡片实时预览；共享表单同步用于设置页与面板 | `src/ui/item-dialog.js`、`src/ui/form-dialog.js`、`src/popup/popup.css`、`src/shared/components.css` |
 | 2026-11-25 | **隐藏入口可发现性**：设置页把「内置条目显示」从「自定义数据」末尾拆成独立分区（导航新增 `builtin`，`#builtin` 锚点直达）；面板页脚在存在隐藏条目时显示「已隐藏 N 条 · 恢复」，点击打开设置页该分区并带 `?onlyHidden=1`，进入后自动勾选“只看已隐藏”，直接列出可恢复条目，AI 页不显示；面板隐藏改为串行写入，修复连续快速隐藏多条时并发「读-改-写」互相覆盖只生效一条的问题 | `src/options/options.html`、`src/ui/options.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/ui/app.js`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | **预设语法库审查补全**：百度补充标题多词、标题 + URL 双限定、上传下载路径、报错信息、phpinfo、移动端子站、备份路径与压缩包，并标注 `filetype:all`、`|`、`+`、`《》` 等非官方明确写法的效果不确定性；Alpha 统一噪音规则排除条件，新增多告警名 `in`、已处置、等级变量、排除源 IP、资产 + 多端口、高危未判定等组合，`notice` 明确字段与枚举需按平台字典确认；Google 把 `.env` 从无法命中的 `filetype:env` 改为 `inurl:".env"` 加内容特征，新增 `.DS_Store`、`.svn` / `WEB-INF`、Actuator、Apache 状态页、phpMyAdmin、JSON / XML 配置、备份目录、子域枚举、`allinanchor`、异常堆栈共 10 条 | `src/data/snippets/baidu.json`、`src/data/snippets/alpha.json`、`src/data/snippets/google.json`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | **预设语法库审查补全**：百度补充标题多词、标题 + URL 双限定、上传下载路径、报错信息、phpinfo、移动端子站、备份路径与压缩包，并标注 `filetype:all`、`\|`、`+`、`《》` 等非官方明确写法的效果不确定性；Alpha 统一噪音规则排除条件，新增多告警名 `in`、已处置、等级变量、排除源 IP、资产 + 多端口、高危未判定等组合，`notice` 明确字段与枚举需按平台字典确认；Google 把 `.env` 从无法命中的 `filetype:env` 改为 `inurl:".env"` 加内容特征，新增 `.DS_Store`、`.svn` / `WEB-INF`、Actuator、Apache 状态页、phpMyAdmin、JSON / XML 配置、备份目录、子域枚举、`allinanchor`、异常堆栈共 10 条 | `src/data/snippets/baidu.json`、`src/data/snippets/alpha.json`、`src/data/snippets/google.json`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | **文档事实性审计**：删除已废弃的「本地告警记录 / 最多 50 条」描述与 `ai.notifyOnQuotaError` 字段说明，补 `ai.includeLibraryExamples`；目录树补 `core/retrieve.js`、`mask` 归位到 `logger.js`、供应商口径改为「6 家预设 + custom（共 7 项）」；修正表格单元格内未转义的竖线（Ldap 绕过示例、百度 `\|` 说明）与失效的 README 引用；中性化图标生成条目的本机环境描述 | `docs/DEVELOPMENT.md` |
 
