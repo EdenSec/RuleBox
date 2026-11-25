@@ -1,6 +1,6 @@
 # RuleBox 开发与维护文档
 
-> 本文档面向后续所有开发 / 修复 / 扩展 RuleBox 的开发者与 AI Agent。
+> 本文档面向后续所有开发 / 修复 / 扩展 RuleBox 的开发者与贡献者。
 > **核心约定：任何开发动手之前，先通读本文档对应章节，并在代码库中检索是否已存在同类实现，禁止重复造轮子**（禁止新开同功能组件、同义字段、重复端点/存储键/映射）。若发现既有实现与期望不一致，优先修正旧实现并同步本文档，而不是另起一套。
 
 ## 1. 技术形态与总体架构
@@ -332,9 +332,9 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 9. **徽章类名**：设置页可用 `badge()/riskBadge()`（变体 accent/danger/warn/info）；`.rb-badge--platform` 只存在于 popup.css。
 10. **条目卡片按钮顺序固定**为收藏 → 隐藏 / 编辑 / 删除 → 存为文件 → 复制：内置条目只有「隐藏」（写 `rb.hidden`，可恢复），自定义条目才出现编辑 / 删除；新增按钮一律用 `data-action` 或独立引用定位，不要按 ghost 顺序取。
 11. **toast 类型**：`success / warn / danger / info`（无 error）。
-12. **PowerShell 5.1 生成图标**：无 BOM 文件按 ANSI/GBK 解析，脚本必须 ASCII-only；本机 `GraphicsPath.AddArc / SolidBrush / Pen` 构造调用失败，图标用逐像素 `SetPixel` 方案生成（已产出并像素级验证，icons/ 下 4 个 PNG）。
+12. **用脚本生成图标时注意编码**：无 BOM 的脚本文件在部分环境下按 ANSI/GBK 解析，脚本内容需保持 ASCII-only；`GraphicsPath.AddArc / SolidBrush / Pen` 的构造调用不够稳定，图标改用逐像素 `SetPixel` 方案生成（icons/ 下 4 个 PNG 已做像素级校验）。
 13. **文件一律 UTF-8**：JS 内中文注释正常写；若出现“中文变 ？”乱码立即回滚定位编码问题。
-14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在 `154×187`（Chrome 151 实测）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
+14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在 `154×187`（已实测复现）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
 15. **变量弹窗提交按钮必须在 `<form>` 内**：`.rb-dialog-foot` 若被放到 `</form>` 之后，`type=submit` 的按钮与回车都失效；`components.js` 的 `openVariableDialog` 已按“form 包裹 body + foot”实现，复用时不要拆开。
 16. **`chrome.windows.create({ type: 'popup' })` 不是 POPUP 上下文**：它创建的是 `TAB` 上下文，`getContexts({ contextTypes: ['POPUP'] })` 查不到。测试真实 action popup（如 `closeAfterCopy`、固定尺寸）必须用 `chrome.action.openPopup()` 打开；否则会得到错误结论。
 17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，12 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已于 2026-10-23 删除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
