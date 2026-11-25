@@ -47,45 +47,111 @@
 
 ## 🖼️ 界面预览
 
-**从搜索到复制（动图）**：搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制
+以下均为深色主题（默认）。
+
+<br>
+
+### 演示：搜索 → 填变量 → 复制
+
+搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制
 
 <p align="center">
   <img src="assets/demo-varfill.gif" alt="搜索条目、填写变量并一键复制的完整流程" width="420">
 </p>
 
-**深色主题**（默认）
+<br>
+
+### 语法库
+
+按平台归类，支持关键词搜索与分类筛选，卡片内直接显示语法与说明。
 
 <p align="center">
   <img src="assets/screenshot-popup-dark.png" alt="主面板 · 语法库搜索" width="420">
+</p>
+
+<br>
+
+### Payload 库
+
+按 Payload 类型分组，可按分类过滤，点击即复制。
+
+<p align="center">
   <img src="assets/screenshot-payloads-dark.png" alt="Payload 库 · 按类型与分类筛选" width="420">
 </p>
 
+<br>
+
+### 变量填充
+
+带变量的条目会弹出填写框，下方实时预览填充后的最终语句。
+
 <p align="center">
   <img src="assets/screenshot-varfill-dark.png" alt="变量填充 · 实时预览最终语法" width="420">
+</p>
+
+<br>
+
+### AI 助手
+
+用自然语言描述需求，生成贴合当前平台字段的语法或 Payload。
+
+<p align="center">
   <img src="assets/screenshot-ai-dark.png" alt="AI 助手" width="420">
 </p>
 
+<br>
+
+### 设置页
+
+主题、复制格式、AI 档案、数据导入导出与自定义条目管理。
+
 <p align="center">
-  <img src="assets/screenshot-settings-dark.png" alt="设置页" width="920">
+  <img src="assets/screenshot-settings-dark.png" alt="设置页" width="880">
 </p>
+
+<br>
 
 <details>
 <summary><b>浅色主题预览</b>（点击展开）</summary>
 
 <br>
 
+#### 语法库 · 浅色
+
 <p align="center">
   <img src="assets/screenshot-popup-light.png" alt="主面板 · 语法库搜索 · 浅色" width="420">
+</p>
+
+<br>
+
+#### Payload 库 · 浅色
+
+<p align="center">
   <img src="assets/screenshot-payloads-light.png" alt="Payload 库 · 浅色" width="420">
 </p>
 
+<br>
+
+#### 变量填充 · 浅色
+
 <p align="center">
   <img src="assets/screenshot-varfill-light.png" alt="变量填充 · 浅色" width="420">
+</p>
+
+<br>
+
+#### AI 助手 · 浅色
+
+<p align="center">
   <img src="assets/screenshot-ai-light.png" alt="AI 助手 · 浅色" width="420">
 </p>
 
+<br>
+
+#### 设置页 · 浅色
+
 <p align="center">
-  <img src="assets/screenshot-settings-light.png" alt="设置页 · 浅色" width="920">
+  <img src="assets/screenshot-settings-light.png" alt="设置页 · 浅色" width="880">
 </p>
 
 </details>
