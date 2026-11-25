@@ -135,6 +135,15 @@
 
 ---
 
+## 🤝 帮助、反馈与贡献
+
+- **遇到问题**：在仓库的 Issues 里提交，尽量附上浏览器与扩展版本、复现步骤、控制台报错
+- **想加语法 / Payload**：可以直接在设置页「自定义数据」里新增，随加随用；也可以提 PR 改 `src/data/` 下的 JSON（开发约定见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)）
+- **提交代码前**：请先读 [DEVELOPMENT.md](docs/DEVELOPMENT.md)，保持无构建、纯原生 ES Module 的结构，不要在代码或数据里写入真实密码、Key、真实单位与个人的信息
+- **维护者**：由 RuleBox 维护者与贡献者共同维护
+
+---
+
 ## 📖 数据来源与免责声明
 
 - 语法与字段依据各平台**公开文档**与公开技术资料整理，条目内标注 `source` 来源
@@ -148,6 +157,7 @@
 ```
 RuleBox/
 ├─ manifest.json              # MV3 清单
+├─ LICENSE                    # MIT 开源协议
 ├─ icons/                     # 扩展图标（16/32/48/128）
 ├─ assets/                    # README 截图与图片
 ├─ src/
@@ -165,4 +175,4 @@ RuleBox/
 
 ## 📜 License
 
-MIT License
+本项目基于 [MIT License](LICENSE) 开源。
