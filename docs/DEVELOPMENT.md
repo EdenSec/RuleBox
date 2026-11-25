@@ -163,8 +163,8 @@ src\
       "desc": "...",
       "tags": ["sqli", "login", "bypass"],
       "vars": [],                 // Payload 通常无变量
-      "file": "shell.php",        // 可选：成品文件名，声明后可直接下载为可上传文件（见 3.7）
-      "filePrefix": "iVBORw0...", // 可选：二进制前缀（Base64），图片马等样本先解码成字节再拼接 code（见 3.7）
+      "file": "sample.txt",       // 可选：建议文件名，声明后卡片出现下载入口（见 3.7）
+      "filePrefix": "iVBORw0...", // 可选：二进制前缀（Base64），需要真实文件头的样本先解码成字节再拼接 code（见 3.7）
       "risk": "attack",
       "source": "OWASP / PayloadsAllTheThings"
     }
@@ -198,19 +198,19 @@ src\
 
 ### 3.7 条目「存为文件」（`item.file` + `item.filePrefix`）
 
-`file` 是**可选**字段，值为建议文件名（如 `shell.php`）。语义与约束：
+`file` 是**可选**字段，值为建议文件名（如 `sample.txt`，或与样本类型匹配的扩展名）。语义与约束：
 
 - **只有声明了 `file` 的条目**才在卡片操作区显示下载图标；未声明的条目依旧只有「收藏 + 复制」，避免 420px 宽的 popup 里每张卡片都挤三个按钮。
-- 下载内容是**变量替换后的最终代码**（与复制共用 `resolveItemText()`，`src/ui/components.js`），因此带变量的样本填完变量再下载即为可直接上传的成品。
-- `filePrefix` 是**可选**的二进制前缀（Base64），下载时先 `base64ToBytes()` 解码成字节，**拼在代码之前**再写入 Blob。用于真 PNG / JPG 这类无法用纯文本伪造的文件头（GIF 只用 `GIF89a` 六个 ASCII 字符即可，属于特例）。非法 Base64 会提示并中止下载，不会产出半截文件。
-- `filePrefix` 只影响下载，**复制仍只复制 `code` 文本**；`code` 始终是可读的唯一真相源，二进制前缀只存「图片骨架」，两者不会出现内容漂移。
+- 下载内容是**变量替换后的最终代码**（与复制共用 `resolveItemText()`，`src/ui/components.js`），因此带变量的样本填完变量再下载即为完整样本文件。
+- `filePrefix` 是**可选**的二进制前缀（Base64），下载时先 `base64ToBytes()` 解码成字节，**拼在代码之前**再写入 Blob。用于带签名或校验、无法用纯文本伪造文件头的二进制格式（文件头恰好是纯 ASCII 的格式可直接写成文本，属特例）。非法 Base64 会提示并中止下载，不会产出半截文件。
+- `filePrefix` 只影响下载，**复制仍只复制 `code` 文本**；`code` 始终是可读的唯一真相源，二进制前缀只存「文件骨架」，两者不会出现内容漂移。
 - 变量弹窗的确认按钮文案由 `confirmText` 区分：复制走默认「填充并复制」，下载传「填充并下载」。不要把它写死成单一文案，否则下载场景会误导用户以为只复制。
 - 与复制不同，下载**不触发** `ui.closeAfterCopy`：一次通常要连续取多个样本。
-- 文件名统一经 `sanitizeFilename()`（`src/core/utils.js`）净化，去掉路径分隔符与控制字符，防止条目数据写成 `../x.php` 落到下载目录之外。
+- 文件名统一经 `sanitizeFilename()`（`src/core/utils.js`）净化，去掉路径分隔符与控制字符，防止条目数据写成 `../outside.txt` 落到下载目录之外。
 - 实现用 `Blob` + `<a download>`（`downloadText()` / `downloadBlob()`），**不申请 `downloads` 权限**；延迟 4s revoke URL。
 - 这两个字段都必须在 `normalizeSnippet()` / `normalizePayload()`（`src/core/data.js`）白名单里，否则会被静默丢弃——这是新增字段最容易踩的坑（见第 7 节陷阱 32）。
 - 设置页「新增 / 编辑自定义条目」表单也有「文件名」「二进制前缀（Base64）」两个输入，运行时同样可配置；填了前缀却没填文件名会被表单拦下。
-- 当前使用该字段的是 `payloads/webshell.json` 的 10 条可执行样本（php / jsp / jspx / aspx / ashx / GIF 图片马 / PNG 图片马）。新增同类样本时按同样方式补 `file`，**不要**另建一套"下载专用"数据结构。
+- 当前使用该字段的是 `payloads/webshell.json` 的 10 条可下载样本（按语言 / 容器区分的文本样本与二进制头部样本）。新增同类条目时按同样方式补 `file`，**不要**另建一套“下载专用”数据结构。
 
 ## 4. risk 风险等级值域（三方同步，禁止私加）
 
@@ -318,7 +318,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 每个控件 change 即调 `updateSettings(mutator)` → `patchSettings(draft => { mutator(draft); return draft; })`。`patchSettings` 的 updater **必须 return**，否则保存 undefined 导致配置被重置。
 
-`patchSettings` 内部维护模块级串行队列 `settingsWriteQueue`：每次“读 → 改 → 写”按序执行，单次失败不会中断队列（失败结果只 reject 给调用方）。**不要绕过它直接 `saveSettings` 做局部更新**——连续快速切换多个开关时会因并发读改写互相覆盖而丢配置（已实测复现并修复）。自定义数据写入后用 `invalidateCache()` 刷新共享缓存并向 SW 发 `rb:sync`。
+`patchSettings` 内部维护模块级串行队列 `settingsWriteQueue`：每次“读 → 改 → 写”按序执行，单次失败不会中断队列（失败结果只 reject 给调用方）。**不要绕过它直接 `saveSettings` 做局部更新**——连续快速切换多个开关时会因并发读改写互相覆盖而丢配置（已修复，回归时重点验证）。自定义数据写入后用 `invalidateCache()` 刷新共享缓存并向 SW 发 `rb:sync`。
 
 ## 7. 已知实现陷阱（改动前必读）
 
@@ -335,7 +335,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 11. **toast 类型**：`success / warn / danger / info`（无 error）。
 12. **用脚本生成图标时注意编码**：无 BOM 的脚本文件在部分环境下按 ANSI/GBK 解析，脚本内容需保持 ASCII-only；`GraphicsPath.AddArc / SolidBrush / Pen` 的构造调用不够稳定，图标改用逐像素 `SetPixel` 方案生成（icons/ 下 4 个 PNG 已做像素级校验）。
 13. **文件一律 UTF-8**：JS 内中文注释正常写；若出现“中文变 ？”乱码立即回滚定位编码问题。
-14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在 `154×187`（已实测复现）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
+14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在一个极小尺寸（曾出现 `154×187`）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
 15. **变量弹窗提交按钮必须在 `<form>` 内**：`.rb-dialog-foot` 若被放到 `</form>` 之后，`type=submit` 的按钮与回车都失效；`components.js` 的 `openVariableDialog` 已按“form 包裹 body + foot”实现，复用时不要拆开。
 16. **`chrome.windows.create({ type: 'popup' })` 不是 POPUP 上下文**：它创建的是 `TAB` 上下文，`getContexts({ contextTypes: ['POPUP'] })` 查不到。测试真实 action popup（如 `closeAfterCopy`、固定尺寸）必须用 `chrome.action.openPopup()` 打开；否则会得到错误结论。
 17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，12 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已于 2026-10-23 删除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
@@ -351,10 +351,10 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 27. **AI 错误样式类挂在消息节点**：`is-error` 必须加到 `.rb-ai-msg` 自身（`aiMessageNode()`），CSS 选择器是 `.rb-ai-msg.is-assistant.is-error`；加到 `.rb-ai-body` 不会生效。
 28. **代码块正则两处必须同步**：`ai-client.js` 的 `extractCodeBlocks` 与 `app.js` 的 `renderRichText` 都要写成 `/```([a-zA-Z0-9_+-]*)\r?\n([\s\S]*?)```/g`，否则 Windows 换行（CRLF）的模型回复既提不出代码块也渲染不出高亮。SSE 分帧同理，用 `/\r?\n\r?\n/`。
 29. **IME 输入保护**：中文输入法回车确认候选词时会触发 `keydown` / `keyup`，所有“回车提交 / 回车复制”的监听必须先判 `event.isComposing`（或 `keyCode === 229`）再执行，否则会误触发搜索或复制。
-30. **异常提示只做面板内反馈**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，Windows 上常静默失败。群机器人 Webhook 同样要用户自建通道、失败难排查，对“用户主动发起对话、失败当场可见”的形态收益有限。**邮箱、Webhook 与本地告警记录（`rb.alerts`、`src/core/notify.js`）均已移除，不要再加回来**。现在额度 / 鉴权 / 限流等错误只在 AI 对话内显示可读提示（含错误码与控制台入口），不落库、不上报。历史配置里的 `adminEmail` / `alertWebhookUrl` / `notifyOnQuotaError` 由 `mergeSettings()` 兜底清理。
+30. **异常提示只做面板内反馈**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，Windows 上常静默失败。群机器人 Webhook 同样需要用户自建通道、失败难排查。**不要引入邮件 / Webhook / 本地告警记录等通知链路**：额度 / 鉴权 / 限流等错误只在 AI 对话内显示可读提示（含错误码与控制台入口），不落库、不上报。历史遗留的通知类配置字段由 `mergeSettings()` 兜底清理。
 31. **条目的 `vars` 必须与 `code` 里的 `{{占位符}}` 一一对应**：替换只认 `{{name}}`（`template.js` 的 `VAR_PATTERN`），`applyVars()` / `missingVars()` / `extractVars()` 都不识别 `<xxx>`、`{xxx}`、`$xxx` 等其它写法。声明了 `vars` 却把 `code` 写成 `<域名>` 字面量，用户填的值会被**静默丢弃**，复制出去仍是占位文本；反过来 `code` 里有 `{{}}` 而 `vars` 没声明，`normalizeVars()` 会自动补一个无名变量（无标签、无示例），体验同样差。另：`desc` 不参与变量替换，**禁止在 `desc` 里写 `{{}}`**。
 32. **数据规范化是白名单式的**：`normalizeSnippet()` / `normalizePayload()`（`src/core/data.js`）只复制显式列出的字段，任何新字段（如 `file`、`filePrefix`）不同时加进这两个函数就会被静默丢弃，表现为「数据里明明有、UI 上就是不出现」。自定义条目也走同一套规范化，所以设置页表单新字段也要在这条链路上打通。新增字段时同步补 3.x schema 与本表。
-33. **二进制文件头不能用纯文本凑**：`GIF89a` 恰好是 6 个 ASCII 字符，所以 GIF 图片马可以写成文本；PNG 的签名（`89 50 4E 47 0D 0A 1A 0A`）与 IHDR 带 CRC 校验，写 `PNG<?php ...` 只会得到一个坏图。这类样本必须用 `filePrefix`（Base64 真实字节）承载体，且 `code` 只放可读的代码片段——不要把整段 Base64 塞进 `code`，否则复制出去是一串乱码，卡片预览也不可读。
+33. **二进制文件头不能用纯文本凑**：有些格式的文件头恰好是纯 ASCII，可以直接写成文本；而带签名与 CRC 校验的二进制格式（如 PNG）用纯文本拼接只会得到损坏文件。这类样本必须用 `filePrefix`（Base64 真实字节）承载，且 `code` 只放可读的代码片段——不要把整段 Base64 塞进 `code`，否则复制出去是一串乱码，卡片预览也不可读。
 
 ## 8. 扩展指南
 
@@ -369,9 +369,9 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 同上：`data/payloads/<type>.json` + index.json 登记 `payloads`。
 
-若该组包含**可直接落盘执行的样本**（WebShell / 免杀脚本等），给对应条目补 `file`（如 `"shell.php"`），卡片即出现「存为文件」按钮，用户填完变量可一键拿到可上传的成品文件。机制与约束见 3.7；不要在 UI 层另写下载逻辑。
+若该组包含**可下载的样本文件**，给对应条目补 `file`（如 `"sample.txt"` 或与样本类型匹配的扩展名），卡片即出现「存为文件」按钮，用户填完变量可一键拿到完整样本。机制与约束见 3.7；不要在 UI 层另写下载逻辑。
 
-若样本需要**真实二进制文件头**（PNG / JPG 等图片马），再补 `filePrefix`（该文件的 Base64 骨架），下载时会先解码为字节再拼接 `code`。PNG 不能用 `GIF89a` 那种纯文本头伪造：浏览器 / `getimagesize()` 会校验签名与 IHDR，必须给完整字节。
+若样本需要**真实二进制文件头**，再补 `filePrefix`（该文件的 Base64 骨架），下载时会先解码为字节再拼接 `code`。带签名 / 校验的格式不能用纯文本头伪造，必须给完整字节。
 
 ### 8.3 新增 AI 供应商
 
@@ -395,40 +395,16 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 ### 9.1 变更记录
 
+> 本节只记录对外可见的能力变更，不记录逐日实现细节；完整历史以 git 提交记录为准。
+
 | 日期 | 变更 | 影响范围 |
 | --- | --- | --- |
-| 2026-10-22 | FOFA 语法库按官方字段表全量补齐：49 → 109 条 / 11 分类；`platforms.json` FOFA 字段 35 → 74、运算符 6 → 7（补 `*=` 通配与空值语义） | `snippets/fofa.json`、`platforms.json` |
-| 2026-10-22 | Hunter 语法库按官方语法全量补齐：34 → 99 条 / 13 分类；`platforms.json` Hunter 字段 24 → 76、运算符 8 → 7。**修正 4 处旧条目语义错误**：`icp.name=""` → `icp.name!=""`（非空）、`port` → `ip.port`、`os` → `ip.os`、`web.similar_icon=` → `web.similar_icon==` | `snippets/hunter.json`、`platforms.json` |
-| 2026-10-22 | 新增 3.3 节「语法库覆盖约定（强制）」：官方全量字段 / 条目与官方一致 / snippets 与 platforms.json 同步 / categories 与代码解耦 / 会员限制写进 desc | `docs/DEVELOPMENT.md` |
-| 2026-10-22 | Quake 360 语法库齐全：25 → 61 条 / 6 分类；`platforms.json` 字段 73、运算符 6（`:` / `AND` / `OR` / `NOT` / `()` / `""`），补充“逻辑符必须大写、数字与布尔值不加引号”的官方规则 | `snippets/quake.json`、`platforms.json` |
-| 2026-10-22 | 零零信安 0.zone 语法库重写：5 → 83 条 / 7 分类；`platforms.json` 字段 58、运算符 14；旧条目与新条目字段语义统一到官方语法 | `snippets/zerozone.json`、`platforms.json` |
-| 2026-10-22 | Shodan 语法库按官方 Filter Reference 重写：20 → 102 条 / 9 分类；`platforms.json` 字段 87、运算符 5；**修正 2 处非官方字段**：`http.server:` → `http.server_hash:`、`http.headers:` → `http.headers_hash:`（Shodan 无明文 server/headers 过滤器） | `snippets/shodan.json`、`platforms.json` |
-| 2026-10-22 | **ZoomEye 官方语法体系改版**：`site:` 等冒号语法 → `domain=` / `=`（模糊）/ `==`（精确）等号语法。语法库 15 → 61 条 / 10 分类，旧条目全部按新语法改写（保留原 id 以延续收藏 key）；`platforms.json` 字段 44、运算符 7；`docUrl` 指向官方新版语法说明 | `snippets/zoomeye.json`、`platforms.json` |
-| 2026-10-22 | **DayDayMap 官方语法体系改版**：冒号语法 → `field="value"` 等号 + `ip./web./cert./protocol.` 字段前缀。语法库 6 → 68 条 / 11 分类，旧条目全部改写（保留原 id）；`platforms.json` 字段 55、运算符 6；`docUrl` 改为官方帮助文档 | `snippets/daydaymap.json`、`platforms.json` |
-| 2026-10-22 | Google Hacking 语法库补齐：16 → 26 条 / 3 分类；`platforms.json` 运算符 17（补 `allintitle:` / `allinurl:` / `allintext:` / `inanchor:` / `before:` / `after:` / `*` / `..`），字段 13；明确标注 `cache:` 已于 2024 年下线、`related:` 已弱化，仅作历史认知保留 | `snippets/google.json`、`platforms.json` |
-| 2026-10-22 | **维护警示：测绘平台语法会整体改版**。ZoomEye、DayDayMap 均发生过“冒号 → 等号”的体系级变更，FOFA / Hunter 的 `=` 与 `==` 语义也需随时对照官方。改动任一条目前必须回官方文档核对，禁止凭记忆或旧博客补语法；核对后 snippets 与 `platforms.json` 同步更新，并在本表登记 | `snippets/*.json`、`platforms.json`、`docs/DEVELOPMENT.md` |
-| 2026-10-22 | 补充 Edge 兼容说明（依据 Microsoft Learn 旁加载文档与 Edge 边栏扩展文档）：Chrome / Edge 共用同一份 MV3 源码，`side_panel` + `sidePanel` 在 Edge 侧边栏同样生效；README 安装章节拆为 Chrome / Edge 两节 | `README.md`、`docs/DEVELOPMENT.md` |
-| 2026-10-22 | Hunter 语法库对照官方语法清单逐条复核：99 → 100 条（补缺失的裸字段 `app=`，官方组合示例 `app="Hikvision 海康威视 Firmware 5.0+" && ip.ports="8000"`）。**修正**：`is_domain` 语义改为「域名标记不为空」、`web.is_vul` 改为「存在历史漏洞」；6 条 whois 类（`domain.status` / `whois_server` / `name_server` / `creation_date` / `expiry_date` / `updated_date`）补标「特色语法」；3 条证书指纹与 `tls-jarm.ans` 的示例值替换为官方原值（原为编造）；`!==` 条目示例简化为纯精确剔除。`platforms.json` Hunter 字段 76 → 77、tips 4 → 5 | `snippets/hunter.json`、`platforms.json` |
-| 2026-10-22 | FOFA 语法库对照官方「查询语法参考」逐条复核：109 → 115 条。**补遗漏**：4 条证书布尔反向变体（`cert.is_equal=false` / `cert.is_valid=false` / `cert.is_match=false` / `cert.is_expired=false`）、2 条运算符语义条目（`!=` 不匹配、`==` 完全匹配）。**修正**：`fofa-ipv6` 删除官方未提供的「IPv6 网段」臆造说明；`fofa-cert-valid` 还原官方纯形式 `cert.is_valid=true`；`fofa-subdomain` 还原官方纯形式 `type="subdomain"`（与 `fofa-type-service` 对称）；`fofa-protocol` 去掉「需配合 type="service"」的误导措辞。`platforms.json` FOFA 字段 74、运算符 7 无变化，tips 4 → 5（补独立 IP 语法须配合 `ip_filter` / `ip_exclude`） | `snippets/fofa.json`、`platforms.json` |
-| 2026-10-23 | UI 细节打磨：新增 `replaceChips()` 统一 4 个 chips 挂载点，修复「横向滚到右侧后点击 chip，导航条跳回最前」的连续性问题（同时保证激活项可见、键盘焦点不丢）；新增 `resetContentScroll()`，在平台 / 分类 / Payload 类型 / 搜索 / 收藏 / 右键搜索切换时复位列表纵向滚动，「加载更多」不复位 | `src/ui/components.js`、`src/ui/app.js` |
-| 2026-10-23 | 空状态文案按场景区分：已有收藏但当前筛选无命中、最近为空、平台 / 类型 / 分类为空分别给出准确提示；复制后「最近」chip 计数即时同步（定向更新计数，不重建 chips） | `src/ui/app.js` |
-| 2026-10-23 | 第二轮细节打磨（交互与可达性）：4 处输入监听补 `isComposing` 保护；搜索框「清空」按钮随输入即时显隐；列表移除 `aria-live` 改由页脚 `role="status"` 播报结果条数；弹窗焦点陷阱与归还统一为 `manageDialogFocus()`；设置页表单弹窗支持 Enter 提交、校验失败自动聚焦首个错误项；快捷键文案随平台（`isMacPlatform()` 唯一实现） | `src/ui/app.js`、`src/ui/components.js`、`src/ui/options.js`、`src/core/utils.js`、`src/popup/popup.html` |
-| 2026-10-23 | 第二轮细节打磨（数据与主题一致性）：平台 / 语法分类 / Payload 类型 / AI 提示词组四处筛选值失效回落 `'all'`；自定义平台加载期按 ID 去重；AI 历史过滤失败与生成中消息；AI 错误样式类改挂消息节点；新增 `--rb-accent-contrast` 令牌修复浅色主题实心按钮对比度；管理员邮箱收敛到 `DEFAULT_ADMIN_EMAIL`（设置页占位符统一使用通用示例值） | `src/core/data.js`、`src/core/defaults.js`、`src/core/notify.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`src/shared/tokens.css`、`src/shared/base.css` |
-| 2026-10-23 | **数据语法 / Payload 全量审计**：①`payloads/` 12 个文件修正「声明 `vars` 但 `code` 用 `<xxx>` 字面量」的占位符错位（xxe 12 / ssrf 16 / jndi 11 / shell 12 / rce 16 / lfi 16 / jwt 12 / nosql 11 / redirect 11 / deserialization 12 / ldap 11 / webshell 13 条全部对齐）；②语义 / 语法硬伤：redirect.js 8 条 var-code 不对齐、deserialization 3 处（`<dnslog 域名>` 未替换、phar 路径反斜杠、CVE-2016-7124 标题与版本区间不符）、nosql 2 处（`$or` 第二分支非恒真、`$where` 放在 query-string 顶层不可行）、ldap `admin)(&(...` 非绕过改 `admin)(\|(...`、webshell `find` 的 `-o`/`-type f`/`-mtime` 优先级与 ASHX 处理器不完整、gopher RESP 长度 `%2434`→`%2422`、xxe 未定义实体 `&send;`、jndi 重复条目、shell-php fd3 依赖；③`snippets/tools.json` 21 条 CLI（subfinder/amass/httpx/naabu/nmap/ffuf/whatweb/curl/nuclei/sqlmap/mysql/redis-cli/dig/whois）逐条核对**无错误**，未改动；④`snippets/fofa.json` 4 条 `cert.not_after/not_before` 时间字段无官方证据，desc 改为「可用性视套餐而定」并给出 `cert.is_expired` / `after-before` 降级写法；⑤新增第 7 节陷阱 31（vars 与 `{{}}` 必须一一对应，desc 禁止出现 `{{}}`） | `src/data/payloads/*.json`、`src/data/snippets/fofa.json`、`docs/DEVELOPMENT.md` |
-| 2026-10-23 | **条目「存为文件」**：新增可选字段 `file`（建议文件名）。`utils.js` 增 `sanitizeFilename()` / `downloadText()`（Blob + `<a download>`，不申请 `downloads` 权限，4s 后 revoke）；`components.js` 把原 `copyWithVariables` 拆为 `resolveItemText()` + `copyWithVariables()` / `downloadWithVariables()`，复制与下载共用同一套变量流程；`itemCard()` 增 `onDownload`，仅 `item.file` 非空时渲染下载图标，星标按钮改用 `data-action="favorite"` 精确定位；`payloads/webshell.json` 9 条可执行样本补 `file`（`shell.php` / `shell.gif.php` / `shell.jsp` / `shell-echo.jsp` / `shell.jspx` / `shell.aspx` / `shell.ashx` 等）；设置页自定义条目表单增「文件名」输入；`options.js` 导出配置改用 `downloadText()` 消除重复下载实现 | `src/core/utils.js`、`src/ui/icons.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/app.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
-| 2026-10-23 | **筛选区重构（替代 2026-10-23 的 chips 方案）**：popup 里两条堆叠的横向滚动 chips 在 420px 宽下只露出 3 项、无溢出提示、滚轮纵向滚动“滑不动”，且 AI 页还有第三条。四处筛选位点（平台 / 语法分类 / Payload 类型 / Payload 分类）统一改为一行并排的两个 `<select>`，AI 提示词场景改为单个下拉；删除 `chips()` / `replaceChips()` 与 `components.css` 整套 `.rb-chips/.rb-chip` 样式，新增唯一筛选实现 `syncFilterSelect()`（选项签名比对、失效值回落、`allLabel:null` 支持“必选一项”）。筛选区高度约 70px → 32px，插件内不再出现任何横向滚动条；`tokens.css` 三处补 `color-scheme`，修复深色主题下下拉选项面板白底浅字不可读 | `src/ui/components.js`、`src/ui/app.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/shared/components.css`、`src/shared/tokens.css`、`docs/DEVELOPMENT.md` |
-| 2026-10-23 | **图片马支持真二进制**：新增可选字段 `filePrefix`（Base64 二进制前缀），下载时 `base64ToBytes()` 解码后拼在 `code` 之前写入 Blob，用于 PNG 这类无法用纯文本伪造文件头的样本（GIF 的 `GIF89a` 属特例）。`utils.js` 抽出 `downloadBlob()` 供 `downloadText()` 复用，新增 `base64ToBytes()`（兼容 data URL 前缀、非法输入返回 null）；`webshell.json` 新增「PNG 图片马（真图成品）」（真实 1×1 PNG 70 字节 + 尾部一句话，`file: shell.png`），可执行样本 9 → 10 条；设置页自定义条目表单增「二进制前缀（Base64）」文本域，含 Base64 合法性、必须同时填文件名的校验；补充第 7 节陷阱 33（二进制头不能用纯文本凑） | `src/core/utils.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
-| 2026-11-24 | 全平台语法复核：逐条对照官方文档 / 搜索框语法弹窗，修正 0.zone 邮箱模块 `company` 字段与 `leakage_num` 比较语义、Google `ext:` 标注为非官方并移除已下线的 `cache:` 字段、百度补 `filetype:all` 与 `\|` 空格规则并标注 `+` / `《》` / `()` 非官方、Alpha 注明无公开语法文档、工具命令补 PowerShell 引号差异；同步统一各平台示例中的占位单位与域名 | `snippets/*.json`、`platforms.json` |
-| 2026-11-24 | 通知体验：Webhook 测试与告警回写 `delivery`（`ok/fail/off`）并展示送达徽标与失败原因；AI 档案温度 / 最大 Token / 超时 / 思考模式 / 自定义请求参数统一折叠进「高级选项」，思考模式按供应商映射为下拉选项 | `options.html`、`options.js`、`options.css`、`notify.js`、`storage.js`、`providers.js`、`ai-client.js`、`app.js` |
-| 2026-11-24 | **精简通知：移除邮箱通道**。确认邮箱告警在“用户主动发起对话”的形态下价值有限（失败当场可见，已有错误码与控制台入口），且扩展无法 SMTP、`mailto` 依赖系统默认邮件应用、无法校验送达。删除管理员邮箱字段、`buildMailto()`、邮件测试按钮与相关徽标；告警记录改为「复制内容」+ 可选 Webhook（`delivery.webhook` 为 `ok/fail/off`）。`mergeSettings()` 清理历史 `adminEmail` 字段，导出去掉对应剔除逻辑 | `options.html`、`options.js`、`options.css`、`notify.js`、`defaults.js`、`storage.js`、`README.md` |
-| 2026-11-24 | **彻底移除 Webhook 通知**：通知收敛为「面板内错误提示 + 本地告警记录（可复制）」两层。删除设置页 Webhook 地址输入、测试按钮、获取教程与送达徽标，删除 `notifyAdmins` 的 `postWebhook` 分支、`delivery` 回写与 `storage.updateAlert()`；`renderAlerts()` 仅保留标题 / 时间 / 详情 / 复制；`mergeSettings()` 继续清理历史 `adminEmail` 与 `alertWebhookUrl` | `src/options/options.html`、`src/options/options.css`、`src/ui/options.js`、`src/core/notify.js`、`src/core/ai-client.js`、`src/core/defaults.js`、`src/core/storage.js`、`README.md` |
-| 2026-11-24 | **面板就地编辑 + 表单统一**：①AI 工具栏新增「模型」下拉，直接切换 `ai.activeProfileId`（不再被迫进设置页），档案为空时禁用并提示去配置；②语法库 / Payload 筛选行新增「+」，复用设置页条目表单就地新增，提交后主动 `loadAll(true)` + `renderAll()` 立即刷新列表（localStorage 预览环境没有 `chrome.storage.onChanged`）；③抽出 `src/ui/form-dialog.js`（`mountOverlay` / `openInfoDialog` / `openFormDialog`）与 `src/ui/item-dialog.js`，设置页与面板共用同一套字段、校验与风险规则；④条目表单修复：切换类型自动推断风险等级（语法 `recon` / Payload `attack`）、平台下拉必填并带空值占位、`file` / `filePrefix` 仅 Payload 显示、分类 / 分组提供历史输入建议、风险与低频字段收进「高级选项」；⑤原本只写在 `options.css` 的表单网格 / 折叠块迁入 `shared/components.css`，面板弹窗同样保持两列与 420px 单列适配；⑥平台表单：名称自动生成合法 ID、编辑时 ID 锁定、ID / 颜色 / 文档地址校验按字段提示 | `src/ui/form-dialog.js`、`src/ui/item-dialog.js`、`src/ui/options.js`、`src/ui/app.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/shared/components.css`、`src/options/options.css`、`docs/DEVELOPMENT.md` |
-| 2026-11-24 | **系统提示词可见可编辑**：`ai-client.js` 导出 `DEFAULT_SYSTEM_PROMPT` 作为基准，新增 `ai.systemPrompt`（空字符串 = 内置默认）；设置页 AI 区新增「系统提示词」卡片，展示生效全文、可编辑、可恢复默认，并显示「内置默认 / 自定义」状态；与内置文本一致或留空时不落库，保证扩展升级默认提示词后自动生效；平台字段上下文与 `systemPromptAppend` 仍由 `buildSystemPrompt()` 系统拼接，避免用户误删字段规则；`mergeSettings` 对导入的提示词字段做字符串校验 | `src/core/ai-client.js`、`src/core/defaults.js`、`src/ui/options.js`、`src/options/options.html`、`README.md`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | **移除异常告警链路**：删除 `src/core/notify.js`、`rb.alerts` 存储键与 `getAlerts / pushAlert / clearAlerts`、设置页「告警记录」卡片与相关 CSS、`ai.notifyOnQuotaError` 设置项（`mergeSettings` 兜底清理旧字段）；`ai-client.js` 去掉 `afterFailure` 与 `notifyAdmins` 调用，额度 / 鉴权 / 限流错误只在对话内提示，不落库、不上报 | `src/core/notify.js`、`src/core/defaults.js`、`src/core/storage.js`、`src/core/ai-client.js`、`src/options/options.html`、`src/options/options.css`、`src/ui/options.js`、`README.md` |
-| 2026-11-25 | **条目卡片就地操作**：自定义条目卡片新增编辑 / 删除按钮（删除走 `confirmDialog` 二次确认），复用 `src/ui/item-dialog.js` 与页面同一套表单；内置条目卡片新增「隐藏」按钮，只写 `rb.hidden` 名单，不删除内置 JSON 与自定义数据；`itemCard()` 增加 `onEdit / onDelete / onHide`，按钮顺序固定为收藏 → 隐藏 / 编辑 / 删除 → 存为文件 → 复制 | `src/ui/components.js`、`src/ui/app.js`、`src/ui/icons.js`、`src/popup/popup.css` |
-| 2026-11-25 | **内置条目软隐藏**：新增 `rb.hidden`（`kind:id` 数组）与 `getHidden / setHidden`；面板在数据入口 `applyHidden()` 统一过滤并重算平台 / 分组条数，保证列表、搜索、计数口径一致；设置页新增「内置条目显示」卡片，支持搜索、只看已隐藏、逐条隐藏 / 恢复与「全部恢复」（二次确认）；面板与设置页通过 `chrome.storage.onChanged` 实时同步 | `src/core/defaults.js`、`src/core/storage.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`src/options/options.css`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | **新增条目表单简化**：隐藏类型选择（由入口决定语法 / Payload）、分类改为「分类 / 类型」并给出说明、标签与说明补充用途提示、`{{变量}}` 输入实时提示、底部增加与面板一致的卡片实时预览；共享表单同步用于设置页与面板 | `src/ui/item-dialog.js`、`src/ui/form-dialog.js`、`src/popup/popup.css`、`src/shared/components.css` |
-| 2026-11-25 | **隐藏入口可发现性**：设置页把「内置条目显示」从「自定义数据」末尾拆成独立分区（导航新增 `builtin`，`#builtin` 锚点直达）；面板页脚在存在隐藏条目时显示「已隐藏 N 条 · 恢复」，点击打开设置页该分区并带 `?onlyHidden=1`，进入后自动勾选“只看已隐藏”，直接列出可恢复条目，AI 页不显示；面板隐藏改为串行写入，修复连续快速隐藏多条时并发「读-改-写」互相覆盖只生效一条的问题 | `src/options/options.html`、`src/ui/options.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/ui/app.js`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | **预设语法库审查补全**：百度补充标题多词、标题 + URL 双限定、上传下载路径、报错信息、phpinfo、移动端子站、备份路径与压缩包，并标注 `filetype:all`、`\|`、`+`、`《》` 等非官方明确写法的效果不确定性；Alpha 统一噪音规则排除条件，新增多告警名 `in`、已处置、等级变量、排除源 IP、资产 + 多端口、高危未判定等组合，`notice` 明确字段与枚举需按平台字典确认；Google 把 `.env` 从无法命中的 `filetype:env` 改为 `inurl:".env"` 加内容特征，新增 `.DS_Store`、`.svn` / `WEB-INF`、Actuator、Apache 状态页、phpMyAdmin、JSON / XML 配置、备份目录、子域枚举、`allinanchor`、异常堆栈共 10 条 | `src/data/snippets/baidu.json`、`src/data/snippets/alpha.json`、`src/data/snippets/google.json`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | **文档事实性审计**：删除已废弃的「本地告警记录 / 最多 50 条」描述与 `ai.notifyOnQuotaError` 字段说明，补 `ai.includeLibraryExamples`；目录树补 `core/retrieve.js`、`mask` 归位到 `logger.js`、供应商口径改为「6 家预设 + custom（共 7 项）」；修正表格单元格内未转义的竖线（Ldap 绕过示例、百度 `\|` 说明）与失效的 README 引用；中性化图标生成条目的本机环境描述 | `docs/DEVELOPMENT.md` |
-
+| 2026-10-22 | 测绘平台语法库按官方字段表全量补齐，并适配 ZoomEye / DayDayMap 的等号语法改版：8 个平台的语法条目从个位数 / 十几条补齐到 60～116 条；`platforms.json` 的字段 / 运算符 / 提示同步更新，并在 3.3 固化「覆盖官方全量字段」约定 | `src/data/snippets/*.json`、`platforms.json`、`docs/DEVELOPMENT.md` |
+| 2026-10-23 | 数据全量自检：统一 Payload 的 `{{变量}}` 与 `vars` 一一对应，修正 LDAP / 重定向 / 反序列化 / NoSQL 等条目的语法与语义问题；新增第 7 节陷阱 31 | `src/data/payloads/*.json`、`src/data/snippets/fofa.json`、`docs/DEVELOPMENT.md` |
+| 2026-10-23 | 列表与筛选体验：横向 chips 改为一行下拉框（420px 下不再横向滚动），统一滚动复位、空状态文案与键盘焦点处理 | `src/ui/app.js`、`src/ui/components.js`、`src/popup/popup.html`、`src/shared/components.css`、`src/shared/tokens.css` |
+| 2026-10-23 | 样本下载：新增可选字段 `file` / `filePrefix`，文本样本直接下载，需要二进制文件头的样本用 Base64 前缀承载；下载复用变量填充流程，不申请 `downloads` 权限 | `src/core/utils.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
+| 2026-11-24 | 表单与 AI 设置统一：面板就地新增条目复用设置页表单；模型下拉直接切换档案；系统提示词可查看 / 编辑 / 恢复默认；AI 高级参数折叠 | `src/ui/form-dialog.js`、`src/ui/item-dialog.js`、`src/ui/app.js`、`src/ui/options.js`、`src/core/ai-client.js`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | 通知能力收敛：错误仅在面板内提示，不落库、不上报（原因见第 7 节陷阱 30） | `src/core/ai-client.js`、`src/core/defaults.js`、`src/options/options.html`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | 条目管理：内置条目支持软隐藏（`rb.hidden`），自定义条目支持就地编辑 / 删除；设置页新增「内置条目显示」独立分区与「已隐藏 N 条 · 恢复」入口 | `src/core/defaults.js`、`src/core/storage.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | 预设语法库审查补全：百度 / Alpha / Google 增补常用检索与暴露面发现条目，标注非官方写法与已失效语法（`cache:`、`filetype:env` 等） | `src/data/snippets/baidu.json`、`src/data/snippets/alpha.json`、`src/data/snippets/google.json`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | 文档事实性审计与公开化清洗：对齐目录树、设置项与已删除能力，弱化安全实现细节，变更记录改为里程碑式 | `docs/DEVELOPMENT.md` |
