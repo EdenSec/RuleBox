@@ -2,11 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Chrome](https://img.shields.io/badge/Chrome-116%2B-green)
-![Edge](https://img.shields.io/badge/Edge-116%2B-green)
-![MV3](https://img.shields.io/badge/Manifest-V3-3fb950)
-![License](https://img.shields.io/badge/license-MIT-3fb950)
+![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Chrome](https://img.shields.io/badge/Chrome-116%2B-green) ![Edge](https://img.shields.io/badge/Edge-116%2B-green) ![Manifest](https://img.shields.io/badge/Manifest-V3-3fb950) ![License](https://img.shields.io/badge/license-MIT-3fb950)
 
 **面向网络安全工程师的浏览器速取面板** — 测绘语法、漏洞 Payload、AI 助手，三者合一，一键复制。
 
