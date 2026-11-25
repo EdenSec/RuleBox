@@ -1545,6 +1545,15 @@ async function init() {
 
   fillAll();
   renderAboutVersion();
+
+  // 从面板“已隐藏 N 条 · 恢复”跳转过来时默认只看已隐藏，
+  // 避免用户落在一整份内置条目列表里还要自己找勾选框
+  if (new URLSearchParams(location.search).get('onlyHidden') === '1') {
+    builtinOnlyHidden = true;
+    const onlyHidden = $('#builtin-only-hidden');
+    if (onlyHidden) onlyHidden.checked = true;
+  }
+
   await refreshData();
   renderPlatformList();
   renderItemList();

@@ -380,7 +380,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 设置页「自定义数据」支持新增平台与条目（存在 `rb.custom`，与内置合并渲染，ID/键冲突会校验拦截）。自定义平台语法条目必须挂到某个平台（内置或自定义均可）。
 
-内置条目的隐藏名单（`rb.hidden`）在设置页有独立分区「内置条目显示」，不在「自定义数据」里，避免和多份自定义列表混在一起难找；面板页脚在存在隐藏条目时把快捷键提示换成「已隐藏 N 条 · 恢复」，点击直达该分区。面板隐藏写入串行执行（`hiddenWriteQueue`），连续快速点多个眼睛图标不会因并发读改写互相覆盖。
+内置条目的隐藏名单（`rb.hidden`）在设置页有独立分区「内置条目显示」，不在「自定义数据」里，避免和多份自定义列表混在一起难找；面板页脚在存在隐藏条目时把快捷键提示换成「已隐藏 N 条 · 恢复」，点击带上 `?onlyHidden=1#builtin` 打开该分区并自动勾选“只看已隐藏”，直接看到可恢复的条目。面板隐藏写入串行执行（`hiddenWriteQueue`），连续快速点多个眼睛图标不会因并发读改写互相覆盖。
 
 ### 8.5 未来方向（已预留，未实现）
 
@@ -427,5 +427,5 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 | 2026-11-25 | **条目卡片就地操作**：自定义条目卡片新增编辑 / 删除按钮（删除走 `confirmDialog` 二次确认），复用 `src/ui/item-dialog.js` 与页面同一套表单；内置条目卡片新增「隐藏」按钮，只写 `rb.hidden` 名单，不删除内置 JSON 与自定义数据；`itemCard()` 增加 `onEdit / onDelete / onHide`，按钮顺序固定为收藏 → 隐藏 / 编辑 / 删除 → 存为文件 → 复制 | `src/ui/components.js`、`src/ui/app.js`、`src/ui/icons.js`、`src/popup/popup.css` |
 | 2026-11-25 | **内置条目软隐藏**：新增 `rb.hidden`（`kind:id` 数组）与 `getHidden / setHidden`；面板在数据入口 `applyHidden()` 统一过滤并重算平台 / 分组条数，保证列表、搜索、计数口径一致；设置页新增「内置条目显示」卡片，支持搜索、只看已隐藏、逐条隐藏 / 恢复与「全部恢复」（二次确认）；面板与设置页通过 `chrome.storage.onChanged` 实时同步 | `src/core/defaults.js`、`src/core/storage.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`src/options/options.css`、`docs/DEVELOPMENT.md` |
 | 2026-11-25 | **新增条目表单简化**：隐藏类型选择（由入口决定语法 / Payload）、分类改为「分类 / 类型」并给出说明、标签与说明补充用途提示、`{{变量}}` 输入实时提示、底部增加与面板一致的卡片实时预览；共享表单同步用于设置页与面板 | `src/ui/item-dialog.js`、`src/ui/form-dialog.js`、`src/popup/popup.css`、`src/shared/components.css` |
-| 2026-11-25 | **隐藏入口可发现性**：设置页把「内置条目显示」从「自定义数据」末尾拆成独立分区（导航新增 `builtin`，`#builtin` 锚点直达）；面板页脚在存在隐藏条目时显示「已隐藏 N 条 · 恢复」，点击打开设置页该分区，AI 页不显示；面板隐藏改为串行写入，修复连续快速隐藏多条时并发「读-改-写」互相覆盖只生效一条的问题 | `src/options/options.html`、`src/ui/options.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/ui/app.js`、`docs/DEVELOPMENT.md` |
+| 2026-11-25 | **隐藏入口可发现性**：设置页把「内置条目显示」从「自定义数据」末尾拆成独立分区（导航新增 `builtin`，`#builtin` 锚点直达）；面板页脚在存在隐藏条目时显示「已隐藏 N 条 · 恢复」，点击打开设置页该分区并带 `?onlyHidden=1`，进入后自动勾选“只看已隐藏”，直接列出可恢复条目，AI 页不显示；面板隐藏改为串行写入，修复连续快速隐藏多条时并发「读-改-写」互相覆盖只生效一条的问题 | `src/options/options.html`、`src/ui/options.js`、`src/popup/popup.html`、`src/popup/popup.css`、`src/ui/app.js`、`docs/DEVELOPMENT.md` |
 

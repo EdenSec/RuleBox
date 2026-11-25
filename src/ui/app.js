@@ -318,7 +318,7 @@ function bindHeader() {
 
   // 页脚“已隐藏 N 条 · 恢复”直达设置页的内置条目显示分区
   const hiddenLink = $('#footer-hidden');
-  if (hiddenLink) hiddenLink.addEventListener('click', () => openOptions('builtin'));
+  if (hiddenLink) hiddenLink.addEventListener('click', () => openOptions('builtin', { onlyHidden: true }));
 }
 
 /**
@@ -370,9 +370,17 @@ function updateSidePanelButton() {
  *   openOptionsPage 不支持锚点，需要定位到具体分区时必须直接打开带 hash 的地址，
  *   否则用户会被丢到设置首页，还要自己再找一遍。
  */
-function openOptions(section = '') {
+/**
+ * 打开设置页
+ * @param {string} section 可选分区（general / ai / data / builtin / import / about）。
+ * @param {object} [options]
+ * @param {boolean} [options.onlyHidden] 进入「内置条目显示」时默认勾选“只看已隐藏”，
+ *   这样从面板“已隐藏 N 条 · 恢复”跳过来就能直接看到可恢复的条目，而不是全量列表。
+ */
+function openOptions(section = '', { onlyHidden = false } = {}) {
+  const query = onlyHidden ? '?onlyHidden=1' : '';
   if (hasChrome && chrome.runtime?.getURL) {
-    const url = `${chrome.runtime.getURL('src/options/options.html')}${section ? `#${section}` : ''}`;
+    const url = `${chrome.runtime.getURL('src/options/options.html')}${query}${section ? `#${section}` : ''}`;
     if (section && chrome.tabs?.create) {
       chrome.tabs.create({ url })
         .catch(() => window.open(url, '_blank', 'noopener'));
@@ -385,7 +393,7 @@ function openOptions(section = '') {
     window.open(url, '_blank', 'noopener');
     return;
   }
-  window.open(`../options/options.html${section ? `#${section}` : ''}`, '_blank', 'noopener');
+  window.open(`../options/options.html${query}${section ? `#${section}` : ''}`, '_blank', 'noopener');
 }
 
 /* ------------------------------------------------------------------ */
