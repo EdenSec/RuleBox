@@ -93,10 +93,10 @@
 
 ### AI 助手
 
-用自然语言描述需求，生成贴合当前平台字段的语法或 Payload。
+用自然语言描述需求，生成贴合当前平台字段的语法或 Payload（下图为真实模型输出）。
 
 <p align="center">
-  <img src="assets/screenshot-ai-dark.png" alt="AI 助手" width="420">
+  <img src="assets/demo-ai.gif" alt="AI 助手 · 输入需求并生成 FOFA 语法" width="420">
 </p>
 
 <br>
