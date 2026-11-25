@@ -47,10 +47,21 @@
 
 ## 🖼️ 界面预览
 
+**从搜索到复制（动图）**：搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制
+
+<p align="center">
+  <img src="assets/demo-varfill.gif" alt="搜索条目、填写变量并一键复制的完整流程" width="420">
+</p>
+
 **深色主题**（默认）
 
 <p align="center">
-  <img src="assets/screenshot-popup-dark.png" alt="主面板 · 语法库" width="420">
+  <img src="assets/screenshot-popup-dark.png" alt="主面板 · 语法库搜索" width="420">
+  <img src="assets/screenshot-payloads-dark.png" alt="Payload 库 · 按类型与分类筛选" width="420">
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-varfill-dark.png" alt="变量填充 · 实时预览最终语法" width="420">
   <img src="assets/screenshot-ai-dark.png" alt="AI 助手" width="420">
 </p>
 
@@ -64,7 +75,12 @@
 <br>
 
 <p align="center">
-  <img src="assets/screenshot-popup-light.png" alt="主面板 · 浅色" width="420">
+  <img src="assets/screenshot-popup-light.png" alt="主面板 · 语法库搜索 · 浅色" width="420">
+  <img src="assets/screenshot-payloads-light.png" alt="Payload 库 · 浅色" width="420">
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-varfill-light.png" alt="变量填充 · 浅色" width="420">
   <img src="assets/screenshot-ai-light.png" alt="AI 助手 · 浅色" width="420">
 </p>
 
