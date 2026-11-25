@@ -73,10 +73,10 @@
 
 ### Payload 库
 
-按 Payload 类型分组，可按分类过滤，点击即复制。
+按 Payload 类型分组，可按分类过滤，列表可连续滚动浏览全部条目。
 
 <p align="center">
-  <img src="assets/screenshot-payloads-dark.png" alt="Payload 库 · 按类型与分类筛选" width="420">
+  <img src="assets/demo-payload-scroll.gif" alt="Payload 库 · 向下滚动浏览更多条目" width="420">
 </p>
 
 <br>
