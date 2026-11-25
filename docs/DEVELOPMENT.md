@@ -80,7 +80,7 @@ src\
 ```jsonc
 {
   "version": 1,
-  "updated": "2026-10-22",
+  "updated": "YYYY-MM-DD",
   "snippets": [ { "path": "snippets/fofa.json", "platform": "fofa" }, ... ],
   "payloads": [ { "path": "payloads/sqli.json" }, ... ]
 }
@@ -232,7 +232,7 @@ src\
 
 > 风险等级只用于卡片徽标，**不参与搜索、筛选与 AI 上下文**。新增条目时按类型自动推断（语法 → `recon`，Payload → `attack`），字段收进表单「高级选项」；用户手动改过之后不再随类型覆盖。
 
-> 历史教训：数据文件使用了 `recon`/`safe`，而 UI 初版只认 `low`/`attack`/`danger`，导致徽标被兜底成“低风险”且自定义条目选不到正确值。2026-10 已按“扩展 UI 值域”方案统一（未改 300+ 处数据）。归一化兜底默认值（`data.js`）：snippet 缺 risk → `low`，payload 缺 risk → `attack`。
+> 历史教训：数据文件使用了 `recon`/`safe`，而 UI 初版只认 `low`/`attack`/`danger`，导致徽标被兜底成“低风险”且自定义条目选不到正确值。现已按“扩展 UI 值域”方案统一（未改 300+ 处数据）。归一化兜底默认值（`data.js`）：snippet 缺 risk → `low`，payload 缺 risk → `attack`。
 
 ## 5. 存储键清单（chrome.storage.local）
 
@@ -338,7 +338,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在一个极小尺寸（曾出现 `154×187`）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
 15. **变量弹窗提交按钮必须在 `<form>` 内**：`.rb-dialog-foot` 若被放到 `</form>` 之后，`type=submit` 的按钮与回车都失效；`components.js` 的 `openVariableDialog` 已按“form 包裹 body + foot”实现，复用时不要拆开。
 16. **`chrome.windows.create({ type: 'popup' })` 不是 POPUP 上下文**：它创建的是 `TAB` 上下文，`getContexts({ contextTypes: ['POPUP'] })` 查不到。测试真实 action popup（如 `closeAfterCopy`、固定尺寸）必须用 `chrome.action.openPopup()` 打开；否则会得到错误结论。
-17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，12 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已于 2026-10-23 删除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
+17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，12 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已移除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
 18. **列表纵向滚动复位只发生在“换了一批结果”时**：平台 / 分类 / Payload 类型 / 搜索 / 收藏过滤 / 右键菜单搜索切换会调用 `app.js` 的 `resetContentScroll()`；“加载更多”只追加卡片，**禁止**调用，否则会打断阅读位置。
 19. **禁止写 `scrollbar-width` / `scrollbar-color`**：Chromium 121+ 中这两个标准属性一旦出现，会整体覆盖 `::-webkit-scrollbar` 定制（`options.css`、`base.css` 两处都已剔除并留注释）。滚动条样式只能走 `::-webkit-scrollbar-thumb`；确需横向滚动的容器（如设置页左侧导航）配 `overscroll-behavior-x: contain` 防止滚动穿透。
 20. **搜索与平台 / 类型 / 分类筛选是叠加关系**：`snippetScope()` / `payloadScope()` 先按平台（类型）取子集，再在子集内按关键词过滤；因此各下拉括号内的计数必须与实际结果同源（含“只看收藏”），页脚 `#footer-count` 也走同一份结果，禁止另算一套计数。
@@ -349,9 +349,9 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 25. **主题色不要硬编码前景色**：实心强调按钮的前景色用 `--rb-accent-contrast`（深色主题 `#07130a`、浅色主题 `#ffffff`），写在 tokens.css 的三处（`:root` / `[data-theme="light"]` / `prefers-color-scheme: light` 下的 `[data-theme="auto"]`）。直接写死深色会在浅色主题下变成深绿底深字（对比度不足 2:1）。这三处同时声明了 `color-scheme`（dark / light）——删掉它，深色主题下展开筛选下拉会得到白底 + 浅色字，选项几乎不可读。
 26. **AI 历史必须过滤失败 / 生成中的回复**：请求失败或用户停止时，回复会以普通 assistant 消息留在 `state.ai.messages`；带进上下文会让模型把“请求失败：…”当成自己说过的话。组装 history 时过滤 `message.pending || message.error`。
 27. **AI 错误样式类挂在消息节点**：`is-error` 必须加到 `.rb-ai-msg` 自身（`aiMessageNode()`），CSS 选择器是 `.rb-ai-msg.is-assistant.is-error`；加到 `.rb-ai-body` 不会生效。
-28. **代码块正则两处必须同步**：`ai-client.js` 的 `extractCodeBlocks` 与 `app.js` 的 `renderRichText` 都要写成 `/```([a-zA-Z0-9_+-]*)\r?\n([\s\S]*?)```/g`，否则 Windows 换行（CRLF）的模型回复既提不出代码块也渲染不出高亮。SSE 分帧同理，用 `/\r?\n\r?\n/`。
+28. **代码块正则两处必须同步**：`ai-client.js` 的 `extractCodeBlocks` 与 `app.js` 的 `renderRichText` 都要写成 `/```([a-zA-Z0-9_+-]*)\r?\n([\s\S]*?)```/g`，否则 CRLF 换行的模型回复既提不出代码块也渲染不出高亮。SSE 分帧同理，用 `/\r?\n\r?\n/`。
 29. **IME 输入保护**：中文输入法回车确认候选词时会触发 `keydown` / `keyup`，所有“回车提交 / 回车复制”的监听必须先判 `event.isComposing`（或 `keyCode === 229`）再执行，否则会误触发搜索或复制。
-30. **异常提示只做面板内反馈**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，Windows 上常静默失败。群机器人 Webhook 同样需要用户自建通道、失败难排查。**不要引入邮件 / Webhook / 本地告警记录等通知链路**：额度 / 鉴权 / 限流等错误只在 AI 对话内显示可读提示（含错误码与控制台入口），不落库、不上报。历史遗留的通知类配置字段由 `mergeSettings()` 兜底清理。
+30. **异常提示只做面板内反馈**：浏览器扩展没有 socket / SMTP 能力，任何“真发邮件”都要引入第三方 API 或自建服务端，与本地优先、零后端的定位冲突；`mailto:` 又依赖系统默认邮件处理器，无法校验送达，多数环境下会静默失败。群机器人 Webhook 同样需要用户自建通道、失败难排查。**不要引入邮件 / Webhook / 本地告警记录等通知链路**：额度 / 鉴权 / 限流等错误只在 AI 对话内显示可读提示（含错误码与控制台入口），不落库、不上报。历史遗留的通知类配置字段由 `mergeSettings()` 兜底清理。
 31. **条目的 `vars` 必须与 `code` 里的 `{{占位符}}` 一一对应**：替换只认 `{{name}}`（`template.js` 的 `VAR_PATTERN`），`applyVars()` / `missingVars()` / `extractVars()` 都不识别 `<xxx>`、`{xxx}`、`$xxx` 等其它写法。声明了 `vars` 却把 `code` 写成 `<域名>` 字面量，用户填的值会被**静默丢弃**，复制出去仍是占位文本；反过来 `code` 里有 `{{}}` 而 `vars` 没声明，`normalizeVars()` 会自动补一个无名变量（无标签、无示例），体验同样差。另：`desc` 不参与变量替换，**禁止在 `desc` 里写 `{{}}`**。
 32. **数据规范化是白名单式的**：`normalizeSnippet()` / `normalizePayload()`（`src/core/data.js`）只复制显式列出的字段，任何新字段（如 `file`、`filePrefix`）不同时加进这两个函数就会被静默丢弃，表现为「数据里明明有、UI 上就是不出现」。自定义条目也走同一套规范化，所以设置页表单新字段也要在这条链路上打通。新增字段时同步补 3.x schema 与本表。
 33. **二进制文件头不能用纯文本凑**：有些格式的文件头恰好是纯 ASCII，可以直接写成文本；而带签名与 CRC 校验的二进制格式（如 PNG）用纯文本拼接只会得到损坏文件。这类样本必须用 `filePrefix`（Base64 真实字节）承载，且 `code` 只放可读的代码片段——不要把整段 Base64 塞进 `code`，否则复制出去是一串乱码，卡片预览也不可读。
@@ -395,16 +395,8 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 ### 9.1 变更记录
 
-> 本节只记录对外可见的能力变更，不记录逐日实现细节；完整历史以 git 提交记录为准。
+> 本节只按版本记录对外可见的能力变更；逐次提交的完整历史以 git 提交记录为准。
 
-| 日期 | 变更 | 影响范围 |
-| --- | --- | --- |
-| 2026-10-22 | 测绘平台语法库按官方字段表全量补齐，并适配 ZoomEye / DayDayMap 的等号语法改版：8 个平台的语法条目从个位数 / 十几条补齐到 60～116 条；`platforms.json` 的字段 / 运算符 / 提示同步更新，并在 3.3 固化「覆盖官方全量字段」约定 | `src/data/snippets/*.json`、`platforms.json`、`docs/DEVELOPMENT.md` |
-| 2026-10-23 | 数据全量自检：统一 Payload 的 `{{变量}}` 与 `vars` 一一对应，修正 LDAP / 重定向 / 反序列化 / NoSQL 等条目的语法与语义问题；新增第 7 节陷阱 31 | `src/data/payloads/*.json`、`src/data/snippets/fofa.json`、`docs/DEVELOPMENT.md` |
-| 2026-10-23 | 列表与筛选体验：横向 chips 改为一行下拉框（420px 下不再横向滚动），统一滚动复位、空状态文案与键盘焦点处理 | `src/ui/app.js`、`src/ui/components.js`、`src/popup/popup.html`、`src/shared/components.css`、`src/shared/tokens.css` |
-| 2026-10-23 | 样本下载：新增可选字段 `file` / `filePrefix`，文本样本直接下载，需要二进制文件头的样本用 Base64 前缀承载；下载复用变量填充流程，不申请 `downloads` 权限 | `src/core/utils.js`、`src/core/data.js`、`src/ui/components.js`、`src/ui/options.js`、`src/data/payloads/webshell.json`、`docs/DEVELOPMENT.md` |
-| 2026-11-24 | 表单与 AI 设置统一：面板就地新增条目复用设置页表单；模型下拉直接切换档案；系统提示词可查看 / 编辑 / 恢复默认；AI 高级参数折叠 | `src/ui/form-dialog.js`、`src/ui/item-dialog.js`、`src/ui/app.js`、`src/ui/options.js`、`src/core/ai-client.js`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | 通知能力收敛：错误仅在面板内提示，不落库、不上报（原因见第 7 节陷阱 30） | `src/core/ai-client.js`、`src/core/defaults.js`、`src/options/options.html`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | 条目管理：内置条目支持软隐藏（`rb.hidden`），自定义条目支持就地编辑 / 删除；设置页新增「内置条目显示」独立分区与「已隐藏 N 条 · 恢复」入口 | `src/core/defaults.js`、`src/core/storage.js`、`src/ui/app.js`、`src/ui/options.js`、`src/options/options.html`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | 预设语法库审查补全：百度 / Alpha / Google 增补常用检索与暴露面发现条目，标注非官方写法与已失效语法（`cache:`、`filetype:env` 等） | `src/data/snippets/baidu.json`、`src/data/snippets/alpha.json`、`src/data/snippets/google.json`、`docs/DEVELOPMENT.md` |
-| 2026-11-25 | 文档事实性审计与公开化清洗：对齐目录树、设置项与已删除能力，弱化安全实现细节，变更记录改为里程碑式 | `docs/DEVELOPMENT.md` |
+| 版本 | 主要能力 |
+| --- | --- |
+| 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |
