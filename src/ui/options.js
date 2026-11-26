@@ -114,20 +114,41 @@ function notifyBackground() {
   }
 }
 
-/** 向后台发送消息并等待响应；扩展环境外或后台无响应时返回 null */
-function sendToBackground(message) {
-  if (!hasChrome || !chrome.runtime?.sendMessage) return Promise.resolve(null);
+/**
+ * 向后台发送消息并等待响应，统一返回 { ok, ... } 结构。
+ * 后台未就绪 / 端口提前关闭 / 超时都会转成可读错误，
+ * 避免用户只能看到笼统的“后台无响应”而无从排查。
+ */
+function sendToBackground(message, timeoutMs = 25000) {
+  const failed = (error) => ({ ok: false, error });
+  if (!hasChrome || !chrome.runtime?.sendMessage) {
+    return Promise.resolve(failed('当前环境不支持扩展消息，请在扩展管理页重新加载后重试'));
+  }
   return new Promise((resolve) => {
+    let settled = false;
+    let timer = null;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(value);
+    };
+    timer = setTimeout(() => finish(failed('后台响应超时，请稍后重试')), timeoutMs);
     try {
       chrome.runtime.sendMessage(message, (response) => {
         if (chrome.runtime.lastError) {
-          resolve(null);
+          const reason = String(chrome.runtime.lastError.message || '');
+          finish(failed(
+            /receiving end does not exist|message port closed/i.test(reason)
+              ? '后台服务未就绪，请在扩展管理页重新加载扩展后再试'
+              : `后台无响应：${reason}`
+          ));
           return;
         }
-        resolve(response ?? null);
+        finish(response ?? failed('后台未返回结果，请重试'));
       });
-    } catch {
-      resolve(null);
+    } catch (error) {
+      finish(failed(`消息发送失败：${error?.message || ''}`));
     }
   });
 }
@@ -1418,7 +1439,6 @@ async function runCyberTest(provider, button, resultNode) {
     if (!saved) throw new Error('API Key 保存失败，请重试');
 
     const response = await sendToBackground({ type: 'rb:cyber-test', provider: provider.id });
-    if (!response) throw new Error('后台无响应，请重新加载扩展后再试');
     if (response.ok) {
       showCyberTestResult(
         resultNode,
