@@ -832,50 +832,6 @@
       "risk": "recon"
     },
     {
-      "id": "fofa-cert-not-after-after",
-      "title": "到期日晚于指定日期",
-      "category": "证书与指纹",
-      "code": "cert.not_after.after=\"{{date}}\"",
-      "desc": "筛选证书到期日在指定日期之后的资产。",
-      "tags": ["cert", "到期时间"],
-      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
-      "source": "FOFA 证书时间字段（可用性视套餐而定）",
-      "risk": "recon"
-    },
-    {
-      "id": "fofa-cert-not-after-before",
-      "title": "到期日早于指定日期",
-      "category": "证书与指纹",
-      "code": "cert.not_after.before=\"{{date}}\"",
-      "desc": "筛选证书到期日在指定日期之前的资产，用于发现已过期或即将到期的站点。",
-      "tags": ["cert", "到期时间"],
-      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
-      "source": "FOFA 证书时间字段（可用性视套餐而定）",
-      "risk": "recon"
-    },
-    {
-      "id": "fofa-cert-not-before-after",
-      "title": "生效日晚于指定日期",
-      "category": "证书与指纹",
-      "code": "cert.not_before.after=\"{{date}}\"",
-      "desc": "筛选证书生效日在指定日期之后的资产，用于发现新上线业务。",
-      "tags": ["cert", "生效时间"],
-      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
-      "source": "FOFA 证书时间字段（可用性视套餐而定）",
-      "risk": "recon"
-    },
-    {
-      "id": "fofa-cert-not-before-before",
-      "title": "生效日早于指定日期",
-      "category": "证书与指纹",
-      "code": "cert.not_before.before=\"{{date}}\"",
-      "desc": "筛选证书生效日在指定日期之前的资产。",
-      "tags": ["cert", "生效时间"],
-      "vars": [{ "name": "date", "label": "日期", "placeholder": "2025-03-01", "example": "2025-03-01" }],
-      "source": "FOFA 证书时间字段（可用性视套餐而定）",
-      "risk": "recon"
-    },
-    {
       "id": "fofa-jarm",
       "title": "JARM TLS 指纹",
       "category": "证书与指纹",

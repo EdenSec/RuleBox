@@ -1,7 +1,7 @@
 {
   "platform": "secmaster",
   "version": 1,
-  "categories": ["常用模板", "日志筛选", "IP 与资产", "自定义组合"],
+  "categories": ["常用模板", "日志筛选", "IP 与资产", "运算符", "自定义组合"],
   "notice": "华为云安全云脑（SecMaster）检索语法为“字段 操作符 值”，字符串值使用单引号。不同版本与数据源的可检索字段存在差异，以下语法依据公开文档整理，IP 均为文档保留地址，使用前请在平台检索帮助中确认字段名。",
   "items": [
     {
@@ -99,6 +99,39 @@
       "code": "url IS NOT NULL AND url LIKE '%.php%'",
       "desc": "先排除空 URL，再按后缀过滤动态页面，减少静态资源噪音。",
       "tags": ["IS NOT NULL", "url"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-is-null",
+      "title": "字段为空（IS NULL）",
+      "category": "运算符",
+      "code": "url IS NULL AND ipList = '192.0.2.10'",
+      "desc": "用 IS NULL 筛选字段缺失或为空的日志，与 IS NOT NULL 相对，适合处理字段未解析或数据不完整的情况。",
+      "tags": ["IS NULL", "url"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-comparison",
+      "title": "数值比较（>= / <= / > / <）",
+      "category": "运算符",
+      "code": "status >= 500 AND request_method = 'GET'",
+      "desc": "除 BETWEEN 外还可直接用 >=、<=、>、< 做数值比较；status >= 500 等价于筛选全部服务端错误。",
+      "tags": ["比较运算符", "status"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-all",
+      "title": "查询全部日志",
+      "category": "运算符",
+      "code": "*",
+      "desc": "使用 * 通配全部记录，常用于确认当前数据源是否有日志，或作为复杂条件的起点逐步收敛。",
+      "tags": ["*", "全量"],
       "vars": [],
       "source": "依据平台公开检索语法整理的示例",
       "risk": "safe"

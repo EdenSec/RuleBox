@@ -109,12 +109,13 @@
     },
     {
       "id": "ailpha-es-all",
-      "title": "全字段关键词检索",
+      "title": "日志内容关键词检索",
       "category": "常用模板",
-      "code": "es:all(\"union select\")",
-      "desc": "用全字段检索定位包含指定关键词的告警或日志，适合先宽后窄的排查思路。",
+      "code": "message contains \"union select\"",
+      "desc": "用 contains 在日志内容中匹配关键词，定位包含指定 payload 的告警或日志，适合先宽后窄的排查思路。",
       "tags": [
-        "全字段",
+        "message",
+        "contains",
         "关键词"
       ],
       "vars": [],
