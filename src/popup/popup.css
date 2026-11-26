@@ -725,14 +725,44 @@ body.is-fluid {
   flex: 0 0 auto;
 }
 
-.rb-cyber-status {
+/* 状态行 + 批量操作：状态文字可换行，操作按钮固定右侧不换行，窄屏也不会挤出去 */
+.rb-cyber-statusbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   padding: 6px 10px;
-  min-height: 24px;
   flex: 0 0 auto;
+}
+
+.rb-cyber-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 18px;
   font-size: 10.5px;
   line-height: 1.5;
   color: var(--rb-fg-subtle);
   overflow-wrap: anywhere;
+}
+
+.rb-cyber-status:empty {
+  min-height: 0;
+}
+
+.rb-cyber-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.rb-cyber-actions[hidden] {
+  display: none;
+}
+
+.rb-cyber-actions .rb-btn {
+  padding: 2px 8px;
+  font-size: 10.5px;
+  white-space: nowrap;
 }
 
 .rb-cyber-status[data-state="loading"] {

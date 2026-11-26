@@ -166,7 +166,15 @@
         </form>
 
         <div id="cyber-notice" class="rb-cyber-notice" hidden></div>
-        <div id="cyber-status" class="rb-cyber-status" role="status" aria-live="polite"></div>
+        <div class="rb-cyber-statusbar">
+          <div id="cyber-status" class="rb-cyber-status" role="status" aria-live="polite"></div>
+          <div id="cyber-actions" class="rb-cyber-actions" hidden>
+            <button id="cyber-copy-all" class="rb-btn rb-btn--ghost rb-btn--sm" type="button"
+              title="复制当前页全部资产地址，每行一条">复制全部</button>
+            <button id="cyber-export" class="rb-btn rb-btn--ghost rb-btn--sm" type="button"
+              title="导出当前页结果为 JSON 文件，含平台、语法与完整字段">导出</button>
+          </div>
+        </div>
         <div id="cyber-results" class="rb-cyber-results"></div>
         <div id="cyber-pager" class="rb-cyber-pager" hidden></div>
       </section>

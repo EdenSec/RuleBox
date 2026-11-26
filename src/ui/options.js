@@ -1444,8 +1444,8 @@ async function runCyberTest(provider, button, resultNode) {
         resultNode,
         'ok',
         response.mode === 'account'
-          ? '连接成功 · Key 有效'
-          : `连接成功 · 命中 ${Number(response.total) || 0} 条`
+          ? '连接成功 · Key 有效（未消耗查询额度）'
+          : `连接成功 · 命中 ${Number(response.total) || 0} 条（探测 ${Number(response.size) || 1} 条）`
       );
     } else {
       showCyberTestResult(resultNode, 'error', response.error || '连接失败');

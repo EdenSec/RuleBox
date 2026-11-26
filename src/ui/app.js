@@ -6,7 +6,7 @@
  * - 复制走统一流程（变量填充 → 格式化 → 剪贴板）。
  */
 
-import { $, $$, el, debounce, copyText, isMacPlatform } from '../core/utils.js';
+import { $, $$, el, debounce, copyText, downloadText, isMacPlatform } from '../core/utils.js';
 import { loadAll } from '../core/data.js';
 import { searchItems, filterByCategory, countCategories } from '../core/search.js';
 import { STORAGE_KEYS } from '../core/defaults.js';
@@ -1351,6 +1351,12 @@ function bindCyber() {
     modeButton.addEventListener('click', () => setCyberMode(!state.cyber.multi));
   }
 
+  const copyAllButton = $('#cyber-copy-all');
+  if (copyAllButton) copyAllButton.addEventListener('click', () => { void copyAllCyberItems(); });
+
+  const exportButton = $('#cyber-export');
+  if (exportButton) exportButton.addEventListener('click', () => exportCyberResults());
+
   // 点击选择面板外部时收起；选择面板本身不关闭，方便连续勾选多个平台
   document.addEventListener('click', (event) => {
     if (!state.cyber.pickerOpen) return;
@@ -1715,15 +1721,18 @@ async function saveCyberSession() {
   }
 }
 
+/** 两位补零，时间标注与导出文件名共用 */
+const pad2 = (value) => String(value).padStart(2, '0');
+
 /** “MM-DD HH:mm”时间戳，用于标注恢复的结果来自上次查询 */
 function formatSessionStamp(time) {
   const date = new Date(Number(time) || Date.now());
-  const pad = (value) => String(value).padStart(2, '0');
-  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 }
 
 function renderCyber() {
   updateCyberControls();
+  updateCyberActions();
   renderCyberNotice();
   // 面板隐藏时不必重建结果 DOM：语法库每次输入都会触发 renderAll，
   // 无谓地重建几十条结果会让输入变卡
@@ -1731,6 +1740,95 @@ function renderCyber() {
   renderCyberStatus();
   renderCyberResults();
   renderCyberPager();
+}
+
+/** 结果批量操作（复制全部 / 导出）只在有成功条目时出现 */
+function updateCyberActions() {
+  const holder = $('#cyber-actions');
+  if (!holder) return;
+  holder.hidden = !cyberHasItems();
+}
+
+/** 当前结果里成功平台的全部条目（未去重） */
+function collectCyberItems() {
+  const groups = state.cyber.results?.results;
+  if (!Array.isArray(groups)) return [];
+  const items = [];
+  for (const group of groups) {
+    if (!group?.ok || !Array.isArray(group.items)) continue;
+    for (const item of group.items) {
+      if (item) items.push(item);
+    }
+  }
+  return items;
+}
+
+function cyberHasItems() {
+  if (state.cyber.loading) return false;
+  const data = state.cyber.results;
+  if (!data || data.error) return false;
+  return collectCyberItems().length > 0;
+}
+
+/** 资产地址：优先页面地址，其次 IP:端口 */
+function cyberItemAddress(item) {
+  return item?.url || (item?.ip ? `${item.ip}${item.port ? `:${item.port}` : ''}` : '');
+}
+
+/** 复制当前结果的全部资产地址：每行一条并去重，方便直接喂给扫描器或脚本 */
+async function copyAllCyberItems() {
+  const addresses = [...new Set(collectCyberItems().map(cyberItemAddress).filter(Boolean))];
+  if (!addresses.length) {
+    toast('当前结果没有可复制的资产地址', 'warn');
+    return;
+  }
+  const ok = await copyText(addresses.join('\n'));
+  toast(
+    ok ? `已复制 ${addresses.length} 条资产地址` : '复制失败，请检查剪贴板权限',
+    ok ? 'success' : 'danger'
+  );
+}
+
+/**
+ * 导出当前结果为 JSON 文件。
+ * 保留平台、语法、页码与全部字段，便于交给 AI 或自动化脚本继续处理。
+ */
+function exportCyberResults() {
+  const data = state.cyber.results;
+  if (!data || data.error) {
+    toast('当前没有可导出的结果', 'warn');
+    return;
+  }
+  const groups = Array.isArray(data.results) ? data.results : [];
+  const items = collectCyberItems();
+  const payload = {
+    generator: 'RuleBox',
+    exportedAt: new Date().toISOString(),
+    query: state.cyber.query,
+    page: state.cyber.page,
+    pageSize: state.cyber.pageSize,
+    providers: state.cyber.providers,
+    results: groups.map((group) => ({
+      provider: group.provider,
+      providerName: getSearchProvider(group.provider)?.name || group.provider,
+      ok: group.ok === true,
+      total: Number(group.total) || 0,
+      error: group.error || '',
+      items: Array.isArray(group.items) ? group.items : []
+    }))
+  };
+
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}`;
+  const bytes = downloadText(
+    `rulebox-cyber-${stamp}.json`,
+    JSON.stringify(payload, null, 2),
+    'application/json;charset=utf-8'
+  );
+  toast(
+    bytes ? `已导出 ${items.length} 条结果` : '没有可导出的内容',
+    bytes ? 'success' : 'warn'
+  );
 }
 
 function cyberEmptyState() {

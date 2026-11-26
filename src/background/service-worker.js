@@ -23,7 +23,8 @@ import {
   sanitizeSearchError,
   normalizeQuery,
   clampPage,
-  normalizePageSize
+  normalizePageSize,
+  PROVIDER_PROBE_SIZE
 } from '../core/search-providers.js';
 
 const MENU_ID = 'rb:search-selection';
@@ -170,6 +171,11 @@ const lastTestAt = new Map();
 /**
  * 测试平台连接：Key 只从本地设置读取，不接受消息体传入，
  * 防止任意页面伪造消息探测或校验他人的 Key。
+ *
+ * 额度策略（最小探测原则）：
+ * - FOFA / Shodan 先走平台账号信息接口，只验证 Key，不发起检索、不扣查询额度；
+ * - 其余平台没有稳定的账号接口，退化为一页最小检索，条数见 PROVIDER_PROBE_SIZE；
+ * - 同一平台 3 秒冷却，避免误触反复消耗。
  */
 async function handleCyberTest(message, sender) {
   // 任何异常都必须回一条响应，否则消息端口提前关闭，设置页只能看到“后台无响应”
@@ -201,12 +207,15 @@ async function handleCyberTest(message, sender) {
         return { ok: true, mode: 'account' };
       }
 
-      // 没有账号信息接口的平台：用一次最小检索验证端点与 Key（会消耗一次查询额度）
+      // 没有账号信息接口的平台：用一次最小检索验证端点与 Key。
+      // 平台按条数或调用次数计额度，这里只取最小合法条数（见 PROVIDER_PROBE_SIZE），
+      // 且已有 3 秒冷却，避免误触反复消耗。
+      const probeSize = PROVIDER_PROBE_SIZE[providerId] || 1;
       const data = await fetchProviderJson(
-        buildProviderRequest(providerId, { query: provider.placeholder, page: 1, size: 10, apiKey })
+        buildProviderRequest(providerId, { query: provider.placeholder, page: 1, size: probeSize, apiKey })
       );
       const parsed = parseProviderResponse(providerId, data);
-      return { ok: true, mode: 'search', total: parsed.total };
+      return { ok: true, mode: 'search', total: parsed.total, size: probeSize };
     } catch (error) {
       return { ok: false, error: sanitizeSearchError(error?.message, apiKey) };
     }

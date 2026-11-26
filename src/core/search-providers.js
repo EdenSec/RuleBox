@@ -13,6 +13,23 @@
 export const SEARCH_PAGE_SIZES = [10, 20, 50];
 export const SEARCH_QUERY_MAX = 512;
 
+/**
+ * 「测试连接」的最小探测条数。
+ * 测绘平台多按每页条数或调用次数扣额度，验证连通性只需要一条：
+ * Quake / ZoomEye / 0.zone / DayDayMap 都接受 1；
+ * Hunter 的 page_size 只支持 10 / 20 / 50 / 100，最小合法值就是 10。
+ * FOFA / Shodan 走账号信息接口、不发起检索，这里的值不会用到。
+ */
+export const PROVIDER_PROBE_SIZE = {
+  fofa: 1,
+  hunter: 10,
+  quake: 1,
+  zoomeye: 1,
+  shodan: 1,
+  zerozone: 1,
+  daydaymap: 1
+};
+
 /** 支持的测绘平台（与语法库平台 ID 保持一致，便于复制语法后直接跳转查询） */
 export const SEARCH_PROVIDERS = [
   {
@@ -105,10 +122,14 @@ export function clampPage(value) {
   return Number.isFinite(num) ? Math.min(100, Math.max(1, num)) : 1;
 }
 
-/** 每页数量只接受 10 / 20 / 50 */
+/**
+ * 每页数量只接受 10 / 20 / 50（界面提供的选项）；
+ * 1 仅供「测试连接」的最小探测使用，不会出现在下拉里。
+ */
 export function normalizePageSize(value) {
   const num = Number(value);
-  return SEARCH_PAGE_SIZES.includes(num) ? num : 20;
+  if (SEARCH_PAGE_SIZES.includes(num)) return num;
+  return num === 1 ? 1 : 20;
 }
 
 /** 修正查询语句：去首尾空白并限制长度 */
