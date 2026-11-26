@@ -21,6 +21,7 @@
 - [快速安装](#-快速安装)
 - [快捷键](#shortcuts)
 - [功能一览](#-功能一览)
+- [聚合查询配置](#cyber-config)
 - [AI 配置](#-ai-配置可选)
 - [权限与隐私](#-权限与隐私)
 - [FAQ](#-faq)
@@ -37,10 +38,17 @@
 
 - 🗂️ **16 个语法库**：13 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / 深信服 SIP / 长亭全悉 T-Answer / 新华三 SecCenter CSAP）+ Google / 百度 + 常用命令行工具
 - 💣 **19 类安全测试 Payload / 252 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
-- 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页
+- 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页、可导出
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
-目前内置 **791 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+目前内置 **802 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+
+### v2.0 新增
+
+- **聚合查询**：面板内直接查询 7 家测绘平台，支持单选 / 多选、分页、结果快照恢复
+- **多格式导出**：聚合结果一键导出为 JSON / CSV / Markdown / TXT
+- **默认打开方式**：可跟随上次使用的标签页（默认），也可固定为指定标签页
+- **设置更稳**：修复了部分操作会把整份配置重置为默认值的问题，密钥不会再被误清空
 
 ---
 
@@ -52,9 +60,19 @@
 
 <br>
 
+### 演示：四个标签页
+
+语法库 → Payload 库 → 聚合查询 → AI 助手，一键切换。
+
+<p align="center">
+  <img src="assets/demo-tabswitch.gif" alt="四个标签页切换演示" width="420">
+</p>
+
+<br>
+
 ### 演示：搜索 → 填变量 → 复制
 
-搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制
+搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制。
 
 <p align="center">
   <img src="assets/demo-varfill.gif" alt="搜索条目、填写变量并一键复制的完整流程" width="420">
@@ -82,6 +100,16 @@
 
 <br>
 
+### 聚合查询
+
+选择平台、填入语法即可检索；未配置密钥时给出明确引导，不会发出请求。
+
+<p align="center">
+  <img src="assets/screenshot-cyber-dark.png" alt="聚合查询 · 查询输入与平台选择" width="420">
+</p>
+
+<br>
+
 ### 变量填充
 
 带变量的条目会弹出填写框，下方实时预览填充后的最终语句。
@@ -94,20 +122,28 @@
 
 ### AI 助手
 
-用自然语言描述需求，生成贴合当前平台字段的语法或 Payload（下图为真实模型输出）。
+内置平台上下文与提示词库，用自然语言描述需求即可生成语法或 Payload。
 
 <p align="center">
-  <img src="assets/demo-ai.gif" alt="AI 助手 · 输入需求并生成 FOFA 语法" width="420">
+  <img src="assets/screenshot-ai-dark.png" alt="AI 助手 · 自然语言生成语法" width="420">
 </p>
 
 <br>
 
 ### 设置页
 
-主题、复制格式、AI 档案、数据导入导出与自定义条目管理。
+主题、复制格式、默认标签页、AI 档案、数据导入导出与自定义条目管理。
 
 <p align="center">
-  <img src="assets/screenshot-settings-dark.png" alt="设置页" width="880">
+  <img src="assets/screenshot-settings-dark.png" alt="设置页 · 通用设置" width="880">
+</p>
+
+<br>
+
+测绘查询分区：逐个平台填写 API Key，可点「测试连接」先校验连通性。
+
+<p align="center">
+  <img src="assets/screenshot-settings-cyber-dark.png" alt="设置页 · 测绘查询与平台密钥" width="880">
 </p>
 
 <br>
@@ -129,6 +165,14 @@
 
 <p align="center">
   <img src="assets/screenshot-payloads-light.png" alt="Payload 库 · 浅色" width="420">
+</p>
+
+<br>
+
+#### 聚合查询 · 浅色
+
+<p align="center">
+  <img src="assets/screenshot-cyber-light.png" alt="聚合查询 · 浅色" width="420">
 </p>
 
 <br>
@@ -155,6 +199,14 @@
   <img src="assets/screenshot-settings-light.png" alt="设置页 · 浅色" width="880">
 </p>
 
+<br>
+
+#### 测绘查询 · 浅色
+
+<p align="center">
+  <img src="assets/screenshot-settings-cyber-light.png" alt="设置页 · 测绘查询 · 浅色" width="880">
+</p>
+
 </details>
 
 > 主题可在设置页切换：跟随系统 / 深色 / 浅色；也可点击面板右上角的主题按钮快速切换。
@@ -164,6 +216,12 @@
 ## 🚀 快速安装
 
 本项目是标准的 Manifest V3 扩展，**无需构建、无需打包**，直接加载源码目录即可。
+
+```bash
+git clone https://github.com/EdenSec/RuleBox.git
+```
+
+也可以直接下载仓库 ZIP 后解压。
 
 ### Chrome
 
@@ -229,7 +287,11 @@
 - **多平台并行**：切到多选后，同一语法会同时发往各平台，结果按平台分组展示
 - **分页浏览**：每页 10 / 20 / 50 条可切换，上一页 / 下一页连续翻页
 - **结果操作**：标题可直接在新标签页打开资产地址，右侧按钮一键复制地址
-- **批量复制 / 导出**：结果状态行右侧提供「复制全部」（当前页所有资产地址，每行一条并去重，直接喂给扫描器或脚本）和「导出」，导出格式可选 JSON / CSV / Markdown / TXT：JSON 保留语法、平台、页码与全部字段，CSV 带 BOM 可直接用表格软件筛选，Markdown 是表格便于写报告，TXT 每行一条资产地址最方便交给脚本或 AI
+- **批量复制 / 导出**：结果状态行右侧提供「复制全部」（当前页所有资产地址，每行一条并去重，直接喂给扫描器或脚本）和「导出」，导出格式可选 JSON / CSV / Markdown / TXT：
+  - **JSON**：保留语法、平台、页码与全部字段，方便二次处理
+  - **CSV**：带 BOM，可直接用表格软件打开筛选
+  - **Markdown**：表格形式，便于写报告或贴进文档
+  - **TXT**：每行一条资产地址，最方便交给脚本或 AI
 - **复制即查询**：在语法库复制测绘语法后，底部会出现「去查询」提示，一键带入聚合查询；可在设置 → 测绘查询中关闭此提示
 - **密钥安全**：API Key 只保存在本机 `chrome.storage.local`，请求由扩展后台直接发往对应平台，导出配置时自动剔除
 - **测试连接**：设置页每个平台都有「测试连接」，先用本地保存的 Key 校验一次，确认能打通再使用；FOFA / Shodan 走账号信息接口不消耗查询额度，其余平台只发一次最小探测（Hunter 受接口限制为 10 条，其他为 1 条），同一平台有 3 秒冷却
@@ -251,6 +313,8 @@
 - 原生控件（下拉框等）随主题着色，深浅一致
 
 ---
+
+<a id="cyber-config"></a>
 
 ## 🔎 测绘查询配置（可选）
 
@@ -301,7 +365,7 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 
 **会把我的数据上传吗？**
 
-不会。只有在你启用 AI 并主动发起请求时，才会把当前输入、对话历史和命中的少量示例发给你选择的 AI 供应商；不启用 AI 时，扩展不会向外部服务器发起请求。
+不会。只有在你启用 AI 并主动发起请求时，才会把当前输入、对话历史和命中的少量示例发给你选择的 AI 供应商；不启用 AI、不使用聚合查询时，扩展不会向外部服务器发起请求。
 
 **有 Chrome 应用商店版本吗？**
 
@@ -318,6 +382,10 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 **AI 必须配置吗？**
 
 不必须。语法库、Payload 库、复制、收藏、自定义等核心功能完全离线可用。
+
+**聚合查询必须配置吗？**
+
+不必须，也不影响其它功能。未配置密钥时聚合查询页只做引导，不会发出任何请求。
 
 **支持 Firefox / Safari 吗？**
 
@@ -349,13 +417,13 @@ RuleBox/
 ├─ manifest.json              # MV3 清单
 ├─ LICENSE                    # MIT 开源协议
 ├─ icons/                     # 扩展图标（16/32/48/128）
-├─ assets/                    # README 截图与图片
+├─ assets/                    # README 截图与动图
 ├─ src/
-│  ├─ background/             # Service Worker（右键菜单 / 侧边栏）
-│  ├─ core/                   # 核心逻辑（存储、数据、AI、搜索、模板…）
+│  ├─ background/             # Service Worker（右键菜单 / 侧边栏 / 聚合查询）
+│  ├─ core/                   # 核心逻辑（存储、数据、搜索、模板、AI、平台适配…）
 │  ├─ data/                   # 内置 JSON 数据（平台 / 语法 / Payload / 提示词）
 │  ├─ options/                # 设置页（HTML/CSS）
-│  ├─ popup/                  # 弹窗（HTML/CSS）
+│  ├─ popup/                  # 弹窗与侧边栏（HTML/CSS）
 │  ├─ shared/                 # 设计令牌与基础样式
 │  └─ ui/                     # 界面逻辑（面板 / 设置页 / 组件库）
 └─ docs/DEVELOPMENT.md        # 开发与维护文档

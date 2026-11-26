@@ -40,7 +40,7 @@ src\
 │   ├─ index.json                 # 数据索引（snippets/payloads 文件路径清单 + version + updated）
 │   ├─ platforms.json             # 平台注册表
 │   ├─ prompts.json               # AI 提示词库
-│   ├─ snippets\*.json            # 各平台语法库（11 个文件）
+│   ├─ snippets\*.json            # 各平台语法库（16 个文件）
 │   └─ payloads\*.json            # 各类 Payload 库（19 个文件）
 ├─ options\                       # 设置页 HTML/CSS
 ├─ popup\                         # 面板 HTML/CSS（popup 与 side panel 共用）
@@ -426,7 +426,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 ### 8.6 未来方向（已预留，未实现）
 
 - 更多国际测绘平台（Censys、Netlas、BinaryEdge、Criminal IP、FullHunt 等）与可配置的自定义 API 适配器。
-- 聚合结果导出（CSV / JSON）与查询历史（需先确认存储体积与隐私边界）。
+- 查询历史（需先确认存储体积与隐私边界）。聚合结果导出已实现，支持 JSON / CSV / Markdown / TXT 四种格式。
 
 ## 9. 变更纪律
 
