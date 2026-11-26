@@ -56,6 +56,8 @@ export const DEFAULT_SETTINGS = {
     promptAfterCopy: true,
     // 每页结果数量，仅允许 10 / 20 / 50
     pageSize: 20,
+    // 导出结果时按资产地址自动去重：多个平台同时返回同一资产时只保留首次出现的一条
+    dedupeExport: true,
     // 上次选择的平台，下次打开时恢复；空数组表示还没有使用记录
     lastProviders: [],
     // 各平台 API Key：只保存在本地，不参与导出
@@ -158,6 +160,7 @@ export function mergeSettings(input) {
   const search = input.search && typeof input.search === 'object' ? input.search : {};
   merged.search.enabled = search.enabled !== false;
   merged.search.promptAfterCopy = search.promptAfterCopy !== false;
+  merged.search.dedupeExport = search.dedupeExport !== false;
   merged.search.pageSize = SEARCH_PAGE_SIZES.includes(Number(search.pageSize))
     ? Number(search.pageSize)
     : DEFAULT_SETTINGS.search.pageSize;

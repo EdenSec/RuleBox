@@ -259,7 +259,7 @@ src\
   - `frequentFirst`：列表“常用优先”排序（默认开启）。按 `rb.recents` 的复制次数降序、次数相同按最近使用时间降序排列，未使用过的条目保持数据文件原有顺序；搜索时仍按匹配度排序，不掺入使用次数。关闭后完全保留原有顺序。
   - `openMode`：`last`（默认，跟随 `rb.lastTab`）| `fixed`（固定打开 `defaultTab`）；设置页只有一个下拉，选“上次使用”写 `last`，选具体标签页写 `fixed` + `defaultTab`。`mergeSettings` 会校验两者取值。
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
-- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次使用的平台，空数组表示还没有记录，面板会回退到已配置 Key 的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
+- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`dedupeExport`（导出结果是否按资产地址去重，默认开启）、`pageSize`（10/20/50）、`lastProviders[]`（上次使用的平台，空数组表示还没有记录，面板会回退到已配置 Key 的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
 - `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
 - 系统提示词由 [`ai-client.js`](../src/core/ai-client.js) 的 `DEFAULT_SYSTEM_PROMPT` 提供基准：设置页展示并允许编辑，与内置文本完全一致或留空时存空字符串，保证扩展升级默认提示词后能自动生效；平台字段上下文与 `systemPromptAppend` 始终由 `buildSystemPrompt()` 拼接，不受用户编辑影响。
 - `limits`：`maxImportBytes`、`maxCustomItems`
@@ -341,6 +341,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 - 平台默认值：`lastProviders` 有记录就恢复；没有记录时优先已配置 Key 的平台，最后才回退 FOFA。`lastProviders` 默认为空数组，避免“首次打开被写成 FOFA”掩盖无历史状态。
 - 会话快照：每次查询成功写入 `rb.cyberSession`（语法、平台、页码、每页条数、结果分组），面板初始化时恢复并在状态栏标注「上次查询（时间）」。popup 关闭会销毁页面内存，没有快照就只能重查、白耗额度；快照只存展示字段（最多 7 个平台 × 50 条），不含任何 Key，`resetAll` 会一并清除。快照始终写同一个键、覆盖旧值，不会随查询次数累积。
 - 批量操作：状态行右侧「复制全部」把当前页所有成功条目转成 `url`（无 url 时用 `ip:port`）逐行复制并去重；「导出」按状态行的格式下拉生成 `rulebox-cyber-<时间>.<json|csv|md|txt>`：JSON 保留语法、平台、页码与完整字段；CSV 带 UTF-8 BOM、逗号/引号/换行按规范转义，便于表格软件直接打开；Markdown 输出元信息 + 表格；TXT 每行一条去重后的资产地址。两者都只作用于当前页已查到的结果，不会为了“导出全量”继续翻页消耗额度。
+- 导出默认去重（`search.dedupeExport`，设置页「导出结果时自动去重」）：多平台常返回同一资产，按 `cyberRecordKey()` 只保留首次出现的一条——地址优先，仅把协议与主机转小写（路径区分大小写，不合并）；地址缺失时依次退回 `domain`、`ip:port`、标题。JSON 导出按去重结果回筛各平台 `items`，保持分组结构不变，并附 `deduped` 条数；CSV / Markdown / TXT 输出的是去重后的记录，Markdown 元信息额外注明去重开关状态。关闭后四个格式都按各平台原始条目导出（TXT 也保留重复行）。
 - 设置页每个平台提供「测试连接」（`rb:cyber-test`）：SW 只从设置读取 Key，同一平台 3 秒冷却；FOFA / Shodan 走账号信息接口（不消耗额度），其余平台用一次最小检索验证，探测条数见 `PROVIDER_PROBE_SIZE`（默认 1，Hunter 因接口枚举限制为 10）。`normalizePageSize` 允许 1 仅为此场景，界面下拉仍只有 10 / 20 / 50。
 
 - 平台元数据、请求构造与响应解析全部在 `src/core/search-providers.js`，UI 不拼 URL、不解析平台响应；新增平台只改这一个文件（并在 `manifest.json` 补 host 权限）。

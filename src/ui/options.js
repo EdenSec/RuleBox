@@ -1292,6 +1292,7 @@ function fillAll() {
 
   $('#opt-cyber-enabled').checked = settings.search.enabled !== false;
   $('#opt-cyber-prompt').checked = settings.search.promptAfterCopy !== false;
+  $('#opt-cyber-dedupe').checked = settings.search.dedupeExport !== false;
   $('#opt-cyber-page-size').value = String(settings.search.pageSize);
   for (const provider of SEARCH_PROVIDERS) {
     const input = $(`#opt-cyber-key-${provider.id}`);
@@ -1541,6 +1542,7 @@ function bindCyber() {
 
   bindCheckbox('#opt-cyber-enabled', (draft, checked) => { draft.search.enabled = checked; });
   bindCheckbox('#opt-cyber-prompt', (draft, checked) => { draft.search.promptAfterCopy = checked; });
+  bindCheckbox('#opt-cyber-dedupe', (draft, checked) => { draft.search.dedupeExport = checked; });
 
   $('#opt-cyber-page-size').addEventListener('change', () => {
     const size = SEARCH_PAGE_SIZES.includes(Number($('#opt-cyber-page-size').value))

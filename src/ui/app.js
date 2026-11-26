@@ -1892,6 +1892,8 @@ function cyberExportRecords() {
     for (const item of group.items) {
       if (!item) continue;
       records.push({
+        // 原始条目引用：导出 JSON 时按去重结果回筛各组 items，避免结构变形
+        source: item,
         provider: providerName,
         title: item.title || item.domain || item.ip || '',
         address: cyberItemAddress(item),
@@ -1910,6 +1912,39 @@ function cyberExportRecords() {
 }
 
 /**
+ * 去重键：同一资产可能被多个平台同时返回（同一语法在 FOFA 与鹰图各出现一次同一域名）。
+ * 优先用资产地址；地址缺失时退回域名 / IP:端口 / 标题，保证每条记录都有稳定键。
+ * 只把协议与主机统一小写——路径与查询串可能区分大小写，保持原样，避免误合并不同资源。
+ */
+function cyberRecordKey(record) {
+  const address = String(record.address || '').trim();
+  if (address) {
+    return address.replace(
+      /^([a-z][a-z0-9+.-]*:\/\/)([^/?#]*)/i,
+      (match, scheme, host) => `${scheme.toLowerCase()}${host.toLowerCase()}`
+    );
+  }
+  const domain = String(record.domain || '').trim().toLowerCase();
+  if (domain) return `domain:${domain}`;
+  const ip = String(record.ip || '').trim();
+  if (ip) return `ip:${ip}:${record.port || ''}`;
+  return `title:${String(record.title || '').trim().toLowerCase()}`;
+}
+
+/** 按 cyberRecordKey 去重，保留首次出现的记录（平台顺序即查询时的勾选顺序） */
+function dedupeCyberRecords(records) {
+  const seen = new Set();
+  const kept = [];
+  for (const record of records) {
+    const key = cyberRecordKey(record);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(record);
+  }
+  return kept;
+}
+
+/**
  * 导出当前结果。
  * 支持 JSON / CSV / Markdown / TXT：JSON 保留完整结构，CSV 便于表格筛选，
  * Markdown 便于写报告，TXT 每行一条资产地址，方便直接交给脚本或 AI。
@@ -1921,7 +1956,12 @@ function exportCyberResults() {
     return;
   }
   const groups = Array.isArray(data.results) ? data.results : [];
-  const records = cyberExportRecords();
+  // 默认去重：多平台同时返回同一资产时只保留首次出现的一条；
+  // 关闭后按各平台原始条目导出，便于对比平台之间的差异
+  const dedupe = state.settings?.search?.dedupeExport !== false;
+  const rawRecords = cyberExportRecords();
+  const records = dedupe ? dedupeCyberRecords(rawRecords) : rawRecords;
+  const deduped = rawRecords.length - records.length;
   if (!records.length) {
     toast('当前结果没有可导出的资产', 'warn');
     return;
@@ -1970,6 +2010,7 @@ function exportCyberResults() {
       `- 导出时间：${now.toLocaleString('zh-CN')}`,
       `- 页码：${state.cyber.page || 1}（每页 ${state.cyber.pageSize || 0} 条）`,
       `- 结果条目：${records.length} 条`,
+      `- 去重：${dedupe ? `已开启${deduped ? `（合并重复 ${deduped} 条）` : ''}` : '已关闭'}`,
       '',
       '| 平台 | 标题 | 地址 | 域名 | IP | 端口 | 协议 | 状态码 | 归属地 | 更新时间 |',
       '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
@@ -1995,7 +2036,10 @@ function exportCyberResults() {
     text = lines.join('\n');
     label = 'Markdown';
   } else if (format === 'txt') {
-    const addresses = [...new Set(records.map((record) => record.address).filter(Boolean))];
+    // 去重开启时记录本身已唯一，直接用地址；关闭时保留每个平台的原始行
+    const addresses = dedupe
+      ? [...new Set(records.map((record) => record.address).filter(Boolean))]
+      : records.map((record) => record.address).filter(Boolean);
     if (!addresses.length) {
       toast('当前结果没有可导出的资产地址', 'warn');
       return;
@@ -2006,6 +2050,7 @@ function exportCyberResults() {
     count = addresses.length;
     label = 'TXT';
   } else {
+    const keep = new Set(records.map((record) => record.source));
     const payload = {
       generator: 'RuleBox',
       exportedAt: now.toISOString(),
@@ -2013,13 +2058,15 @@ function exportCyberResults() {
       page: state.cyber.page,
       pageSize: state.cyber.pageSize,
       providers: state.cyber.providers,
+      deduped,
       results: groups.map((group) => ({
         provider: group.provider,
         providerName: getSearchProvider(group.provider)?.name || group.provider,
         ok: group.ok === true,
         total: Number(group.total) || 0,
         error: group.error || '',
-        items: Array.isArray(group.items) ? group.items : []
+        // 按去重结果回筛条目，保持“平台分组”结构不变
+        items: (Array.isArray(group.items) ? group.items : []).filter((item) => keep.has(item))
       }))
     };
     text = JSON.stringify(payload, null, 2);
@@ -2027,7 +2074,9 @@ function exportCyberResults() {
 
   const bytes = downloadText(filename, text, mime);
   toast(
-    bytes ? `已导出 ${count} 条结果（${label}）` : '没有可导出的内容',
+    bytes
+      ? `已导出 ${count} 条结果（${label}${deduped ? `，已去重 ${deduped} 条` : ''}）`
+      : '没有可导出的内容',
     bytes ? 'success' : 'warn'
   );
 }
