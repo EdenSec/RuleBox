@@ -49,6 +49,17 @@
       "source": "OWASP LDAP Injection"
     },
     {
+      "id": "ldap-wildcard-probe",
+      "title": "通配符盲探用户名",
+      "category": "信息探测",
+      "code": "admin*",
+      "desc": "在用户名或邮箱字段提交通配符，观察登录结果与错误信息差异，可判断是否存在相似账号以及过滤器是否被拼接；单独的 * 能否命中取决于后端是否允许空口令。",
+      "tags": ["ldap", "blind", "wildcard"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP LDAP Injection"
+    },
+    {
       "id": "ldap-filter-objectclass",
       "title": "objectClass 条件",
       "category": "信息探测",

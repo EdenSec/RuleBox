@@ -148,6 +148,17 @@
       "source": "PayloadsAllTheThings"
     },
     {
+      "id": "ssrf-loopback-variants",
+      "title": "回环地址变体写法",
+      "category": "绕过技巧",
+      "code": "http://0.0.0.0/ 或 http://127.1/ 或 http://[::ffff:127.0.0.1]/",
+      "desc": "0.0.0.0、省略段的 127.1、IPv4 映射的 IPv6 地址在多数系统上都指向本机，可绕过只匹配 127.0.0.1 字符串的黑名单。",
+      "tags": ["ssrf", "bypass", "localhost"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
       "id": "ssrf-dns-rebinding",
       "title": "DNS 重绑定思路",
       "category": "绕过技巧",

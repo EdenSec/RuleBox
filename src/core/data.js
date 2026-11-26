@@ -35,7 +35,7 @@ async function fetchJson(path) {
  * 语法库使用对象写法（name/label/placeholder/example），Payload 库与自定义条目使用字符串写法，
  * 这里统一成对象，避免 UI 直接拿到 String(Object) 产生「{{[object Object]}}」。
  */
-function normalizeVars(vars, code) {
+function normalizeVars(vars, code, literalBraces = false) {
   if (!Array.isArray(vars)) vars = [];
   const result = [];
   for (const entry of vars) {
@@ -49,9 +49,12 @@ function normalizeVars(vars, code) {
     });
   }
   // 代码里出现但未声明的占位符也纳入，避免复制出未替换的 {{xxx}}
-  for (const name of extractVars(code)) {
-    if (!result.some((item) => item.name === name)) {
-      result.push({ name, label: '', placeholder: '', example: '' });
+  // literalBraces：payload 本身就是模板语法（如 Handlebars 的 {{this}}），不能把花括号当变量
+  if (!literalBraces) {
+    for (const name of extractVars(code)) {
+      if (!result.some((item) => item.name === name)) {
+        result.push({ name, label: '', placeholder: '', example: '' });
+      }
     }
   }
   return result;
@@ -68,7 +71,7 @@ function normalizeSnippet(item, platformId) {
     code: String(item.code || ''),
     desc: String(item.desc || ''),
     tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
-    vars: normalizeVars(item.vars, item.code),
+    vars: normalizeVars(item.vars, item.code, item.literalBraces),
     // 可选：建议文件名。声明后卡片会提供「存为文件」，把代码直接下载成可上传 / 可执行的成品
     file: String(item.file || ''),
     // 可选：二进制前缀（Base64）。图片马等样本需要真 PNG/GIF 字节头，下载时先解码再拼接代码
@@ -91,7 +94,7 @@ function normalizePayload(item, groupName) {
     code: String(item.code || ''),
     desc: String(item.desc || ''),
     tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
-    vars: normalizeVars(item.vars, item.code),
+    vars: normalizeVars(item.vars, item.code, item.literalBraces),
     // 可选：建议文件名（见 normalizeSnippet 同名注释）
     file: String(item.file || ''),
     // 可选：二进制前缀（见 normalizeSnippet 同名注释）

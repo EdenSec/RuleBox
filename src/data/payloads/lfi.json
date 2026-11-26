@@ -104,6 +104,17 @@
       "source": "PayloadsAllTheThings"
     },
     {
+      "id": "lfi-replace-bypass",
+      "title": "替换过滤绕过",
+      "category": "编码绕过",
+      "code": "....//....//....//....//etc/passwd",
+      "desc": "服务端若用 str_replace 删除 ../，过滤后仍会残留 ../（....// 去掉 ../ 得 ../），可继续穿越；同类写法还有 ..././ 与 ..../。",
+      "tags": ["lfi", "bypass", "filter"],
+      "vars": [],
+      "risk": "attack",
+      "source": "PayloadsAllTheThings"
+    },
+    {
       "id": "lfi-null-byte",
       "title": "空字节截断",
       "category": "编码绕过",

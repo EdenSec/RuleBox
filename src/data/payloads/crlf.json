@@ -60,6 +60,17 @@
       "source": "OWASP CRLF Injection"
     },
     {
+      "id": "crlf-location",
+      "title": "注入 Location 跳转",
+      "category": "组合利用",
+      "code": "%0d%0aLocation:%20/admin",
+      "desc": "向响应注入 Location 实现任意跳转，常与开放重定向结合用于钓鱼或窃取票据；能直接发送裸回车换行时也可用 \\r\\n 代替编码。",
+      "tags": ["crlf", "redirect", "header"],
+      "vars": [],
+      "risk": "attack",
+      "source": "OWASP CRLF Injection"
+    },
+    {
       "id": "crlf-cache-poison",
       "title": "缓存投毒思路",
       "category": "组合利用",
