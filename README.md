@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Chrome](https://img.shields.io/badge/Chrome-116%2B-green) ![Edge](https://img.shields.io/badge/Edge-116%2B-green) ![Manifest](https://img.shields.io/badge/Manifest-V3-3fb950) ![License](https://img.shields.io/badge/license-MIT-3fb950) ![Build](https://img.shields.io/badge/build-none-3fb950) ![Backend](https://img.shields.io/badge/backend-none-3fb950) ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen)
+![Version](https://img.shields.io/badge/version-2.0.0-blue) ![Chrome](https://img.shields.io/badge/Chrome-116%2B-green) ![Edge](https://img.shields.io/badge/Edge-116%2B-green) ![Manifest](https://img.shields.io/badge/Manifest-V3-3fb950) ![License](https://img.shields.io/badge/license-MIT-3fb950) ![Build](https://img.shields.io/badge/build-none-3fb950) ![Backend](https://img.shields.io/badge/backend-none-3fb950) ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
-**面向网络安全工程师的浏览器速取面板** — 测绘语法、安全测试 Payload、AI 助手，三者合一，一键复制。
+**面向网络安全工程师的浏览器速取面板** — 测绘语法、安全测试 Payload、聚合查询、AI 助手，四者合一，一键复制。
 
 <sub>RuleBox — a local-first browser panel for security recon syntax, payloads, and AI-assisted query generation.</sub>
 
@@ -37,6 +37,7 @@
 
 - 🗂️ **11 个语法库**：8 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / Alpha / DayDayMap / 0.zone）+ Google / 百度 + 常用命令行工具
 - 💣 **19 类安全测试 Payload / 252 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
+- 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
 目前内置 **730 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
@@ -196,8 +197,8 @@
 | :--- | :--- |
 | `Ctrl+Shift+Y` / `Cmd+Shift+Y` | 打开 RuleBox 面板 |
 | `Ctrl+K` / `Cmd+K` | 聚焦搜索框 |
-| `Ctrl+1` / `2` / `3` | 切换 语法库 / Payload / AI 助手 |
-| `Ctrl+Enter` | AI 输入框内发送请求 |
+| `Ctrl+1` / `2` / `3` / `4` | 切换 语法库 / Payload / 聚合查询 / AI 助手 |
+| `Ctrl+Enter` | AI 输入框内发送请求；聚合查询中执行查询 |
 | `Escape` | 清空搜索 / 关闭弹窗 |
 
 > 如果 `Ctrl+Shift+Y` 与其它扩展冲突，可在 `chrome://extensions/shortcuts` 中修改。
@@ -218,6 +219,15 @@
 - **右键搜索**：选中网页文本后右键「在 RuleBox 中搜索」，关键词直接带入
 - **侧边栏模式**：Chrome 116+ / Edge 116+ 固定常驻；低版本或侧边栏不可用时自动降级到弹窗 / 标签页
 
+### 聚合查询（v2.0）
+
+- **一个搜索框**：在面板内直接使用平台的原始语法检索，不必再逐个打开 FOFA / Hunter / Quake 等网站
+- **多平台并行**：勾选多个平台后，同一语法会同时发往各平台，结果按平台分组展示
+- **分页浏览**：每页 10 / 20 / 50 条可切换，上一页 / 下一页连续翻页
+- **结果操作**：标题可直接在新标签页打开资产地址，右侧按钮一键复制地址
+- **复制即查询**：在语法库复制测绘语法后，底部会出现「去查询」提示，一键带入聚合查询；可在设置 → 测绘查询中关闭此提示
+- **密钥安全**：API Key 只保存在本机 `chrome.storage.local`，请求由扩展后台直接发往对应平台，导出配置时自动剔除
+
 ### AI 助手
 
 - **自然语言生成**：「查询响应码为 200 的告警」→ 直接生成完整语法
@@ -233,6 +243,17 @@
 - 深色 / 浅色 / 跟随系统三档
 - 无渐变、无花哨装饰，信息密度高、长时间看不累
 - 原生控件（下拉框等）随主题着色，深浅一致
+
+---
+
+## 🔎 测绘查询配置（可选）
+
+1. 打开面板右上角「设置」→「测绘查询」
+2. 在对应平台行填入 API Key（FOFA 个人中心、Hunter 个人中心、Quake 密钥管理、ZoomEye 个人中心、Shodan Account 均可获取）
+3. 回到面板「聚合查询」，勾选平台、输入语法即可查询
+4. 不同平台语法不完全通用，例如 FOFA 的 `domain="example.com"` 与 Hunter 的 `domain="example.com"` 语义接近，但 Quake 使用 `domain: "example.com"`；建议只勾选与语法匹配的平台
+
+**配额与计费**：查询会消耗各平台账号额度，RuleBox 不做任何中转或缓存，也不绕过平台限流；额度与频率限制以各平台账号为准。
 
 ---
 
@@ -258,8 +279,10 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 | `clipboardWrite` | 点击复制时写入剪贴板 |
 | `contextMenus` | 提供「在 RuleBox 中搜索」右键菜单 |
 | `sidePanel` | 侧边栏常驻模式 |
-| `host_permissions` | 仅包含 5 家内置 AI 服务与本地 Ollama 地址 |
+| `host_permissions` | 5 家内置 AI 服务、本地 Ollama 地址，以及 FOFA / Hunter / Quake / ZoomEye / Shodan 的 API 域名 |
 | `optional_host_permissions` | 自定义 AI 端点首次使用时按需申请，不授权则不发起请求 |
+
+测绘查询的 API Key 与 AI Key 一样只保存在本机，不会发送给 RuleBox 作者或任何第三方中转；请求直接从扩展后台发往你选择的平台。导出配置时所有密钥都会被清空。
 
 ---
 

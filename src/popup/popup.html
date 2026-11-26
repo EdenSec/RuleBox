@@ -73,6 +73,8 @@
         aria-selected="true" aria-controls="panel-snippets">语法库</button>
       <button id="tab-payloads" class="rb-tab" type="button" role="tab" data-tab="payloads"
         aria-selected="false" aria-controls="panel-payloads">Payload</button>
+      <button id="tab-cyber" class="rb-tab" type="button" role="tab" data-tab="cyber"
+        aria-selected="false" aria-controls="panel-cyber">聚合查询</button>
       <button id="tab-ai" class="rb-tab" type="button" role="tab" data-tab="ai"
         aria-selected="false" aria-controls="panel-ai">AI 助手</button>
     </nav>
@@ -121,6 +123,49 @@
           </div>
         </div>
         <div id="payload-list" class="rb-list"></div>
+      </section>
+
+      <!-- 聚合查询 -->
+      <section id="panel-cyber" class="rb-panel rb-cyber" data-panel="cyber" role="tabpanel"
+        aria-labelledby="tab-cyber" hidden>
+        <div class="rb-cyber-toolbar">
+          <div class="rb-cyber-picker">
+            <button id="cyber-providers-btn" class="rb-btn rb-btn--ghost rb-btn--sm rb-cyber-picker-btn"
+              type="button" aria-haspopup="true" aria-expanded="false" aria-controls="cyber-providers-pop">
+              <span class="rb-cyber-picker-label">平台</span>
+              <span id="cyber-providers-text" class="rb-cyber-picker-text">FOFA</span>
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m5 6.5 3 3 3-3"></path>
+              </svg>
+            </button>
+            <div id="cyber-providers-pop" class="rb-cyber-pop" role="group"
+              aria-label="选择查询平台" hidden></div>
+          </div>
+          <label class="rb-cyber-size">
+            <span>每页</span>
+            <select id="cyber-page-size" class="rb-select" aria-label="每页结果数量">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+        </div>
+
+        <form id="cyber-form" class="rb-cyber-form">
+          <textarea id="cyber-query" class="rb-input rb-textarea" rows="2"
+            placeholder='domain="example.com"'
+            autocomplete="off" spellcheck="false" aria-label="查询语法"></textarea>
+          <div class="rb-cyber-form-foot">
+            <span id="cyber-hint" class="rb-cyber-hint">支持所选平台原生语法，Ctrl+Enter 查询</span>
+            <button id="cyber-submit" class="rb-btn rb-btn--primary rb-btn--sm" type="submit">查询</button>
+          </div>
+        </form>
+
+        <div id="cyber-notice" class="rb-cyber-notice" hidden></div>
+        <div id="cyber-status" class="rb-cyber-status" role="status" aria-live="polite"></div>
+        <div id="cyber-results" class="rb-cyber-results"></div>
+        <div id="cyber-pager" class="rb-cyber-pager" hidden></div>
       </section>
 
       <!-- AI 助手 -->

@@ -22,7 +22,7 @@
 
 ```
 src\
-├─ background\service-worker.js   # MV3 SW：右键菜单、sidePanel.setOptions 同步、rb:sync 消息
+├─ background\service-worker.js   # MV3 SW：右键菜单、sidePanel.setOptions 同步、rb:sync 消息、rb:cyber-search 聚合查询
 ├─ core\                          # 全部无 DOM 依赖的核心逻辑（SW 也可复用）
 │   ├─ defaults.js                # STORAGE_KEYS、DEFAULT_SETTINGS、mergeSettings（唯一配置定义点）
 │   ├─ storage.js                 # chrome.storage.local 封装 + localStorage 回退 + 各业务键读写
@@ -32,6 +32,7 @@ src\
 │   ├─ template.js               # {{变量}} 提取 / 填充 / 校验（applyVars / extractVars / missingVars / describeVar）
 │   ├─ clipboard.js               # 复制格式化（formatCopy：code | markdown | title-code）
 │   ├─ providers.js               # AI 供应商预设（PROVIDERS 数组，6 家预设 + custom，共 7 项）
+│   ├─ search-providers.js        # 测绘平台接入（平台元数据、请求构造、响应归一化、错误脱敏，无 DOM/chrome 依赖）
 │   ├─ ai-client.js               # OpenAI 兼容 Chat Completions 客户端（SSE 流式、testConnection、hasEndpointPermission）
 │   ├─ logger.js                  # 日志与敏感信息脱敏（mask）
 │   └─ utils.js                    # $、$$、el、uid、clamp、safeParse、debounce、copyText、truncate、sanitizeFilename、isAllowedEndpoint 等
@@ -45,7 +46,7 @@ src\
 ├─ popup\                         # 面板 HTML/CSS（popup 与 side panel 共用）
 ├─ shared\                        # tokens.css（设计令牌）、base.css、components.css
 └─ ui\
-    ├─ app.js                     # 面板逻辑（标签切换、搜索、复制、收藏、AI 对话、pendingSearch 消费）
+    ├─ app.js                     # 面板逻辑（标签切换、搜索、复制、收藏、聚合查询、AI 对话、pendingSearch 消费）
     ├─ options.js                 # 设置页逻辑（每个控件变更即自动保存）
     ├─ form-dialog.js             # 共享弹窗与表单（mountOverlay / openInfoDialog / openFormDialog），options 与 popup 共用
     ├─ item-dialog.js             # 共享条目表单（新增 / 编辑语法与 Payload，风险等级自动推断）
@@ -59,7 +60,7 @@ src\
 `manifest.json`：
 
 - permissions：`storage`、`clipboardWrite`、`contextMenus`、`sidePanel`。
-- host_permissions：内置 5 家 AI 供应商域名 + `localhost/127.0.0.1`（Ollama）。
+- host_permissions：内置 5 家 AI 供应商域名、`localhost/127.0.0.1`（Ollama），以及 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan 的 API 域名（聚合查询直接由 SW 发起，端点固定，不接受页面传入 URL）。
 - optional_host_permissions：`https://*/*`、`http://*/*`——自定义 AI 端点在用户手势内 `chrome.permissions.request` 动态授权。
 - CSP：`script-src 'self'; object-src 'self'; base-uri 'self'`（禁止内联脚本 / eval / 远程代码）。
 
@@ -255,6 +256,7 @@ src\
 - `theme`：`auto | dark | light`
 - `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`showRiskBadges`、`copyFormat`、`showDesc`
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
+- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次勾选的平台）、`providers{ fofa|hunter|quake|zoomeye|shodan: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
 - `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
 - 系统提示词由 [`ai-client.js`](../src/core/ai-client.js) 的 `DEFAULT_SYSTEM_PROMPT` 提供基准：设置页展示并允许编辑，与内置文本完全一致或留空时存空字符串，保证扩展升级默认提示词后能自动生效；平台字段上下文与 `systemPromptAppend` 始终由 `buildSystemPrompt()` 拼接，不受用户编辑影响。
 - `limits`：`maxImportBytes`、`maxCustomItems`
@@ -287,6 +289,7 @@ src\
 
 - 无 `vars` 的条目直接复制，不弹窗（与 `rb.variables` 是否已保存过无关）。
 - SIDE_PANEL / TAB 永不自关（否则用户会丢失正在浏览的页面），只弹 toast。
+- 语法库复制成功后若平台支持聚合查询，会调用 `maybeShowCopyGuide()` 在底部显示提示条；提示出现时**跳过** `closeAfterCopy` 自关，否则用户来不及点击“去查询”。
 - 变量弹窗 `<form>` 的提交按钮（`.rb-dialog-foot` 内的 `type=submit`）必须位于 `<form>` 内部，否则回车/点击都不会触发提交。
 
 **「存为文件」流程**（与复制同源，只差最后一步）：
@@ -319,6 +322,25 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 每个控件 change 即调 `updateSettings(mutator)` → `patchSettings(draft => { mutator(draft); return draft; })`。`patchSettings` 的 updater **必须 return**，否则保存 undefined 导致配置被重置。
 
 `patchSettings` 内部维护模块级串行队列 `settingsWriteQueue`：每次“读 → 改 → 写”按序执行，单次失败不会中断队列（失败结果只 reject 给调用方）。**不要绕过它直接 `saveSettings` 做局部更新**——连续快速切换多个开关时会因并发读改写互相覆盖而丢配置（已修复，回归时重点验证）。自定义数据写入后用 `invalidateCache()` 刷新共享缓存并向 SW 发 `rb:sync`。
+
+### 6.5 聚合查询（`rb:cyber-search`）
+
+```
+面板勾选平台 + 输入语法
+  → chrome.runtime.sendMessage({ type:'rb:cyber-search', query, providers[], page, size })
+  → SW handleCyberSearch：校验 sender.id、query 长度、平台 ID 白名单、page/size 范围
+       → 读取 rb.settings.search.providers[].apiKey（密钥不出 SW）
+       → Promise.all 并行 searchOneProvider（固定端点 + 20s 超时）
+       → 逐平台返回 { ok, total, items[] } 或 { ok:false, error }
+  → 面板按平台分组渲染，支持翻页、点击跳转、复制地址
+```
+
+- 平台元数据、请求构造与响应解析全部在 `src/core/search-providers.js`，UI 不拼 URL、不解析平台响应；新增平台只改这一个文件（并在 `manifest.json` 补 host 权限）。
+- SW 不接受页面传入的 URL / header，避免被利用做 SSRF；`providers` 只认注册表里的 ID。
+- 每个平台独立 try/catch，单平台失败不影响其他平台；错误信息经 `sanitizeSearchError()` 剔除 API Key 后返回。
+- 结果条目的标题 / 地址 / 字段均截断，地址只接受 `http(s)`；渲染统一走 `textContent`，禁止把平台返回值拼进 HTML。
+- 平台语法不做跨平台翻译：用户勾选多个平台时，同一段语法会原样发往各平台，语法差异由用户自行选择匹配的平台。
+- 复制后提示条：仅 `kind === 'snippet'`、平台在 `SEARCH_PROVIDERS` 中、`search.enabled` 与 `search.promptAfterCopy` 均未关闭时出现；点击“不再提示”会写回设置，点击“去查询”会带入语法并在有 Key、无未填 `{{变量}}` 时自动检索。
 
 ## 7. 已知实现陷阱（改动前必读）
 
@@ -383,9 +405,19 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 内置条目的隐藏名单（`rb.hidden`）在设置页有独立分区「内置条目显示」，不在「自定义数据」里，避免和多份自定义列表混在一起难找；面板页脚在存在隐藏条目时把快捷键提示换成「已隐藏 N 条 · 恢复」，点击带上 `?onlyHidden=1#builtin` 打开该分区并自动勾选“只看已隐藏”，直接看到可恢复的条目。面板隐藏写入串行执行（`hiddenWriteQueue`），连续快速点多个眼睛图标不会因并发读改写互相覆盖。
 
-### 8.5 未来方向（已预留，未实现）
+### 8.5 新增一个聚合查询平台
 
-- 接入各测绘平台 API Key 直接查询（尚未开发——动手前先检索避免重复设计）。
+1. `src/core/search-providers.js` 的 `SEARCH_PROVIDERS` 增加平台元数据（`id` 必须与语法库平台 ID 一致；`keyUrl` / `keyHint` 用于设置页指引）。
+2. 同文件补充 `buildProviderRequest()` 分支与 `parseProviderResponse()` 解析函数，统一输出 `{ total, items[], quota? }`，条目由 `buildItem()` 归一化。
+3. `manifest.json` 的 `host_permissions` 增加该平台 API 域名（端点固定，不接受运行时传入）。
+4. 无需改 UI：平台选择、设置页密钥行、分页、复制与跳转都从注册表自动生成。
+
+已在用的平台：FOFA、Hunter 鹰图、Quake 360、ZoomEye、Shodan。ZoomEye 使用 `api.zoomeye.ai/v2/search`（`API-KEY` 头 + `qbase64`）；Quake 使用旧版 `X-QuakeToken` 端点，若账号已切换到新的 APPID/SECRET 签名接口，需要在此扩展鉴权方式。
+
+### 8.6 未来方向（已预留，未实现）
+
+- 更多测绘平台（如零零信安 0.zone、DayDayMap）与可配置的自定义 API 适配器。
+- 聚合结果导出（CSV / JSON）与查询历史（需先确认存储体积与隐私边界）。
 
 ## 9. 变更纪律
 
@@ -399,4 +431,5 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 | 版本 | 主要能力 |
 | --- | --- |
+| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化 |
 | 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |

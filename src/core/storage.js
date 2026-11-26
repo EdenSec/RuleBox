@@ -253,6 +253,14 @@ export async function exportConfig() {
     ...profile,
     apiKey: ''
   }));
+  // 测绘平台 API Key 与 AI 密钥同等对待：只留在本机，导出配置时一律清空
+  safeSettings.search = { ...safeSettings.search };
+  safeSettings.search.providers = Object.fromEntries(
+    Object.entries(safeSettings.search.providers || {}).map(([id, config]) => [
+      id,
+      { ...config, apiKey: '' }
+    ])
+  );
 
   return {
     app: 'RuleBox',
@@ -285,6 +293,12 @@ export async function applyConfig(payload) {
   const settings = mergeSettings(payload.settings);
   // 导入时清空密钥，避免把旧机器的密钥带进来
   settings.ai.profiles = settings.ai.profiles.map((profile) => ({ ...profile, apiKey: '' }));
+  settings.search.providers = Object.fromEntries(
+    Object.entries(settings.search.providers || {}).map(([id, config]) => [
+      id,
+      { ...config, apiKey: '' }
+    ])
+  );
 
   await setItems({
     [STORAGE_KEYS.settings]: settings,

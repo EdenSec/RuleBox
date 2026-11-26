@@ -28,6 +28,7 @@ import {
   onStorageChanged
 } from '../core/storage.js';
 import { PROVIDERS, getProvider, getProviderModels } from '../core/providers.js';
+import { SEARCH_PROVIDERS, SEARCH_PAGE_SIZES } from '../core/search-providers.js';
 import { testConnection, hasEndpointPermission, DEFAULT_SYSTEM_PROMPT } from '../core/ai-client.js';
 import { loadAll, invalidateCache } from '../core/data.js';
 import { applyTheme, nextTheme, themeMeta } from './theme.js';
@@ -37,7 +38,7 @@ import { openFormDialog, openInfoDialog } from './form-dialog.js';
 import { openItemDialog } from './item-dialog.js';
 
 const hasChrome = typeof chrome !== 'undefined';
-const SECTIONS = ['general', 'ai', 'data', 'builtin', 'import', 'about'];
+const SECTIONS = ['general', 'cyber', 'ai', 'data', 'builtin', 'import', 'about'];
 
 const PLATFORM_ID_PATTERN = /^[a-zA-Z0-9_-]{2,32}$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
@@ -1249,6 +1250,14 @@ function fillAll() {
   $('#opt-context-menu').checked = Boolean(settings.features.contextMenu);
   $('#opt-ai-feature').checked = Boolean(settings.features.ai);
 
+  $('#opt-cyber-enabled').checked = settings.search.enabled !== false;
+  $('#opt-cyber-prompt').checked = settings.search.promptAfterCopy !== false;
+  $('#opt-cyber-page-size').value = String(settings.search.pageSize);
+  for (const provider of SEARCH_PROVIDERS) {
+    const input = $(`#opt-cyber-key-${provider.id}`);
+    if (input) input.value = settings.search.providers?.[provider.id]?.apiKey || '';
+  }
+
   syncAiSwitches();
   renderProviderOptions();
   renderProfileOptions();
@@ -1321,6 +1330,72 @@ function bindGeneral() {
     draft.features.ai = checked;
     draft.ai.enabled = checked;
   }, () => syncAiSwitches());
+}
+
+/** 渲染测绘平台密钥输入行（平台定义来自 core/search-providers.js，避免两处维护） */
+function renderCyberProviders() {
+  const holder = $('#opt-cyber-providers');
+  if (!holder || holder.dataset.ready === '1') return;
+  holder.dataset.ready = '1';
+
+  holder.replaceChildren(...SEARCH_PROVIDERS.map((provider) => {
+    const input = el('input', {
+      className: 'rb-input rb-cyber-key',
+      attrs: {
+        type: 'password',
+        id: `opt-cyber-key-${provider.id}`,
+        placeholder: '粘贴 API Key',
+        autocomplete: 'off',
+        spellcheck: 'false'
+      },
+      dataset: { provider: provider.id }
+    });
+    input.addEventListener('change', () => {
+      const value = input.value.trim();
+      void updateSettings((draft) => {
+        draft.search.providers[provider.id] = {
+          ...(draft.search.providers[provider.id] || {}),
+          apiKey: value
+        };
+      });
+    });
+
+    const link = el('a', {
+      className: 'rb-field-link',
+      text: '获取 Key',
+      attrs: { href: provider.keyUrl, target: '_blank', rel: 'noopener noreferrer' }
+    });
+
+    return el('div', { className: 'rb-opt-row' }, [
+      el('div', { className: 'rb-opt-row-main' }, [
+        el('span', { className: 'rb-opt-row-title' }, [
+          el('span', { className: 'rb-cyber-key-name' }, [
+            el('span', { text: provider.name }),
+            badge(provider.vendor)
+          ])
+        ]),
+        el('span', { className: 'rb-opt-row-desc' }, [
+          `${provider.keyHint} · `,
+          link
+        ])
+      ]),
+      el('label', { className: 'rb-opt-control' }, [input])
+    ]);
+  }));
+}
+
+function bindCyber() {
+  renderCyberProviders();
+
+  bindCheckbox('#opt-cyber-enabled', (draft, checked) => { draft.search.enabled = checked; });
+  bindCheckbox('#opt-cyber-prompt', (draft, checked) => { draft.search.promptAfterCopy = checked; });
+
+  $('#opt-cyber-page-size').addEventListener('change', () => {
+    const size = SEARCH_PAGE_SIZES.includes(Number($('#opt-cyber-page-size').value))
+      ? Number($('#opt-cyber-page-size').value)
+      : 20;
+    void updateSettings((draft) => { draft.search.pageSize = size; });
+  });
 }
 
 function bindAi() {
@@ -1539,6 +1614,7 @@ async function init() {
   bindHeader();
   bindNav();
   bindGeneral();
+  bindCyber();
   bindAi();
   bindData();
   bindImport();

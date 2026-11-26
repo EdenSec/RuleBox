@@ -3,6 +3,8 @@
  * 所有可调项集中在此，避免散落在 UI 中硬编码。
  */
 
+import { SEARCH_PROVIDERS, SEARCH_PAGE_SIZES } from './search-providers.js';
+
 export const STORAGE_KEYS = {
   settings: 'rb.settings',
   favorites: 'rb.favorites',
@@ -38,6 +40,18 @@ export const DEFAULT_SETTINGS = {
     sidePanel: true,
     contextMenu: true,
     ai: true
+  },
+  search: {
+    // 聚合查询总开关（关闭后面板仍保留入口提示，但不会发起任何测绘 API 请求）
+    enabled: true,
+    // 复制语法后是否提示“一站式查询”
+    promptAfterCopy: true,
+    // 每页结果数量，仅允许 10 / 20 / 50
+    pageSize: 20,
+    // 上次选择的平台，下次打开时恢复
+    lastProviders: ['fofa'],
+    // 各平台 API Key：只保存在本地，不参与导出
+    providers: Object.fromEntries(SEARCH_PROVIDERS.map((provider) => [provider.id, { apiKey: '' }]))
   },
   ai: {
     enabled: false,
@@ -107,6 +121,27 @@ export function mergeSettings(input) {
     if (input[group] && typeof input[group] === 'object') {
       merged[group] = { ...merged[group], ...input[group] };
     }
+  }
+
+  // 测绘查询：逐项校验，避免旧配置或手改 JSON 把开关写成字符串、把平台写成不存在的 ID
+  const search = input.search && typeof input.search === 'object' ? input.search : {};
+  merged.search.enabled = search.enabled !== false;
+  merged.search.promptAfterCopy = search.promptAfterCopy !== false;
+  merged.search.pageSize = SEARCH_PAGE_SIZES.includes(Number(search.pageSize))
+    ? Number(search.pageSize)
+    : DEFAULT_SETTINGS.search.pageSize;
+  const lastProviders = Array.isArray(search.lastProviders)
+    ? Array.from(new Set(search.lastProviders.map((id) => String(id || ''))))
+      .filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id))
+      .slice(0, SEARCH_PROVIDERS.length)
+    : [];
+  merged.search.lastProviders = lastProviders.length ? lastProviders : [...DEFAULT_SETTINGS.search.lastProviders];
+  merged.search.providers = {};
+  for (const provider of SEARCH_PROVIDERS) {
+    const saved = search.providers?.[provider.id];
+    merged.search.providers[provider.id] = {
+      apiKey: saved && typeof saved === 'object' ? String(saved.apiKey || '') : ''
+    };
   }
 
   // 旧版本曾支持邮箱、Webhook 与告警提醒，现已移除；顺带清理历史配置里残留的字段

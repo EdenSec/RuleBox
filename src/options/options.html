@@ -38,6 +38,7 @@
       <!-- 分区导航 -->
       <nav class="rb-opt-nav" id="opt-nav" aria-label="设置分区">
         <button class="rb-opt-nav-item is-active" type="button" data-section="general">通用</button>
+        <button class="rb-opt-nav-item" type="button" data-section="cyber">测绘查询</button>
         <button class="rb-opt-nav-item" type="button" data-section="ai">AI 助手</button>
         <button class="rb-opt-nav-item" type="button" data-section="data">自定义数据</button>
         <button class="rb-opt-nav-item" type="button" data-section="builtin">内置条目显示</button>
@@ -77,6 +78,7 @@
                 <select id="opt-default-tab" class="rb-select" aria-label="默认标签页">
                   <option value="snippets">语法库</option>
                   <option value="payloads">Payload</option>
+                  <option value="cyber">聚合查询</option>
                   <option value="ai">AI 助手</option>
                 </select>
               </label>
@@ -168,6 +170,57 @@
                 <span></span>
               </label>
             </div>
+          </div>
+        </section>
+
+        <!-- 测绘查询 -->
+        <section class="rb-opt-section" data-section="cyber" hidden>
+          <header class="rb-section-head">
+            <h2>测绘查询</h2>
+            <p>在面板内直接调用 FOFA、Hunter 鹰图等平台的 API，一站式检索资产。API Key 仅保存在本机，导出配置时自动剔除。</p>
+          </header>
+
+          <div class="rb-card">
+            <h3 class="rb-card-title">功能</h3>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">启用聚合查询</span>
+                <span class="rb-opt-row-desc">关闭后面板仍保留入口，但不会向任何测绘平台发起请求。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-cyber-enabled" type="checkbox" aria-label="启用聚合查询">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">复制语法后提示一站式查询</span>
+                <span class="rb-opt-row-desc">在语法库复制测绘语法后，面板底部会出现“去查询”提示；关闭后不再出现。</span>
+              </div>
+              <label class="rb-switch">
+                <input id="opt-cyber-prompt" type="checkbox" aria-label="复制语法后提示一站式查询">
+                <span></span>
+              </label>
+            </div>
+            <div class="rb-opt-row">
+              <div class="rb-opt-row-main">
+                <span class="rb-opt-row-title">默认每页结果数</span>
+                <span class="rb-opt-row-desc">可在面板中随时切换，这里只决定初始值。</span>
+              </div>
+              <label class="rb-opt-control">
+                <select id="opt-cyber-page-size" class="rb-select" aria-label="默认每页结果数">
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="rb-card">
+            <h3 class="rb-card-title">平台 API Key</h3>
+            <p class="rb-note">密钥写入浏览器本地存储（chrome.storage.local），不会上传到任何服务器，也不会写入导出的配置文件。不同平台语法不完全通用，建议勾选语法对应的平台。</p>
+            <div id="opt-cyber-providers" class="rb-cyber-key-list"></div>
           </div>
         </section>
 

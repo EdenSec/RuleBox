@@ -34,6 +34,12 @@ import {
 import { requestAI, AIError, getActiveProfile } from '../core/ai-client.js';
 import { retrieveExamples } from '../core/retrieve.js';
 import { getProvider } from '../core/providers.js';
+import { applyVars } from '../core/template.js';
+import {
+  SEARCH_PROVIDERS,
+  SEARCH_PAGE_SIZES,
+  getSearchProvider
+} from '../core/search-providers.js';
 import { icon } from './icons.js';
 import { openItemDialog } from './item-dialog.js';
 import { applyTheme, nextTheme, themeMeta } from './theme.js';
@@ -42,6 +48,7 @@ import {
   itemKey,
   syncFilterSelect,
   emptyState,
+  badge,
   toast,
   confirmDialog,
   copyWithVariables,
@@ -88,6 +95,16 @@ const state = {
     controller: null,
     platform: 'all',
     promptGroup: ''
+  },
+  cyber: {
+    providers: [],
+    query: '',
+    page: 1,
+    pageSize: 20,
+    loading: false,
+    results: null,
+    pickerOpen: false,
+    guideTimer: null
   }
 };
 
@@ -152,15 +169,23 @@ async function init() {
   state.variables = variables;
   state.recents = normalizeRecents(recents);
   state.ai.messages = Array.isArray(history) ? history.slice(-40) : [];
-  state.tab = ['snippets', 'payloads', 'ai'].includes(state.settings.ui.defaultTab)
+  state.tab = ['snippets', 'payloads', 'cyber', 'ai'].includes(state.settings.ui.defaultTab)
     ? state.settings.ui.defaultTab
     : 'snippets';
+
+  const savedCyberProviders = (state.settings.search.lastProviders || [])
+    .filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id));
+  state.cyber.providers = savedCyberProviders.length
+    ? savedCyberProviders
+    : [SEARCH_PROVIDERS[0].id];
+  state.cyber.pageSize = state.settings.search.pageSize;
 
   bindHeader();
   bindSearch();
   bindSnippetFilters();
   bindTabs();
   bindPayloads();
+  bindCyber();
   bindAi();
   renderPromptLibrary();
   renderAiProfileSelect();
@@ -177,6 +202,7 @@ async function init() {
       getSettings().then((settings) => {
         const themeChanged = settings.theme !== state.settings.theme;
         state.settings = settings;
+        state.cyber.pageSize = settings.search.pageSize;
         if (themeChanged) {
           applyTheme(settings.theme);
           updateThemeButton();
@@ -366,7 +392,7 @@ function updateSidePanelButton() {
 
 /**
  * 打开设置页。
- * @param {string} section 可选分区（general / ai / data / builtin / import / about）。
+ * @param {string} section 可选分区（general / cyber / ai / data / builtin / import / about）。
  *   openOptionsPage 不支持锚点，需要定位到具体分区时必须直接打开带 hash 的地址，
  *   否则用户会被丢到设置首页，还要自己再找一遍。
  */
@@ -482,14 +508,14 @@ function bindTabs() {
     const mod = event.ctrlKey || event.metaKey;
     if (mod && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      // AI 标签下搜索栏是隐藏的，直接 focus 会静默失败；先切回语法库
-      if (state.tab === 'ai') switchTab('snippets');
+      // AI / 聚合查询标签下搜索栏是隐藏的，直接 focus 会静默失败；先切回语法库
+      if (state.tab === 'ai' || state.tab === 'cyber') switchTab('snippets');
       $('#search-input').focus();
       $('#search-input').select();
     }
-    if (mod && ['1', '2', '3'].includes(event.key)) {
+    if (mod && ['1', '2', '3', '4'].includes(event.key)) {
       event.preventDefault();
-      switchTab(['snippets', 'payloads', 'ai'][Number(event.key) - 1]);
+      switchTab(['snippets', 'payloads', 'cyber', 'ai'][Number(event.key) - 1]);
     }
   });
 }
@@ -500,7 +526,7 @@ function bindTabs() {
  * 用户从“语法库”滚动到中段、去 Payload 看一眼再回来，位置就丢了，
  * 需要重新滚动查找——与筛选导航条丢失滚动位置是同一类“操作不连续”问题。
  */
-const tabScroll = { snippets: 0, payloads: 0, ai: 0 };
+const tabScroll = { snippets: 0, payloads: 0, cyber: 0, ai: 0 };
 
 /**
  * AI 会话区的内部滚动位置。
@@ -510,9 +536,12 @@ const tabScroll = { snippets: 0, payloads: 0, ai: 0 };
 let aiScroll = null;
 
 function switchTab(tab, { silent = false } = {}) {
-  if (!['snippets', 'payloads', 'ai'].includes(tab)) return;
+  if (!['snippets', 'payloads', 'cyber', 'ai'].includes(tab)) return;
   const content = $('.rb-content');
   const aiMessages = $('#ai-messages');
+
+  // 用户主动切换标签时收起“复制后去查询”的提示，避免它跨页面停留
+  if (state.tab !== tab && !silent) dismissCopyGuide();
 
   // 先记录离开标签时的纵向位置（隐藏面板后容器内容会变短，位置会被浏览器收敛）
   // 初始渲染时 state.tab 与目标一致，不属于“离开”，记录会把首次贴底覆盖成 0
@@ -532,7 +561,7 @@ function switchTab(tab, { silent = false } = {}) {
     panel.hidden = panel.dataset.panel !== tab;
   }
 
-  $('#searchbar').hidden = tab === 'ai';
+  $('#searchbar').hidden = tab === 'ai' || tab === 'cyber';
 
   // 切回标签时恢复该标签上次的阅读位置（首次进入为 0）
   if (content) content.scrollTop = tabScroll[tab] || 0;
@@ -540,7 +569,9 @@ function switchTab(tab, { silent = false } = {}) {
   if (tab === 'ai' && aiMessages) {
     aiMessages.scrollTop = aiScroll ?? aiMessages.scrollHeight;
   }
+  if (tab === 'cyber') renderCyber();
   if (!silent && tab === 'ai') $('#ai-input').focus();
+  if (!silent && tab === 'cyber') $('#cyber-query').focus();
   renderFooter();
 }
 
@@ -1094,7 +1125,11 @@ async function handleCopy(item) {
   if (!ok) return;
 
   await rememberRecent(item);
-  if (state.isPopup && state.settings.ui.closeAfterCopy) {
+
+  // 复制语法后提供“一站式查询”入口；提示出现时暂不自动关闭弹窗，
+  // 否则用户还没来得及点击就被关掉了
+  const showGuide = maybeShowCopyGuide(item);
+  if (state.isPopup && state.settings.ui.closeAfterCopy && !showGuide) {
     setTimeout(() => window.close(), 520);
   }
 }
@@ -1207,6 +1242,657 @@ function recentItems(kind) {
     .map((entry) => map.get(entry.key))
     .filter((item) => item && item.kind === kind);
   return Array.from(new Map(list.map((item) => [itemKey(item), item])).values());
+}
+
+/* ------------------------------------------------------------------ */
+/* 聚合查询                                                            */
+/* ------------------------------------------------------------------ */
+
+function cyberProviderConfigured(providerId) {
+  return Boolean(String(state.settings?.search?.providers?.[providerId]?.apiKey || '').trim());
+}
+
+function cyberSelectedProviders() {
+  return SEARCH_PROVIDERS.filter((provider) => state.cyber.providers.includes(provider.id));
+}
+
+function formatCyberCount(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toLocaleString('zh-CN') : '0';
+}
+
+/** 与后台通信：后台统一读取密钥并发起请求，面板不接触 Key 值 */
+function sendRuntimeMessage(message) {
+  return new Promise((resolve, reject) => {
+    if (!hasChrome || !chrome.runtime?.sendMessage) {
+      reject(new Error('聚合查询需要在扩展环境中运行'));
+      return;
+    }
+    chrome.runtime.sendMessage(message, (response) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        reject(new Error(error.message || '后台通信失败'));
+        return;
+      }
+      resolve(response);
+    });
+  });
+}
+
+function bindCyber() {
+  const form = $('#cyber-form');
+  const input = $('#cyber-query');
+  const pickerButton = $('#cyber-providers-btn');
+  if (!form || !input || !pickerButton) return;
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void runCyberSearch({ page: 1 });
+  });
+
+  input.addEventListener('input', () => {
+    state.cyber.query = input.value;
+    updateCyberControls();
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.isComposing) return;
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      void runCyberSearch({ page: 1 });
+    }
+  });
+
+  $('#cyber-page-size').addEventListener('change', (event) => {
+    const size = SEARCH_PAGE_SIZES.includes(Number(event.target.value))
+      ? Number(event.target.value)
+      : 20;
+    state.cyber.pageSize = size;
+    patchSettings((draft) => {
+      draft.search.pageSize = size;
+    }).then((settings) => {
+      state.settings = settings;
+    }).catch(() => {});
+  });
+
+  pickerButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCyberPicker();
+  });
+
+  // 点击选择面板外部时收起；选择面板本身不关闭，方便连续勾选多个平台
+  document.addEventListener('click', (event) => {
+    if (!state.cyber.pickerOpen) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (target && target.closest('.rb-cyber-picker')) return;
+    toggleCyberPicker(false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !state.cyber.pickerOpen) return;
+    toggleCyberPicker(false);
+    pickerButton.focus();
+  });
+
+  updateCyberControls();
+}
+
+function toggleCyberPicker(force) {
+  const open = typeof force === 'boolean' ? force : !state.cyber.pickerOpen;
+  state.cyber.pickerOpen = open;
+  const pop = $('#cyber-providers-pop');
+  const button = $('#cyber-providers-btn');
+  if (!pop || !button) return;
+  if (open) renderCyberPicker();
+  pop.hidden = !open;
+  button.setAttribute('aria-expanded', String(open));
+}
+
+function renderCyberPicker() {
+  const pop = $('#cyber-providers-pop');
+  if (!pop) return;
+
+  const rows = SEARCH_PROVIDERS.map((provider) => {
+    const checkbox = el('input', {
+      attrs: { type: 'checkbox', value: provider.id, 'aria-label': provider.name }
+    });
+    checkbox.checked = state.cyber.providers.includes(provider.id);
+    checkbox.addEventListener('change', () => {
+      updateCyberProviderSelection(provider.id, checkbox.checked);
+      checkbox.checked = state.cyber.providers.includes(provider.id);
+    });
+
+    const stateNode = el('span', {
+      className: `rb-cyber-option-state${cyberProviderConfigured(provider.id) ? '' : ' is-missing'}`,
+      text: cyberProviderConfigured(provider.id) ? '已配置' : '未配置',
+      dataset: { provider: provider.id }
+    });
+
+    const row = el('label', { className: 'rb-cyber-option' }, [
+      checkbox,
+      el('span', {
+        className: 'rb-cyber-dot',
+        style: { '--rb-dot-color': provider.color }
+      }),
+      el('span', { className: 'rb-cyber-option-main' }, [
+        el('span', { className: 'rb-cyber-option-name', text: provider.name }),
+        el('span', { className: 'rb-cyber-option-sub', text: provider.vendor })
+      ]),
+      stateNode
+    ]);
+    return row;
+  });
+
+  pop.replaceChildren(...rows);
+}
+
+function updateCyberProviderSelection(providerId, checked) {
+  if (checked) {
+    if (!state.cyber.providers.includes(providerId)) state.cyber.providers.push(providerId);
+  } else {
+    state.cyber.providers = state.cyber.providers.filter((id) => id !== providerId);
+    if (!state.cyber.providers.length) {
+      // 至少保留一个平台，否则查询按钮会变成永远无效的空操作
+      state.cyber.providers = [providerId];
+      toast('至少保留一个查询平台', 'warn');
+    }
+  }
+  state.cyber.providers = SEARCH_PROVIDERS
+    .map((provider) => provider.id)
+    .filter((id) => state.cyber.providers.includes(id));
+  persistCyberProviders();
+  updateCyberControls();
+}
+
+function persistCyberProviders() {
+  const list = [...state.cyber.providers];
+  patchSettings((draft) => {
+    draft.search.lastProviders = list;
+  }).then((settings) => {
+    state.settings = settings;
+  }).catch(() => {});
+}
+
+function updateCyberControls() {
+  const selected = cyberSelectedProviders();
+  const text = $('#cyber-providers-text');
+  if (text) {
+    text.textContent = selected.length > 2
+      ? `${selected.slice(0, 2).map((provider) => provider.name).join('、')} 等 ${selected.length} 个`
+      : selected.map((provider) => provider.name).join('、') || '选择平台';
+  }
+
+  const input = $('#cyber-query');
+  if (input) input.placeholder = selected[0]?.placeholder || 'domain="example.com"';
+
+  const size = $('#cyber-page-size');
+  if (size) {
+    size.value = String(state.cyber.pageSize);
+    size.disabled = state.cyber.loading;
+  }
+
+  const picker = $('#cyber-providers-btn');
+  if (picker) picker.disabled = state.cyber.loading;
+
+  const submit = $('#cyber-submit');
+  if (submit) {
+    submit.disabled = state.cyber.loading
+      || !selected.length
+      || !String(input?.value || '').trim()
+      || state.settings?.search?.enabled === false;
+  }
+
+  // 配置状态徽标随设置页保存的 Key 实时更新，不必等到下次打开下拉
+  for (const node of $$('#cyber-providers-pop [data-provider]')) {
+    const configured = cyberProviderConfigured(node.dataset.provider);
+    node.textContent = configured ? '已配置' : '未配置';
+    node.classList.toggle('is-missing', !configured);
+  }
+}
+
+function renderCyberNotice() {
+  const holder = $('#cyber-notice');
+  if (!holder) return;
+
+  const disabled = state.settings?.search?.enabled === false;
+  const configured = SEARCH_PROVIDERS.filter((provider) => cyberProviderConfigured(provider.id)).length;
+  let text = '';
+  if (disabled) {
+    text = '聚合查询已在设置中关闭，当前不会向任何平台发起请求。';
+  } else if (!configured) {
+    text = '尚未配置测绘平台 API Key。前往设置填入密钥后，即可在这里直接搜索资产。';
+  }
+
+  holder.hidden = !text;
+  if (!text) {
+    holder.replaceChildren();
+    return;
+  }
+
+  const action = el('button', {
+    className: 'rb-btn rb-btn--primary rb-btn--sm',
+    text: disabled ? '去开启' : '去配置',
+    attrs: { type: 'button' }
+  });
+  action.addEventListener('click', () => openOptions('cyber'));
+
+  holder.replaceChildren(
+    el('span', { className: 'rb-cyber-notice-text', text }),
+    action
+  );
+}
+
+function renderCyberStatus() {
+  const node = $('#cyber-status');
+  if (!node) return;
+
+  const count = cyberSelectedProviders().length;
+  if (state.cyber.loading) {
+    node.dataset.state = 'loading';
+    node.textContent = `正在查询 ${count} 个平台，请稍候…`;
+    return;
+  }
+
+  const data = state.cyber.results;
+  if (!data) {
+    node.dataset.state = '';
+    node.textContent = state.cyber.providers.some((id) => cyberProviderConfigured(id))
+      ? '输入语法后开始查询，可同时检索多个平台。'
+      : '';
+    return;
+  }
+
+  if (data.error) {
+    node.dataset.state = 'error';
+    node.textContent = data.error;
+    return;
+  }
+
+  node.dataset.state = '';
+  const groups = Array.isArray(data.results) ? data.results : [];
+  const success = groups.filter((group) => group.ok);
+  const failed = groups.length - success.length;
+  const summary = success.map((group) => {
+    const provider = getSearchProvider(group.provider);
+    return `${provider?.name || group.provider} ${formatCyberCount(group.total)} 条`;
+  });
+  node.textContent = `${summary.length ? `查询完成：${summary.join(' · ')}` : '查询完成：没有平台返回结果'}${
+    failed ? ` · ${failed} 个平台失败` : ''
+  }`;
+}
+
+async function runCyberSearch({ page = 1 } = {}) {
+  if (state.cyber.loading) return;
+
+  const input = $('#cyber-query');
+  const query = String(input?.value || '').trim();
+  if (!query) {
+    toast('请输入查询语法', 'warn');
+    input?.focus();
+    return;
+  }
+  if (state.settings?.search?.enabled === false) {
+    toast('聚合查询已在设置中关闭', 'warn');
+    return;
+  }
+
+  const providers = state.cyber.providers.filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id));
+  if (!providers.length) {
+    toast('请至少选择一个查询平台', 'warn');
+    return;
+  }
+
+  state.cyber.query = query;
+  state.cyber.page = Math.max(1, Number(page) || 1);
+  state.cyber.loading = true;
+  state.cyber.results = null;
+  renderCyber();
+
+  try {
+    const response = await sendRuntimeMessage({
+      type: 'rb:cyber-search',
+      query,
+      providers,
+      page: state.cyber.page,
+      size: state.cyber.pageSize
+    });
+    if (!response || response.ok === false) {
+      throw new Error(response?.error || '查询失败');
+    }
+    state.cyber.results = response;
+    state.cyber.page = response.page || state.cyber.page;
+    if (response.size) state.cyber.pageSize = response.size;
+  } catch (error) {
+    state.cyber.results = {
+      error: error?.message || '查询失败，请稍后重试',
+      results: []
+    };
+  } finally {
+    state.cyber.loading = false;
+    renderCyber();
+    const holder = $('#cyber-results');
+    if (holder) holder.scrollTop = 0;
+  }
+}
+
+function renderCyber() {
+  updateCyberControls();
+  renderCyberNotice();
+  // 面板隐藏时不必重建结果 DOM：语法库每次输入都会触发 renderAll，
+  // 无谓地重建几十条结果会让输入变卡
+  if (state.tab !== 'cyber') return;
+  renderCyberStatus();
+  renderCyberResults();
+  renderCyberPager();
+}
+
+function cyberEmptyState() {
+  const configured = SEARCH_PROVIDERS.filter((provider) => cyberProviderConfigured(provider.id)).length;
+  if (!configured) {
+    return emptyState({
+      iconName: 'shield',
+      title: '先配置平台密钥',
+      desc: '支持 FOFA、Hunter 鹰图、Quake、ZoomEye 与 Shodan。密钥只保存在本机，导出配置时自动剔除。'
+    });
+  }
+  return emptyState({
+    iconName: 'search',
+    title: '一站式资产检索',
+    desc: '勾选一个或多个平台，输入平台原生语法后查询；结果支持点击跳转与一键复制。'
+  });
+}
+
+function renderCyberResults() {
+  const holder = $('#cyber-results');
+  if (!holder) return;
+
+  if (state.cyber.loading) {
+    holder.replaceChildren(emptyState({
+      iconName: 'search',
+      title: '正在查询',
+      desc: '已向所选平台发起请求，返回后会按平台分组展示。'
+    }));
+    return;
+  }
+
+  const data = state.cyber.results;
+  if (!data) {
+    holder.replaceChildren(cyberEmptyState());
+    return;
+  }
+
+  if (data.error) {
+    holder.replaceChildren(emptyState({
+      iconName: 'warning',
+      title: '查询未完成',
+      desc: data.error
+    }));
+    return;
+  }
+
+  const groups = Array.isArray(data.results) ? data.results : [];
+  holder.replaceChildren(...groups.map((group) => cyberGroupNode(group)));
+}
+
+function cyberGroupNode(group) {
+  const provider = getSearchProvider(group.provider);
+  const head = el('header', { className: 'rb-cyber-group-head' }, [
+    el('span', {
+      className: 'rb-cyber-dot',
+      style: { '--rb-dot-color': provider?.color || 'var(--rb-fg-subtle)' }
+    }),
+    el('h3', { className: 'rb-cyber-group-title', text: provider?.name || group.provider }),
+    group.ok
+      ? el('span', { className: 'rb-cyber-group-total', text: `共 ${formatCyberCount(group.total)} 条` })
+      : el('span', { className: 'rb-cyber-group-total', text: '(失败)' }),
+    group.ok ? null : badge('失败', 'danger')
+  ]);
+
+  let body;
+  if (!group.ok) {
+    const actions = el('div', { className: 'rb-cyber-group-error-actions' });
+    if (!/未配置/.test(group.error || '')) {
+      const retry = el('button', {
+        className: 'rb-btn rb-btn--ghost rb-btn--sm',
+        text: '重试',
+        attrs: { type: 'button' }
+      });
+      retry.addEventListener('click', () => { void runCyberSearch({ page: state.cyber.page || 1 }); });
+      actions.appendChild(retry);
+    }
+    const configure = el('button', {
+      className: 'rb-btn rb-btn--ghost rb-btn--sm',
+      text: '去配置',
+      attrs: { type: 'button' }
+    });
+    configure.addEventListener('click', () => openOptions('cyber'));
+    actions.appendChild(configure);
+
+    body = el('div', { className: 'rb-cyber-group-error' }, [
+      el('span', { text: group.error || '查询失败' }),
+      actions
+    ]);
+  } else if (!group.items?.length) {
+    body = el('div', { className: 'rb-cyber-group-empty', text: '没有匹配结果，可调整语法或换一页。' });
+  } else {
+    body = el('div', { className: 'rb-cyber-items' }, group.items.map((item) => cyberItemNode(item)));
+  }
+
+  return el('section', { className: 'rb-cyber-group' }, [head, body]);
+}
+
+function cyberItemNode(item) {
+  const titleText = item.title || item.domain || item.ip || '未命名资产';
+  const title = item.url
+    ? el('a', {
+      className: 'rb-cyber-item-title',
+      text: titleText,
+      attrs: {
+        href: item.url,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title: item.url
+      }
+    })
+    : el('span', { className: 'rb-cyber-item-title', text: titleText });
+
+  const metaParts = [
+    item.ip ? `${item.ip}${item.port ? `:${item.port}` : ''}` : '',
+    item.protocol,
+    item.status ? `HTTP ${item.status}` : '',
+    item.domain && item.domain !== item.ip ? item.domain : '',
+    item.server
+  ].filter(Boolean);
+
+  const subParts = [
+    item.location,
+    item.updatedAt ? `更新 ${item.updatedAt}` : ''
+  ].filter(Boolean);
+
+  const copy = el('button', {
+    className: 'rb-btn rb-btn--ghost rb-btn--icon',
+    attrs: { type: 'button', title: '复制资产地址', 'aria-label': '复制资产地址' }
+  }, [icon('copy')]);
+  copy.addEventListener('click', () => { void copyCyberItem(item); });
+
+  const open = item.url
+    ? el('a', {
+      className: 'rb-btn rb-btn--ghost rb-btn--icon',
+      attrs: {
+        href: item.url,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title: '在新标签页打开',
+        'aria-label': '在新标签页打开'
+      }
+    }, [icon('external')])
+    : null;
+
+  return el('article', { className: 'rb-cyber-item' }, [
+    el('div', { className: 'rb-cyber-item-main' }, [
+      title,
+      metaParts.length ? el('p', { className: 'rb-cyber-item-meta', text: metaParts.join(' · ') }) : null,
+      subParts.length ? el('p', { className: 'rb-cyber-item-sub', text: subParts.join(' · ') }) : null
+    ]),
+    el('div', { className: 'rb-cyber-item-actions' }, [copy, open])
+  ]);
+}
+
+async function copyCyberItem(item) {
+  const value = item.url || (item.ip ? `${item.ip}${item.port ? `:${item.port}` : ''}` : '');
+  if (!value) {
+    toast('该条目没有可复制的地址', 'warn');
+    return;
+  }
+  const ok = await copyText(value);
+  toast(ok ? '已复制资产地址' : '复制失败，请检查剪贴板权限', ok ? 'success' : 'danger');
+}
+
+function renderCyberPager() {
+  const holder = $('#cyber-pager');
+  if (!holder) return;
+
+  const data = state.cyber.results;
+  if (!data || data.error || state.cyber.loading) {
+    holder.hidden = true;
+    return;
+  }
+
+  const groups = (data.results || []).filter((group) => group.ok);
+  const page = Number(data.page) || 1;
+  const size = Number(data.size) || state.cyber.pageSize;
+  const hasMore = groups.some((group) => group.items.length >= size || group.total > page * size);
+  const show = page > 1 || hasMore;
+  holder.hidden = !show;
+  if (!show) {
+    holder.replaceChildren();
+    return;
+  }
+
+  const prev = el('button', {
+    className: 'rb-btn rb-btn--ghost rb-btn--sm',
+    text: '上一页',
+    attrs: { type: 'button' }
+  });
+  prev.disabled = page <= 1;
+  prev.addEventListener('click', () => { void runCyberSearch({ page: page - 1 }); });
+
+  const next = el('button', {
+    className: 'rb-btn rb-btn--ghost rb-btn--sm',
+    text: '下一页',
+    attrs: { type: 'button' }
+  });
+  next.disabled = !hasMore;
+  next.addEventListener('click', () => { void runCyberSearch({ page: page + 1 }); });
+
+  holder.replaceChildren(
+    prev,
+    el('span', { className: 'rb-cyber-page-label', text: `第 ${page} 页` }),
+    next
+  );
+}
+
+/**
+ * 复制语法后的一站式查询提示。
+ * 只在语法库复制、对应平台支持 API 查询、且设置里未关闭时出现；
+ * 出现期间不自动关闭弹窗（否则用户来不及点击）。
+ */
+function maybeShowCopyGuide(item) {
+  if (item.kind !== 'snippet') return false;
+  if (state.settings?.search?.enabled === false) return false;
+  if (state.settings?.search?.promptAfterCopy === false) return false;
+  const provider = getSearchProvider(item.platform);
+  if (!provider) return false;
+
+  const code = applyVars(item.code, state.variables).trim();
+  if (!code) return false;
+  showCopyGuide(provider, code);
+  return true;
+}
+
+function dismissCopyGuide() {
+  if (state.cyber.guideTimer) {
+    clearTimeout(state.cyber.guideTimer);
+    state.cyber.guideTimer = null;
+  }
+  document.querySelector('.rb-copy-guide')?.remove();
+}
+
+function showCopyGuide(provider, code) {
+  dismissCopyGuide();
+
+  const ask = el('button', {
+    className: 'rb-btn rb-btn--primary rb-btn--sm',
+    text: '去查询',
+    attrs: { type: 'button' }
+  });
+  ask.addEventListener('click', () => {
+    dismissCopyGuide();
+    openCyberWithQuery(provider.id, code);
+  });
+
+  const mute = el('button', {
+    className: 'rb-btn rb-btn--ghost rb-btn--sm',
+    text: '不再提示',
+    attrs: { type: 'button' }
+  });
+  mute.addEventListener('click', async () => {
+    dismissCopyGuide();
+    const settings = await patchSettings((draft) => {
+      draft.search.promptAfterCopy = false;
+    }).catch(() => null);
+    if (settings) {
+      state.settings = settings;
+      toast('已关闭复制后的查询提示，可在设置中重新开启', 'info', 2600);
+    }
+  });
+
+  const close = el('button', {
+    className: 'rb-btn rb-btn--ghost rb-btn--icon',
+    attrs: { type: 'button', title: '关闭提示', 'aria-label': '关闭提示' }
+  }, [icon('close')]);
+  close.addEventListener('click', dismissCopyGuide);
+
+  const guide = el('div', {
+    className: 'rb-copy-guide',
+    attrs: { role: 'region', 'aria-label': '一站式查询提示' }
+  }, [
+    el('span', {
+      className: 'rb-copy-guide-text',
+      text: `已复制语法。要在 ${provider.name} 直接检索这类资产吗？`
+    }),
+    el('div', { className: 'rb-copy-guide-actions' }, [ask, mute, close])
+  ]);
+  document.body.appendChild(guide);
+
+  // 不自动关闭弹窗，但提示本身超时收起，避免长时间遮挡内容
+  state.cyber.guideTimer = setTimeout(dismissCopyGuide, 15000);
+}
+
+function openCyberWithQuery(providerId, code) {
+  state.cyber.providers = [providerId];
+  state.cyber.query = code;
+  state.cyber.page = 1;
+  state.cyber.results = null;
+
+  const input = $('#cyber-query');
+  if (input) input.value = code;
+  persistCyberProviders();
+  switchTab('cyber');
+  renderCyber();
+
+  if (cyberProviderConfigured(providerId) && !/\{\{\s*[a-zA-Z0-9_.-]+\s*\}\}/.test(code)) {
+    void runCyberSearch({ page: 1 });
+    return;
+  }
+
+  input?.focus();
+  input?.select();
+  if (!cyberProviderConfigured(providerId)) {
+    toast(`${getSearchProvider(providerId)?.name || providerId} 尚未配置 API Key`, 'warn', 2600);
+  } else {
+    toast('语法中还包含未填写的变量，请补全后再查询', 'info', 2600);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1864,6 +2550,7 @@ function scrollAiBottom() {
 function renderAll() {
   renderSnippets();
   renderPayloads();
+  renderCyber();
   renderPromptLibrary();
   updateAiStatus();
   renderFooter();
@@ -1880,6 +2567,15 @@ function renderFooter() {
     count.textContent = 'AI 输出仅供辅助，请核对字段后使用';
     // 生成中把快捷键提示换成“停止”，让用户知道此刻能做什么
     hint.textContent = state.ai.busy ? 'Esc 停止生成' : `${SHORTCUT.send} 发送`;
+    return;
+  }
+
+  if (state.tab === 'cyber') {
+    const configured = SEARCH_PROVIDERS.filter((provider) => cyberProviderConfigured(provider.id)).length;
+    count.textContent = state.cyber.loading
+      ? '正在向所选平台发起查询…'
+      : `聚合查询：已配置 ${configured} / ${SEARCH_PROVIDERS.length} 个平台`;
+    hint.textContent = 'Ctrl+Enter 查询 · 可多选平台';
     return;
   }
 
@@ -1902,7 +2598,8 @@ function renderHiddenFooter() {
   if (!link || !hint) return;
 
   const total = state.hidden.length;
-  const show = total > 0 && state.tab !== 'ai';
+  // 隐藏条目只与语法库 / Payload 列表相关，AI 与聚合查询页脚不展示该入口
+  const show = total > 0 && (state.tab === 'snippets' || state.tab === 'payloads');
   link.hidden = !show;
   hint.hidden = show;
   if (!show) return;

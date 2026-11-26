@@ -216,7 +216,7 @@ body.is-fluid {
 
 .rb-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-bottom: 1px solid var(--rb-border);
   background: var(--rb-bg);
   flex: 0 0 auto;
@@ -258,8 +258,9 @@ body.is-fluid {
   position: relative;
 }
 
-/* AI 面板自行管理滚动，避免双重滚动条 */
-.rb-content:has(.rb-panel.rb-ai:not([hidden])) {
+/* AI / 聚合查询面板自行管理滚动，避免双重滚动条 */
+.rb-content:has(.rb-panel.rb-ai:not([hidden])),
+.rb-content:has(.rb-panel.rb-cyber:not([hidden])) {
   overflow: hidden;
 }
 
@@ -479,6 +480,431 @@ body.is-fluid {
   background: var(--rb-accent-weak);
   border-color: var(--rb-accent);
   color: var(--rb-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 聚合查询                                                            */
+/* ------------------------------------------------------------------ */
+
+.rb-cyber {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.rb-cyber-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px 6px;
+  flex: 0 0 auto;
+}
+
+.rb-cyber-picker {
+  position: relative;
+  flex: 1 1 170px;
+  min-width: 0;
+}
+
+.rb-cyber-picker-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 5px 8px;
+  border: 1px solid var(--rb-border);
+  background: var(--rb-bg-input);
+  color: var(--rb-fg);
+}
+
+.rb-cyber-picker-btn:hover {
+  background: var(--rb-bg-elev);
+}
+
+.rb-cyber-picker-label {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-cyber-picker-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 11px;
+}
+
+.rb-cyber-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: min(320px, calc(100vw - 20px));
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--rb-border-strong);
+  border-radius: var(--rb-radius);
+  background: var(--rb-bg-elev);
+  box-shadow: var(--rb-shadow);
+}
+
+.rb-cyber-pop[hidden] {
+  display: none;
+}
+
+.rb-cyber-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px;
+  border-radius: var(--rb-radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.rb-cyber-option:hover {
+  background: var(--rb-bg-hover);
+}
+
+.rb-cyber-option input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--rb-accent);
+}
+
+.rb-cyber-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--rb-dot-color, var(--rb-fg-subtle));
+}
+
+.rb-cyber-option-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rb-cyber-option-name {
+  font-size: 11.5px;
+  color: var(--rb-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-cyber-option-sub {
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-cyber-option-state {
+  flex: 0 0 auto;
+  font-size: 9.5px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-cyber-option-state.is-missing {
+  color: var(--rb-warn);
+}
+
+.rb-cyber-size {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-cyber-size .rb-select {
+  width: 58px;
+  padding: 3px 4px;
+  font-size: 10.5px;
+}
+
+.rb-cyber-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 8px;
+  border-bottom: 1px solid var(--rb-border);
+  flex: 0 0 auto;
+}
+
+.rb-cyber-form .rb-textarea {
+  min-height: 52px;
+  max-height: 120px;
+  padding: 7px 9px;
+  resize: none;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.rb-cyber-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rb-cyber-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-cyber-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 10px 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(210, 153, 34, 0.35);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-warn-weak);
+  flex: 0 0 auto;
+}
+
+.rb-cyber-notice[hidden] {
+  display: none;
+}
+
+.rb-cyber-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--rb-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-notice .rb-btn {
+  flex: 0 0 auto;
+}
+
+.rb-cyber-status {
+  padding: 6px 10px;
+  min-height: 24px;
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--rb-fg-subtle);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-status[data-state="loading"] {
+  color: var(--rb-accent);
+}
+
+.rb-cyber-status[data-state="error"] {
+  color: var(--rb-danger);
+}
+
+.rb-cyber-results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 10px 8px;
+}
+
+.rb-cyber-group + .rb-cyber-group {
+  margin-top: 12px;
+}
+
+.rb-cyber-group-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  background: var(--rb-bg);
+}
+
+.rb-cyber-group-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rb-fg);
+  white-space: nowrap;
+}
+
+.rb-cyber-group-total {
+  min-width: 0;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-cyber-group-head .rb-badge {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.rb-cyber-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.rb-cyber-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  background: var(--rb-bg-elev);
+}
+
+.rb-cyber-item:hover {
+  border-color: var(--rb-border-strong);
+  background: var(--rb-bg-elev-2);
+}
+
+.rb-cyber-item-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rb-cyber-item-title {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--rb-fg);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-item-title:hover {
+  color: var(--rb-accent);
+  text-decoration: underline;
+}
+
+.rb-cyber-item-meta,
+.rb-cyber-item-sub {
+  margin: 3px 0 0;
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: var(--rb-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-item-sub {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--rb-fg-subtle);
+}
+
+.rb-cyber-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 0 0 auto;
+}
+
+.rb-cyber-item-actions .rb-btn--icon {
+  width: 26px;
+  height: 26px;
+}
+
+.rb-cyber-group-empty,
+.rb-cyber-group-error {
+  padding: 9px;
+  border: 1px dashed var(--rb-border);
+  border-radius: var(--rb-radius-sm);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--rb-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-group-error {
+  border-color: rgba(248, 81, 73, 0.3);
+  color: var(--rb-danger);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rb-cyber-group-error-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.rb-cyber-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--rb-border);
+  background: var(--rb-bg-elev);
+  flex: 0 0 auto;
+}
+
+.rb-cyber-pager[hidden] {
+  display: none;
+}
+
+.rb-cyber-page-label {
+  font-size: 11px;
+  color: var(--rb-fg-muted);
+  white-space: nowrap;
+}
+
+/* 复制语法后的一站式查询提示 */
+.rb-copy-guide {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  z-index: 55;
+  width: calc(100% - 20px);
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--rb-accent-border);
+  border-radius: var(--rb-radius);
+  background: var(--rb-bg-elev-2);
+  box-shadow: var(--rb-shadow);
+}
+
+.rb-copy-guide-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--rb-fg);
+  overflow-wrap: anywhere;
+}
+
+.rb-copy-guide-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
 }
 
 /* ------------------------------------------------------------------ */
