@@ -3,6 +3,9 @@ node_modules/
 dist/
 build/
 
+# 商店上架素材（由 scripts/make-store-assets.py 本地生成，不入库）
+store/
+
 # 本地环境与密钥
 .env
 .env.*
