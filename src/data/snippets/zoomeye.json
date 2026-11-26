@@ -531,6 +531,34 @@
       "risk": "recon"
     },
     {
+      "id": "zoomeye-cert-alg",
+      "title": "证书算法与公钥类型",
+      "category": "证书与 TLS",
+      "code": "ssl.cert.alg=\"{{alg}}\" AND ssl.cert.pubkey.type=\"{{type}}\"",
+      "desc": "按证书签名算法与公钥类型筛选，例如 SHA256-RSA 配 RSA；可用于排查仍在使用弱算法或过期密钥的资产。",
+      "tags": ["ssl", "cert.alg", "pubkey"],
+      "vars": [
+        { "name": "alg", "label": "签名算法", "placeholder": "SHA256-RSA", "example": "SHA256-RSA" },
+        { "name": "type", "label": "公钥类型", "placeholder": "RSA", "example": "RSA" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
+      "id": "zoomeye-cipher",
+      "title": "加密套件与 TLS 版本",
+      "category": "证书与 TLS",
+      "code": "ssl.cipher.name=\"{{cipher}}\" AND ssl.version=\"{{version}}\"",
+      "desc": "按协商的加密套件与 TLS 版本筛选，官方字段还包括 ssl.cipher.bits、ssl.chain_count、ssl.cert.serial。",
+      "tags": ["ssl", "cipher", "TLS"],
+      "vars": [
+        { "name": "cipher", "label": "加密套件", "placeholder": "TLS_AES_128_GCM_SHA256", "example": "TLS_AES_128_GCM_SHA256" },
+        { "name": "version", "label": "TLS 版本", "placeholder": "TLSv1.3", "example": "TLSv1.3" }
+      ],
+      "source": "ZoomEye 官方最新语法",
+      "risk": "recon"
+    },
+    {
       "id": "zoomeye-after",
       "title": "更新时间晚于",
       "category": "时间与资产状态",
