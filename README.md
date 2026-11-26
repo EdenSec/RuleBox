@@ -88,10 +88,14 @@
 
 ### 聚合查询
 
-选择平台、填入语法即可检索；未配置密钥时给出明确引导，不会发出请求。
+一条语法 `domain="qq.com"`，同时检索已配置密钥的多个平台，结果可复制、可导出、可翻页。
 
 <p align="center">
-  <img src="assets/screenshot-cyber-dark.png" alt="聚合查询 · 查询输入与平台选择" width="420">
+  <img src="assets/demo-cyber-query.gif" alt="聚合查询 · 输入语法并同时检索 FOFA 与 Hunter 鹰图" width="420">
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-cyber-dark.png" alt="聚合查询 · 多平台查询结果" width="420">
 </p>
 
 <br>
@@ -108,7 +112,11 @@
 
 ### AI 助手
 
-内置平台上下文与提示词库，用自然语言描述需求即可生成语法或 Payload。
+内置平台上下文与提示词库，用自然语言描述需求即可生成语法或 Payload，回复中的代码块可直接复制。
+
+<p align="center">
+  <img src="assets/demo-ai-ask.gif" alt="AI 助手 · 自然语言生成 FOFA 语法" width="420">
+</p>
 
 <p align="center">
   <img src="assets/screenshot-ai-dark.png" alt="AI 助手 · 自然语言生成语法" width="420">
@@ -126,7 +134,7 @@
 
 <br>
 
-测绘查询分区：逐个平台填写 API Key，可点「测试连接」先校验连通性。
+测绘查询分区：逐个平台填写 API Key，可点「测试连接」先校验连通性（截图中密钥已掩码显示）。
 
 <p align="center">
   <img src="assets/screenshot-settings-cyber-dark.png" alt="设置页 · 测绘查询与平台密钥" width="880">
