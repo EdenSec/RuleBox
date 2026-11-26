@@ -256,7 +256,7 @@ src\
 - `theme`：`auto | dark | light`
 - `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`showRiskBadges`、`copyFormat`、`showDesc`
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
-- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次勾选的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
+- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次使用的平台，空数组表示还没有记录，面板会回退到已配置 Key 的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
 - `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
 - 系统提示词由 [`ai-client.js`](../src/core/ai-client.js) 的 `DEFAULT_SYSTEM_PROMPT` 提供基准：设置页展示并允许编辑，与内置文本完全一致或留空时存空字符串，保证扩展升级默认提示词后能自动生效；平台字段上下文与 `systemPromptAppend` 始终由 `buildSystemPrompt()` 拼接，不受用户编辑影响。
 - `limits`：`maxImportBytes`、`maxCustomItems`
@@ -326,7 +326,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 ### 6.5 聚合查询（`rb:cyber-search`）
 
 ```
-面板勾选平台 + 输入语法
+面板选择平台（默认单选下拉，点「多选」切换为复选面板）+ 输入语法
   → chrome.runtime.sendMessage({ type:'rb:cyber-search', query, providers[], page, size })
   → SW handleCyberSearch：校验 sender.id、query 长度、平台 ID 白名单、page/size 范围
        → 读取 rb.settings.search.providers[].apiKey（仅 SW 用于发起请求；面板只判断“是否已配置”）
@@ -335,11 +335,14 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
   → 面板按平台分组渲染，支持翻页、点击跳转、复制地址
 ```
 
+- 平台默认值：`lastProviders` 有记录就恢复；没有记录时优先已配置 Key 的平台，最后才回退 FOFA。`lastProviders` 默认为空数组，避免“首次打开被写成 FOFA”掩盖无历史状态。
+- 设置页每个平台提供「测试连接」（`rb:cyber-test`）：SW 只从设置读取 Key，同一平台 3 秒冷却；FOFA / Shodan 走账号信息接口（不消耗额度），其余平台用一次最小检索验证。
+
 - 平台元数据、请求构造与响应解析全部在 `src/core/search-providers.js`，UI 不拼 URL、不解析平台响应；新增平台只改这一个文件（并在 `manifest.json` 补 host 权限）。
 - SW 不接受页面传入的 URL / header，避免被利用做 SSRF；`providers` 只认注册表里的 ID。
 - 每个平台独立 try/catch，单平台失败不影响其他平台；错误信息经 `sanitizeSearchError()` 剔除 API Key 后返回。
 - 结果条目的标题 / 地址 / 字段均截断，地址只接受 `http(s)`；渲染统一走 `textContent`，禁止把平台返回值拼进 HTML。
-- 平台语法不做跨平台翻译：用户勾选多个平台时，同一段语法会原样发往各平台，语法差异由用户自行选择匹配的平台。
+- 平台语法不做跨平台翻译：切到多选后，同一段语法会原样发往各平台，语法差异由用户自行选择匹配的平台。
 - 复制后提示条：仅 `kind === 'snippet'`、平台在 `SEARCH_PROVIDERS` 中、`search.enabled` 与 `search.promptAfterCopy` 均未关闭时出现；点击“不再提示”会写回设置，点击“去查询”会带入语法并在有 Key、无未填 `{{变量}}` 时自动检索。
 
 ## 7. 已知实现陷阱（改动前必读）
@@ -433,5 +436,5 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 | 版本 | 主要能力 |
 | --- | --- |
-| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉 T-Answer、新华三 SecCenter CSAP 六个态势感知平台，并将早期误命名为 Alpha 的条目并入 AiLPHA |
+| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉 T-Answer、新华三 SecCenter CSAP 六个态势感知平台，并将早期误命名的条目并入安恒 AiLPHA；平台选择改为默认单选下拉 + 可切换多选面板，打开时恢复上次使用或已配置 Key 的平台；设置页新增逐平台「测试连接」（`rb:cyber-test`，3 秒冷却，仅后台读取 Key）；API Key 改为输入即保存，避免未失焦就关闭页面导致丢配置 |
 | 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |

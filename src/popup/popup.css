@@ -508,6 +508,35 @@ body.is-fluid {
   min-width: 0;
 }
 
+/* 单选模式：常规下拉，宽度跟随工具栏；多选时才换成下方的复选浮层 */
+.rb-cyber-single {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.rb-cyber-mode-btn {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid var(--rb-border);
+  background: var(--rb-bg-input);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rb-cyber-mode-btn[aria-pressed="true"] {
+  border-color: var(--rb-accent);
+  color: var(--rb-accent);
+}
+
+/* .rb-btn 的 display:inline-flex 会覆盖 UA 的 [hidden]，单选模式下必须显式隐藏 */
+.rb-cyber-picker-btn[hidden] {
+  display: none;
+}
+
 .rb-cyber-picker-btn {
   width: 100%;
   justify-content: flex-start;

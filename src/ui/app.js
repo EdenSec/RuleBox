@@ -98,6 +98,8 @@ const state = {
   },
   cyber: {
     providers: [],
+    // false = 单选下拉；true = 多选复选框面板
+    multi: false,
     query: '',
     page: 1,
     pageSize: 20,
@@ -173,11 +175,14 @@ async function init() {
     ? state.settings.ui.defaultTab
     : 'snippets';
 
+  // 平台默认值优先级：上次使用的平台 → 已配置 Key 的平台 → 第一个平台（FOFA）
   const savedCyberProviders = (state.settings.search.lastProviders || [])
     .filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id));
+  const firstConfigured = SEARCH_PROVIDERS.find((provider) => cyberProviderConfigured(provider.id));
   state.cyber.providers = savedCyberProviders.length
     ? savedCyberProviders
-    : [SEARCH_PROVIDERS[0].id];
+    : [firstConfigured?.id || SEARCH_PROVIDERS[0].id];
+  state.cyber.multi = state.cyber.providers.length > 1;
   state.cyber.pageSize = state.settings.search.pageSize;
 
   bindHeader();
@@ -1320,6 +1325,22 @@ function bindCyber() {
     toggleCyberPicker();
   });
 
+  const providerSelect = $('#cyber-provider-select');
+  if (providerSelect) {
+    providerSelect.addEventListener('change', (event) => {
+      const id = String(event.target.value || '');
+      if (!SEARCH_PROVIDERS.some((provider) => provider.id === id)) return;
+      state.cyber.providers = [id];
+      persistCyberProviders();
+      updateCyberControls();
+    });
+  }
+
+  const modeButton = $('#cyber-mode-btn');
+  if (modeButton) {
+    modeButton.addEventListener('click', () => setCyberMode(!state.cyber.multi));
+  }
+
   // 点击选择面板外部时收起；选择面板本身不关闭，方便连续勾选多个平台
   document.addEventListener('click', (event) => {
     if (!state.cyber.pickerOpen) return;
@@ -1338,6 +1359,8 @@ function bindCyber() {
 }
 
 function toggleCyberPicker(force) {
+  // 单选模式没有复选框面板，避免按钮误开空浮层
+  if (!state.cyber.multi) return;
   const open = typeof force === 'boolean' ? force : !state.cyber.pickerOpen;
   state.cyber.pickerOpen = open;
   const pop = $('#cyber-providers-pop');
@@ -1346,6 +1369,52 @@ function toggleCyberPicker(force) {
   if (open) renderCyberPicker();
   pop.hidden = !open;
   button.setAttribute('aria-expanded', String(open));
+}
+
+/**
+ * 切换单选 / 多选模式。
+ * 单选是常用场景（大多数人只配了一两个平台），多选才展开复选框面板；
+ * 切回单选时保留排序后的第一个平台，保证状态始终有效。
+ */
+function setCyberMode(multi) {
+  state.cyber.multi = Boolean(multi);
+  if (!state.cyber.multi) {
+    const first = cyberSelectedProviders()[0] || SEARCH_PROVIDERS[0];
+    state.cyber.providers = [first.id];
+    persistCyberProviders();
+
+    // 单选模式下复选框浮层必须收起
+    state.cyber.pickerOpen = false;
+    const pop = $('#cyber-providers-pop');
+    const button = $('#cyber-providers-btn');
+    if (pop) pop.hidden = true;
+    if (button) button.setAttribute('aria-expanded', 'false');
+  }
+  updateCyberControls();
+}
+
+/** 单选下拉：选项标注是否已配置 Key，配置状态变化时才重建 */
+function syncCyberProviderSelect(selected) {
+  const select = $('#cyber-provider-select');
+  if (!select) return;
+
+  const signature = SEARCH_PROVIDERS
+    .map((provider) => `${provider.id}:${cyberProviderConfigured(provider.id) ? 1 : 0}`)
+    .join(',');
+  if (select.dataset.signature !== signature) {
+    select.replaceChildren(...SEARCH_PROVIDERS.map((provider) => el('option', {
+      attrs: { value: provider.id },
+      text: cyberProviderConfigured(provider.id)
+        ? provider.name
+        : `${provider.name} · 未配置`
+    })));
+    select.dataset.signature = signature;
+  }
+
+  const current = selected[0]?.id || SEARCH_PROVIDERS[0].id;
+  if (select.value !== current) select.value = current;
+  select.disabled = state.cyber.loading;
+  select.hidden = state.cyber.multi;
 }
 
 function renderCyberPicker() {
@@ -1432,7 +1501,19 @@ function updateCyberControls() {
   }
 
   const picker = $('#cyber-providers-btn');
-  if (picker) picker.disabled = state.cyber.loading;
+  if (picker) {
+    picker.disabled = state.cyber.loading;
+    picker.hidden = !state.cyber.multi;
+  }
+
+  const modeButton = $('#cyber-mode-btn');
+  if (modeButton) {
+    modeButton.textContent = state.cyber.multi ? '单选' : '多选';
+    modeButton.setAttribute('aria-pressed', String(state.cyber.multi));
+    modeButton.disabled = state.cyber.loading;
+  }
+
+  syncCyberProviderSelect(selected);
 
   const submit = $('#cyber-submit');
   if (submit) {
@@ -1598,7 +1679,7 @@ function cyberEmptyState() {
   return emptyState({
     iconName: 'search',
     title: '一站式资产检索',
-    desc: '勾选一个或多个平台，输入平台原生语法后查询；结果支持点击跳转与一键复制。'
+    desc: '选择平台（可切换多选），输入平台原生语法后查询；结果支持点击跳转与一键复制。'
   });
 }
 
@@ -1871,6 +1952,7 @@ function showCopyGuide(provider, code) {
 
 function openCyberWithQuery(providerId, code) {
   state.cyber.providers = [providerId];
+  state.cyber.multi = false;
   state.cyber.query = code;
   state.cyber.page = 1;
   state.cyber.results = null;

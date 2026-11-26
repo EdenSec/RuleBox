@@ -48,8 +48,8 @@ export const DEFAULT_SETTINGS = {
     promptAfterCopy: true,
     // 每页结果数量，仅允许 10 / 20 / 50
     pageSize: 20,
-    // 上次选择的平台，下次打开时恢复
-    lastProviders: ['fofa'],
+    // 上次选择的平台，下次打开时恢复；空数组表示还没有使用记录
+    lastProviders: [],
     // 各平台 API Key：只保存在本地，不参与导出
     providers: Object.fromEntries(SEARCH_PROVIDERS.map((provider) => [provider.id, { apiKey: '' }]))
   },
@@ -135,7 +135,8 @@ export function mergeSettings(input) {
       .filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id))
       .slice(0, SEARCH_PROVIDERS.length)
     : [];
-  merged.search.lastProviders = lastProviders.length ? lastProviders : [...DEFAULT_SETTINGS.search.lastProviders];
+  // 保留空数组：面板据此判断“还没有使用记录”，从而回退到已配置 Key 的平台
+  merged.search.lastProviders = lastProviders;
   merged.search.providers = {};
   for (const provider of SEARCH_PROVIDERS) {
     const saved = search.providers?.[provider.id];

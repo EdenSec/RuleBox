@@ -130,8 +130,9 @@
         aria-labelledby="tab-cyber" hidden>
         <div class="rb-cyber-toolbar">
           <div class="rb-cyber-picker">
+            <select id="cyber-provider-select" class="rb-select rb-cyber-single" aria-label="查询平台"></select>
             <button id="cyber-providers-btn" class="rb-btn rb-btn--ghost rb-btn--sm rb-cyber-picker-btn"
-              type="button" aria-haspopup="true" aria-expanded="false" aria-controls="cyber-providers-pop">
+              type="button" aria-haspopup="true" aria-expanded="false" aria-controls="cyber-providers-pop" hidden>
               <span class="rb-cyber-picker-label">平台</span>
               <span id="cyber-providers-text" class="rb-cyber-picker-text">FOFA</span>
               <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor"
@@ -142,6 +143,8 @@
             <div id="cyber-providers-pop" class="rb-cyber-pop" role="group"
               aria-label="选择查询平台" hidden></div>
           </div>
+          <button id="cyber-mode-btn" class="rb-btn rb-btn--ghost rb-btn--sm rb-cyber-mode-btn" type="button"
+            aria-pressed="false" title="切换到多平台同时查询">多选</button>
           <label class="rb-cyber-size">
             <span>每页</span>
             <select id="cyber-page-size" class="rb-select" aria-label="每页结果数量">

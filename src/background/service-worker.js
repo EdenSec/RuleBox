@@ -16,6 +16,7 @@ import {
   isSearchProviderId,
   getSearchProvider,
   buildProviderRequest,
+  buildProviderTestRequest,
   parseProviderResponse,
   readProviderError,
   describeHttpStatus,
@@ -123,7 +124,12 @@ async function searchOneProvider(providerId, { query, page, size }, apiKey) {
   if (!provider) throw new Error('不支持的查询平台');
   if (!apiKey) throw new Error(`${provider.name} 未配置 API Key`);
 
-  const request = buildProviderRequest(providerId, { query, page, size, apiKey });
+  const data = await fetchProviderJson(buildProviderRequest(providerId, { query, page, size, apiKey }));
+  return parseProviderResponse(providerId, data);
+}
+
+/** 发起平台请求并解析 JSON；统一处理超时、非 2xx 与错误信息 */
+async function fetchProviderJson(request) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
@@ -148,12 +154,59 @@ async function searchOneProvider(providerId, { query, page, size }, apiKey) {
     if (!response.ok) {
       throw new Error(readProviderError(data) || describeHttpStatus(response.status));
     }
-    return parseProviderResponse(providerId, data);
+    return data;
   } catch (error) {
     if (error?.name === 'AbortError') throw new Error('请求超时，请稍后重试或减少每页数量');
     throw error;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** 测试连接冷却：同一平台 3 秒内只允许测一次，避免误触反复消耗额度 */
+const TEST_COOLDOWN_MS = 3000;
+const lastTestAt = new Map();
+
+/**
+ * 测试平台连接：Key 只从本地设置读取，不接受消息体传入，
+ * 防止任意页面伪造消息探测或校验他人的 Key。
+ */
+async function handleCyberTest(message, sender) {
+  if (!sender || sender.id !== chrome.runtime.id) {
+    return { ok: false, error: '请求来源校验失败' };
+  }
+
+  const providerId = String(message?.provider || '');
+  if (!isSearchProviderId(providerId)) return { ok: false, error: '不支持的查询平台' };
+  const provider = getSearchProvider(providerId);
+
+  const now = Date.now();
+  if (now - (lastTestAt.get(providerId) || 0) < TEST_COOLDOWN_MS) {
+    return { ok: false, error: '操作过于频繁，请稍后再试' };
+  }
+  lastTestAt.set(providerId, now);
+
+  const settings = await getSettings();
+  const apiKey = String(settings.search?.providers?.[providerId]?.apiKey || '').trim();
+  if (!apiKey) return { ok: false, error: `请先填写 ${provider.name} 的 API Key` };
+
+  try {
+    const accountRequest = buildProviderTestRequest(providerId, apiKey);
+    if (accountRequest) {
+      const data = await fetchProviderJson(accountRequest);
+      const error = readProviderError(data);
+      if (error) throw new Error(error);
+      return { ok: true, mode: 'account' };
+    }
+
+    // 没有账号信息接口的平台：用一次最小检索验证端点与 Key（会消耗一次查询额度）
+    const data = await fetchProviderJson(
+      buildProviderRequest(providerId, { query: provider.placeholder, page: 1, size: 10, apiKey })
+    );
+    const parsed = parseProviderResponse(providerId, data);
+    return { ok: true, mode: 'search', total: parsed.total };
+  } catch (error) {
+    return { ok: false, error: sanitizeSearchError(error?.message, apiKey) };
   }
 }
 
@@ -221,6 +274,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'rb:cyber-search') {
     // 返回 true 保持消息通道，等待异步结果
     void handleCyberSearch(message, sender).then(sendResponse);
+    return true;
+  }
+  if (message?.type === 'rb:cyber-test') {
+    void handleCyberTest(message, sender).then(sendResponse);
     return true;
   }
 });

@@ -429,6 +429,32 @@ export function buildProviderRequest(providerId, { query, page, size, apiKey }) 
   }
 }
 
+/**
+ * 构造“测试连接”请求。
+ * 优先使用平台提供的账号信息接口：既不消耗查询额度，也能准确区分
+ * “Key 无效”和“有 Key 但查询语法的账号无权限”。
+ * FOFA / Shodan 的账号接口有公开文档依据；其余平台没有稳定的账号接口，
+ * 返回 null，由后台退化为一次最小检索。
+ */
+export function buildProviderTestRequest(providerId, apiKey) {
+  const key = String(apiKey || '').trim();
+  if (providerId === 'fofa') {
+    return {
+      url: `https://fofa.info/api/v1/info/my?key=${encodeURIComponent(key)}`,
+      method: 'GET',
+      headers: {}
+    };
+  }
+  if (providerId === 'shodan') {
+    return {
+      url: `https://api.shodan.io/api-info?key=${encodeURIComponent(key)}`,
+      method: 'GET',
+      headers: {}
+    };
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------------ */
 /* 响应解析                                                            */
 /* ------------------------------------------------------------------ */

@@ -114,6 +114,24 @@ function notifyBackground() {
   }
 }
 
+/** 向后台发送消息并等待响应；扩展环境外或后台无响应时返回 null */
+function sendToBackground(message) {
+  if (!hasChrome || !chrome.runtime?.sendMessage) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve(null);
+          return;
+        }
+        resolve(response ?? null);
+      });
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 /* 弹窗与表单统一由 ./form-dialog.js 提供，设置页只负责业务字段与提交逻辑 */
 
 /* ------------------------------------------------------------------ */
@@ -1332,6 +1350,94 @@ function bindGeneral() {
   }, () => syncAiSwitches());
 }
 
+/* ------------------------------------------------------------------ */
+/* 测绘平台 API Key                                                     */
+/* ------------------------------------------------------------------ */
+
+/** 每个平台的 Key 保存定时器：输入即存（防抖），避免“填完直接关页面”丢配置 */
+const cyberKeyTimers = new Map();
+
+function saveCyberKey(providerId, value, { silent = true } = {}) {
+  const trimmed = String(value || '').trim();
+  return updateSettings((draft) => {
+    draft.search.providers[providerId] = {
+      ...(draft.search.providers[providerId] || {}),
+      apiKey: trimmed
+    };
+  }, { silent });
+}
+
+function queueCyberKeySave(providerId, value) {
+  const timer = cyberKeyTimers.get(providerId);
+  if (timer) clearTimeout(timer);
+  cyberKeyTimers.set(providerId, setTimeout(() => {
+    cyberKeyTimers.delete(providerId);
+    void saveCyberKey(providerId, value);
+  }, 500));
+}
+
+/** 立即落盘所有待保存的 Key（页面隐藏 / 关闭前调用） */
+function flushCyberKeySaves() {
+  if (!cyberKeyTimers.size) return;
+  for (const [providerId, timer] of cyberKeyTimers) {
+    clearTimeout(timer);
+    const input = $(`#opt-cyber-key-${providerId}`);
+    void saveCyberKey(providerId, input?.value || '');
+  }
+  cyberKeyTimers.clear();
+}
+
+/** 清掉某平台的待保存定时器，返回输入框当前值（测试连接前调用） */
+function takeCyberKey(providerId) {
+  const timer = cyberKeyTimers.get(providerId);
+  if (timer) clearTimeout(timer);
+  cyberKeyTimers.delete(providerId);
+  return String($(`#opt-cyber-key-${providerId}`)?.value || '').trim();
+}
+
+function showCyberTestResult(node, type, message) {
+  node.classList.remove('is-ok', 'is-error');
+  if (type === 'ok') node.classList.add('is-ok');
+  if (type === 'error') node.classList.add('is-error');
+  node.textContent = message || '';
+}
+
+/** 测试连接：先把当前输入落盘，再让后台用本地 Key 发起一次校验 */
+async function runCyberTest(provider, button, resultNode) {
+  const value = takeCyberKey(provider.id);
+  if (!value) {
+    showCyberTestResult(resultNode, 'error', '请先填写 API Key');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = '测试中…';
+  showCyberTestResult(resultNode, '', '');
+  try {
+    const saved = await saveCyberKey(provider.id, value, { silent: true });
+    if (!saved) throw new Error('API Key 保存失败，请重试');
+
+    const response = await sendToBackground({ type: 'rb:cyber-test', provider: provider.id });
+    if (!response) throw new Error('后台无响应，请重新加载扩展后再试');
+    if (response.ok) {
+      showCyberTestResult(
+        resultNode,
+        'ok',
+        response.mode === 'account'
+          ? '连接成功 · Key 有效'
+          : `连接成功 · 命中 ${Number(response.total) || 0} 条`
+      );
+    } else {
+      showCyberTestResult(resultNode, 'error', response.error || '连接失败');
+    }
+  } catch (error) {
+    showCyberTestResult(resultNode, 'error', error?.message || '测试失败');
+  } finally {
+    button.disabled = false;
+    button.textContent = '测试连接';
+  }
+}
+
 /** 渲染测绘平台密钥输入行（平台定义来自 core/search-providers.js，避免两处维护） */
 function renderCyberProviders() {
   const holder = $('#opt-cyber-providers');
@@ -1350,15 +1456,28 @@ function renderCyberProviders() {
       },
       dataset: { provider: provider.id }
     });
+    // 输入即保存：change 事件只在失焦时触发，粘贴后直接打开面板会来不及落盘
+    input.addEventListener('input', () => { queueCyberKeySave(provider.id, input.value); });
     input.addEventListener('change', () => {
-      const value = input.value.trim();
-      void updateSettings((draft) => {
-        draft.search.providers[provider.id] = {
-          ...(draft.search.providers[provider.id] || {}),
-          apiKey: value
-        };
-      });
+      const timer = cyberKeyTimers.get(provider.id);
+      if (timer) clearTimeout(timer);
+      cyberKeyTimers.delete(provider.id);
+      void saveCyberKey(provider.id, input.value, { silent: false });
     });
+
+    const testButton = el('button', {
+      className: 'rb-btn rb-btn--ghost rb-btn--sm rb-cyber-test-btn',
+      text: '测试连接',
+      attrs: {
+        type: 'button',
+        title: '使用本地保存的 Key 校验连通性；无账号接口的平台会发起一次最小查询'
+      }
+    });
+    const testResult = el('span', {
+      className: 'rb-cyber-test-result',
+      attrs: { role: 'status', 'aria-live': 'polite' }
+    });
+    testButton.addEventListener('click', () => { void runCyberTest(provider, testButton, testResult); });
 
     const link = el('a', {
       className: 'rb-field-link',
@@ -1379,7 +1498,10 @@ function renderCyberProviders() {
           link
         ])
       ]),
-      el('label', { className: 'rb-opt-control' }, [input])
+      el('div', { className: 'rb-opt-control rb-cyber-key-control' }, [
+        el('div', { className: 'rb-cyber-key-inline' }, [input, testButton]),
+        testResult
+      ])
     ]);
   }));
 }
@@ -1395,6 +1517,12 @@ function bindCyber() {
       ? Number($('#opt-cyber-page-size').value)
       : 20;
     void updateSettings((draft) => { draft.search.pageSize = size; });
+  });
+
+  // 关闭页面 / 切到后台时补存一次，避免防抖窗口内的输入丢失
+  window.addEventListener('pagehide', flushCyberKeySaves);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushCyberKeySaves();
   });
 }
 
