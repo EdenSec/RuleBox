@@ -66,6 +66,9 @@ export async function getSettings() {
 
 /** 保存设置（自动补全默认字段） */
 export async function saveSettings(settings) {
+  // 拒绝非对象写入：避免上游误传 undefined / 字符串时被 mergeSettings 当成
+  // “全新配置”整体重置，把本机保存的 API Key 等设置清空
+  if (!settings || typeof settings !== 'object') throw new Error('设置数据无效');
   const merged = mergeSettings(settings);
   await setItems({ [STORAGE_KEYS.settings]: merged });
   return merged;
@@ -81,8 +84,15 @@ let settingsWriteQueue = Promise.resolve();
 export function patchSettings(updater) {
   const run = async () => {
     const current = await getSettings();
-    const next = typeof updater === 'function' ? updater(structuredClone(current)) : { ...current, ...updater };
-    return saveSettings(next);
+    if (typeof updater !== 'function') return saveSettings({ ...current, ...updater });
+
+    // updater 支持两种写法：直接改 draft 后不返回，或返回一份新对象。
+    // 只认返回值时，一旦忘记 return 就会把 undefined 交给 saveSettings，
+    // mergeSettings 会当成“没有配置”整体回退默认值，把本地 API Key 全部清空，
+    // 因此必须回退到被修改过的 draft。
+    const draft = structuredClone(current);
+    const result = updater(draft);
+    return saveSettings(result && typeof result === 'object' ? result : draft);
   };
   const result = settingsWriteQueue.then(run, run);
   // 队列不因单次失败而中断

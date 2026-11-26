@@ -25,6 +25,7 @@ import {
   setAiHistory,
   onStorageChanged,
   getItems,
+  setItems,
   removeItems,
   getCyberSession,
   setCyberSession,
@@ -66,6 +67,8 @@ const hasChrome = typeof chrome !== 'undefined';
  * 平台判定统一走 core/utils.js 的 isMacPlatform，设置页的快捷键弹窗复用同一实现。
  */
 const IS_MAC = isMacPlatform();
+// 面板的四个标签页，初始化与切换共用同一份白名单
+const TAB_IDS = ['snippets', 'payloads', 'cyber', 'ai'];
 const SHORTCUT = {
   search: IS_MAC ? '⌘K' : 'Ctrl+K',
   searchKbd: IS_MAC ? '⌘ K' : 'Ctrl K',
@@ -176,9 +179,15 @@ async function init() {
   state.variables = variables;
   state.recents = normalizeRecents(recents);
   state.ai.messages = Array.isArray(history) ? history.slice(-40) : [];
-  state.tab = ['snippets', 'payloads', 'cyber', 'ai'].includes(state.settings.ui.defaultTab)
-    ? state.settings.ui.defaultTab
-    : 'snippets';
+  // 默认打开方式：跟随上次使用（默认）或固定某个标签页；
+  // 独立的 rb.lastTab 键不会触发设置变更监听，避免切换标签就整页重绘
+  const lastTab = (await getItems(STORAGE_KEYS.lastTab))[STORAGE_KEYS.lastTab];
+  const wantedTab = state.settings.ui.openMode === 'fixed' ? state.settings.ui.defaultTab : lastTab;
+  state.tab = TAB_IDS.includes(wantedTab)
+    ? wantedTab
+    : TAB_IDS.includes(state.settings.ui.defaultTab)
+      ? state.settings.ui.defaultTab
+      : 'snippets';
 
   // 平台默认值优先级：上次使用的平台 → 已配置 Key 的平台 → 第一个平台（FOFA）
   const savedCyberProviders = (state.settings.search.lastProviders || [])
@@ -551,7 +560,7 @@ const tabScroll = { snippets: 0, payloads: 0, cyber: 0, ai: 0 };
 let aiScroll = null;
 
 function switchTab(tab, { silent = false } = {}) {
-  if (!['snippets', 'payloads', 'cyber', 'ai'].includes(tab)) return;
+  if (!TAB_IDS.includes(tab)) return;
   const content = $('.rb-content');
   const aiMessages = $('#ai-messages');
 
@@ -566,6 +575,10 @@ function switchTab(tab, { silent = false } = {}) {
   }
 
   state.tab = tab;
+
+  // 记住用户最后停留的标签页，供“跟随上次使用”在下次打开时恢复。
+  // 初始化时的静默切换不写入，避免把恢复结果又当成用户选择。
+  if (!silent) void setItems({ [STORAGE_KEYS.lastTab]: tab }).catch(() => {});
 
   for (const button of $$('.rb-tab')) {
     const active = button.dataset.tab === tab;
@@ -1325,6 +1338,7 @@ function bindCyber() {
     state.cyber.pageSize = size;
     patchSettings((draft) => {
       draft.search.pageSize = size;
+      return draft;
     }).then((settings) => {
       state.settings = settings;
     }).catch(() => {});
@@ -1493,6 +1507,7 @@ function persistCyberProviders() {
   const list = [...state.cyber.providers];
   patchSettings((draft) => {
     draft.search.lastProviders = list;
+    return draft;
   }).then((settings) => {
     state.settings = settings;
   }).catch(() => {});
@@ -1789,9 +1804,57 @@ async function copyAllCyberItems() {
   );
 }
 
+/** CSV 单元格转义：逗号、引号、换行需要包裹，内部引号翻倍 */
+function csvCell(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  // 防御 CSV 公式注入：以 = + - @ 开头的单元格在表格软件里会被当成公式执行
+  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
+/** Markdown 表格单元格：竖线转义、换行压空格，尖括号转义防止被渲染成 HTML */
+function mdCell(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return text
+    .replace(/\|/g, '\\|')
+    .replace(/\r?\n/g, ' ')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim();
+}
+
+/** 导出用的扁平记录：成功平台的全部条目 + 平台名，供 CSV / MD / JSON 共用 */
+function cyberExportRecords() {
+  const groups = state.cyber.results?.results;
+  if (!Array.isArray(groups)) return [];
+  const records = [];
+  for (const group of groups) {
+    if (!group?.ok || !Array.isArray(group.items)) continue;
+    const providerName = getSearchProvider(group.provider)?.name || group.provider;
+    for (const item of group.items) {
+      if (!item) continue;
+      records.push({
+        provider: providerName,
+        title: item.title || item.domain || item.ip || '',
+        address: cyberItemAddress(item),
+        domain: item.domain || '',
+        ip: item.ip || '',
+        port: item.port || '',
+        protocol: item.protocol || '',
+        status: item.status ? `HTTP ${item.status}` : '',
+        server: item.server || '',
+        location: item.location || '',
+        updatedAt: item.updatedAt || ''
+      });
+    }
+  }
+  return records;
+}
+
 /**
- * 导出当前结果为 JSON 文件。
- * 保留平台、语法、页码与全部字段，便于交给 AI 或自动化脚本继续处理。
+ * 导出当前结果。
+ * 支持 JSON / CSV / Markdown / TXT：JSON 保留完整结构，CSV 便于表格筛选，
+ * Markdown 便于写报告，TXT 每行一条资产地址，方便直接交给脚本或 AI。
  */
 function exportCyberResults() {
   const data = state.cyber.results;
@@ -1800,33 +1863,113 @@ function exportCyberResults() {
     return;
   }
   const groups = Array.isArray(data.results) ? data.results : [];
-  const items = collectCyberItems();
-  const payload = {
-    generator: 'RuleBox',
-    exportedAt: new Date().toISOString(),
-    query: state.cyber.query,
-    page: state.cyber.page,
-    pageSize: state.cyber.pageSize,
-    providers: state.cyber.providers,
-    results: groups.map((group) => ({
-      provider: group.provider,
-      providerName: getSearchProvider(group.provider)?.name || group.provider,
-      ok: group.ok === true,
-      total: Number(group.total) || 0,
-      error: group.error || '',
-      items: Array.isArray(group.items) ? group.items : []
-    }))
-  };
+  const records = cyberExportRecords();
+  if (!records.length) {
+    toast('当前结果没有可导出的资产', 'warn');
+    return;
+  }
 
+  const format = String($('#cyber-export-format')?.value || 'json');
   const now = new Date();
   const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}`;
-  const bytes = downloadText(
-    `rulebox-cyber-${stamp}.json`,
-    JSON.stringify(payload, null, 2),
-    'application/json;charset=utf-8'
-  );
+  const baseName = `rulebox-cyber-${stamp}`;
+  const query = String(state.cyber.query || '').trim();
+
+  let filename = `${baseName}.json`;
+  let mime = 'application/json;charset=utf-8';
+  let text = '';
+  let count = records.length;
+  let label = 'JSON';
+
+  if (format === 'csv') {
+    const columns = [
+      ['平台', 'provider'],
+      ['标题', 'title'],
+      ['地址', 'address'],
+      ['域名', 'domain'],
+      ['IP', 'ip'],
+      ['端口', 'port'],
+      ['协议', 'protocol'],
+      ['状态码', 'status'],
+      ['服务器', 'server'],
+      ['归属地', 'location'],
+      ['更新时间', 'updatedAt']
+    ];
+    const lines = [columns.map(([title]) => csvCell(title)).join(',')];
+    for (const record of records) {
+      lines.push(columns.map(([, field]) => csvCell(record[field])).join(','));
+    }
+    // 带 BOM，避免 Excel 打开中文表头乱码
+    filename = `${baseName}.csv`;
+    mime = 'text/csv;charset=utf-8';
+    text = `\ufeff${lines.join('\r\n')}`;
+    label = 'CSV';
+  } else if (format === 'md') {
+    const lines = [
+      '# RuleBox 聚合查询结果',
+      '',
+      `- 查询语法：${query ? `\`${query.replace(/`/g, "'")}\`` : '（未填写）'}`,
+      `- 导出时间：${now.toLocaleString('zh-CN')}`,
+      `- 页码：${state.cyber.page || 1}（每页 ${state.cyber.pageSize || 0} 条）`,
+      `- 结果条目：${records.length} 条`,
+      '',
+      '| 平台 | 标题 | 地址 | 域名 | IP | 端口 | 协议 | 状态码 | 归属地 | 更新时间 |',
+      '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+    ];
+    for (const record of records) {
+      lines.push(
+        `| ${[
+          record.provider,
+          record.title,
+          record.address,
+          record.domain,
+          record.ip,
+          record.port,
+          record.protocol,
+          record.status,
+          record.location,
+          record.updatedAt
+        ].map(mdCell).join(' | ')} |`
+      );
+    }
+    filename = `${baseName}.md`;
+    mime = 'text/markdown;charset=utf-8';
+    text = lines.join('\n');
+    label = 'Markdown';
+  } else if (format === 'txt') {
+    const addresses = [...new Set(records.map((record) => record.address).filter(Boolean))];
+    if (!addresses.length) {
+      toast('当前结果没有可导出的资产地址', 'warn');
+      return;
+    }
+    filename = `${baseName}.txt`;
+    mime = 'text/plain;charset=utf-8';
+    text = addresses.join('\n');
+    count = addresses.length;
+    label = 'TXT';
+  } else {
+    const payload = {
+      generator: 'RuleBox',
+      exportedAt: now.toISOString(),
+      query,
+      page: state.cyber.page,
+      pageSize: state.cyber.pageSize,
+      providers: state.cyber.providers,
+      results: groups.map((group) => ({
+        provider: group.provider,
+        providerName: getSearchProvider(group.provider)?.name || group.provider,
+        ok: group.ok === true,
+        total: Number(group.total) || 0,
+        error: group.error || '',
+        items: Array.isArray(group.items) ? group.items : []
+      }))
+    };
+    text = JSON.stringify(payload, null, 2);
+  }
+
+  const bytes = downloadText(filename, text, mime);
   toast(
-    bytes ? `已导出 ${items.length} 条结果` : '没有可导出的内容',
+    bytes ? `已导出 ${count} 条结果（${label}）` : '没有可导出的内容',
     bytes ? 'success' : 'warn'
   );
 }
@@ -2085,6 +2228,7 @@ function showCopyGuide(provider, code) {
     dismissCopyGuide();
     const settings = await patchSettings((draft) => {
       draft.search.promptAfterCopy = false;
+      return draft;
     }).catch(() => null);
     if (settings) {
       state.settings = settings;

@@ -250,11 +250,13 @@ src\
 | `rb.aiHistory` | AI 对话历史（应用层截 40 条） | `getAiHistory / setAiHistory` |
 | `rb.usage` | 每日 AI 请求计数 `{ date: 'yyyy-MM-dd', count }` | `getUsage`（内部） |
 | `rb.pendingSearch` | 右键菜单传入的待搜索关键词，**一次性**（面板消费后立即删除） | `getItems / removeItems` |
+| `rb.lastTab` | 上次停留的标签页 ID（`snippets / payloads / cyber / ai`），供“跟随上次使用”恢复；独立键避免切标签就触发设置变更重绘 | `getItems / setItems` |
 
 `rb.settings` 结构（`DEFAULT_SETTINGS`，`mergeSettings` 做深合并保证旧配置兼容）：
 
 - `theme`：`auto | dark | light`
-- `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`showRiskBadges`、`copyFormat`、`showDesc`
+- `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`openMode`、`showRiskBadges`、`copyFormat`、`showDesc`
+  - `openMode`：`last`（默认，跟随 `rb.lastTab`）| `fixed`（固定打开 `defaultTab`）；设置页只有一个下拉，选“上次使用”写 `last`，选具体标签页写 `fixed` + `defaultTab`。`mergeSettings` 会校验两者取值。
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
 - `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次使用的平台，空数组表示还没有记录，面板会回退到已配置 Key 的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
 - `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
@@ -319,7 +321,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 ### 6.4 设置页自动保存
 
-每个控件 change 即调 `updateSettings(mutator)` → `patchSettings(draft => { mutator(draft); return draft; })`。`patchSettings` 的 updater **必须 return**，否则保存 undefined 导致配置被重置。
+每个控件 change 即调 `updateSettings(mutator)` → `patchSettings(draft => { mutator(draft); return draft; })`。updater 建议显式 `return draft`；即使忘记返回，`patchSettings` 也会回退到被修改过的 draft，并且 `saveSettings` 拒绝非对象写入——这两层兜底是为修复“updater 返回 undefined → `mergeSettings` 当成新配置 → 本地 API Key 与默认标签页被整体重置”的事故，不要回退。
 
 `patchSettings` 内部维护模块级串行队列 `settingsWriteQueue`：每次“读 → 改 → 写”按序执行，单次失败不会中断队列（失败结果只 reject 给调用方）。**不要绕过它直接 `saveSettings` 做局部更新**——连续快速切换多个开关时会因并发读改写互相覆盖而丢配置（已修复，回归时重点验证）。自定义数据写入后用 `invalidateCache()` 刷新共享缓存并向 SW 发 `rb:sync`。
 
@@ -337,7 +339,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 - 平台默认值：`lastProviders` 有记录就恢复；没有记录时优先已配置 Key 的平台，最后才回退 FOFA。`lastProviders` 默认为空数组，避免“首次打开被写成 FOFA”掩盖无历史状态。
 - 会话快照：每次查询成功写入 `rb.cyberSession`（语法、平台、页码、每页条数、结果分组），面板初始化时恢复并在状态栏标注「上次查询（时间）」。popup 关闭会销毁页面内存，没有快照就只能重查、白耗额度；快照只存展示字段（最多 7 个平台 × 50 条），不含任何 Key，`resetAll` 会一并清除。快照始终写同一个键、覆盖旧值，不会随查询次数累积。
-- 批量操作：状态行右侧「复制全部」把当前页所有成功条目转成 `url`（无 url 时用 `ip:port`）逐行复制并去重；「导出」生成 `rulebox-cyber-<时间>.json`，含语法、平台、页码与完整字段。两者都只作用于当前页已查到的结果，不会为了“导出全量”继续翻页消耗额度。
+- 批量操作：状态行右侧「复制全部」把当前页所有成功条目转成 `url`（无 url 时用 `ip:port`）逐行复制并去重；「导出」按状态行的格式下拉生成 `rulebox-cyber-<时间>.<json|csv|md|txt>`：JSON 保留语法、平台、页码与完整字段；CSV 带 UTF-8 BOM、逗号/引号/换行按规范转义，便于表格软件直接打开；Markdown 输出元信息 + 表格；TXT 每行一条去重后的资产地址。两者都只作用于当前页已查到的结果，不会为了“导出全量”继续翻页消耗额度。
 - 设置页每个平台提供「测试连接」（`rb:cyber-test`）：SW 只从设置读取 Key，同一平台 3 秒冷却；FOFA / Shodan 走账号信息接口（不消耗额度），其余平台用一次最小检索验证，探测条数见 `PROVIDER_PROBE_SIZE`（默认 1，Hunter 因接口枚举限制为 10）。`normalizePageSize` 允许 1 仅为此场景，界面下拉仍只有 10 / 20 / 50。
 
 - 平台元数据、请求构造与响应解析全部在 `src/core/search-providers.js`，UI 不拼 URL、不解析平台响应；新增平台只改这一个文件（并在 `manifest.json` 补 host 权限）。
@@ -349,7 +351,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 ## 7. 已知实现陷阱（改动前必读）
 
-1. **`patchSettings` updater 必须 `return draft`**（同上）。
+1. **`patchSettings` updater 应显式 `return draft`**（同上；漏写有兜底，但不要依赖兜底）。
 2. **`el(tag, options, children)` 只扁平一层**：children 传嵌套数组会渲染成字符串，调用处必须自行展平。
 3. **`chrome` 未声明时可选链抛 ReferenceError**：一律先判 `typeof chrome !== 'undefined'`（各文件有 `hasChrome` 常量）。
 4. **`chrome.permissions.request` 必须在用户手势内、任何 `await` 之前同步调用**（`handleAuthorize` 已实现：先同步拿 Promise 再 await）。
@@ -438,5 +440,5 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 | 版本 | 主要能力 |
 | --- | --- |
-| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉 T-Answer、新华三 SecCenter CSAP 六个态势感知平台，并将早期误命名的条目并入安恒 AiLPHA；平台选择改为默认单选下拉 + 可切换多选面板，打开时恢复上次使用或已配置 Key 的平台；设置页新增逐平台「测试连接」（`rb:cyber-test`，3 秒冷却，仅后台读取 Key）；API Key 改为输入即保存，避免未失焦就关闭页面导致丢配置 |
+| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉 T-Answer、新华三 SecCenter CSAP 六个态势感知平台，并将早期误命名的条目并入安恒 AiLPHA；平台选择改为默认单选下拉 + 可切换多选面板，打开时恢复上次使用或已配置 Key 的平台；设置页新增逐平台「测试连接」（`rb:cyber-test`，3 秒冷却，仅后台读取 Key）；API Key 改为输入即保存，避免未失焦就关闭页面导致丢配置；修复 `patchSettings` updater 漏写 return 时把 `undefined` 写入设置、导致平台 API Key 与默认标签页被整体重置的问题；结果导出支持 JSON / CSV / Markdown / TXT；默认标签页可跟随上次使用或固定 |
 | 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |

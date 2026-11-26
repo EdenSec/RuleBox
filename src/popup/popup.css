@@ -765,6 +765,17 @@ body.is-fluid {
   white-space: nowrap;
 }
 
+/* 导出格式选择：与右侧小按钮同高，窄屏下不挤压状态文字 */
+.rb-cyber-export-format {
+  width: auto;
+  max-width: 72px;
+  height: auto;
+  padding: 2px 4px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  border-radius: 6px;
+}
+
 .rb-cyber-status[data-state="loading"] {
   color: var(--rb-accent);
 }

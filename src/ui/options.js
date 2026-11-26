@@ -1279,7 +1279,7 @@ function updateSystemPromptState() {
 function fillAll() {
   const settings = state.settings;
   $('#opt-theme').value = settings.theme;
-  $('#opt-default-tab').value = settings.ui.defaultTab;
+  $('#opt-default-tab').value = settings.ui.openMode === 'fixed' ? settings.ui.defaultTab : 'last';
   $('#opt-copy-format').value = settings.ui.copyFormat;
   $('#opt-recents-limit').value = String(settings.ui.recentsLimit);
   $('#opt-close-after-copy').checked = Boolean(settings.ui.closeAfterCopy);
@@ -1345,7 +1345,15 @@ function bindGeneral() {
   });
 
   $('#opt-default-tab').addEventListener('change', () => {
-    void updateSettings((draft) => { draft.ui.defaultTab = $('#opt-default-tab').value; });
+    const value = $('#opt-default-tab').value;
+    void updateSettings((draft) => {
+      if (value === 'last') {
+        draft.ui.openMode = 'last';
+      } else {
+        draft.ui.openMode = 'fixed';
+        draft.ui.defaultTab = value;
+      }
+    });
   });
 
   $('#opt-copy-format').addEventListener('change', () => {

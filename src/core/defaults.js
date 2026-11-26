@@ -18,7 +18,9 @@ export const STORAGE_KEYS = {
   // 右键菜单“搜索”传递的待搜索关键词（一次性，面板消费后即删除）
   pendingSearch: 'rb.pendingSearch',
   // 聚合查询会话快照（语法、平台、页码、结果），重开面板时恢复，避免重复消耗额度
-  cyberSession: 'rb.cyberSession'
+  cyberSession: 'rb.cyberSession',
+  // 上次使用的标签页（snippets | payloads | cyber | ai），供“跟随上次使用”读取
+  lastTab: 'rb.lastTab'
 };
 
 export const DEFAULT_SETTINGS = {
@@ -31,6 +33,8 @@ export const DEFAULT_SETTINGS = {
     recentsLimit: 20,
     // 默认打开的标签页：snippets | payloads | cyber | ai
     defaultTab: 'snippets',
+    // 打开方式：last = 跟随上次使用；fixed = 固定打开 defaultTab
+    openMode: 'last',
     // 是否显示风险等级徽标
     showRiskBadges: true,
     // 默认复制格式：code（仅代码）| markdown（代码块）| title-code（标题+代码）
@@ -124,6 +128,11 @@ export function mergeSettings(input) {
       merged[group] = { ...merged[group], ...input[group] };
     }
   }
+
+  // 标签页设置逐项校验，避免手改配置后写出不存在的 tab 或打开方式
+  const TAB_IDS = ['snippets', 'payloads', 'cyber', 'ai'];
+  merged.ui.defaultTab = TAB_IDS.includes(merged.ui.defaultTab) ? merged.ui.defaultTab : 'snippets';
+  merged.ui.openMode = merged.ui.openMode === 'fixed' ? 'fixed' : 'last';
 
   // 测绘查询：逐项校验，避免旧配置或手改 JSON 把开关写成字符串、把平台写成不存在的 ID
   const search = input.search && typeof input.search === 'object' ? input.search : {};
