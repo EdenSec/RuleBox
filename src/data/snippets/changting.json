@@ -2,7 +2,7 @@
   "platform": "changting",
   "version": 1,
   "categories": ["常用模板", "告警筛选", "IP 与资产", "自定义组合"],
-  "notice": "长亭全悉（T-Answer）为流量检测与响应（NDR）产品，告警检索支持“快速筛选”与“高级筛选”，高级筛选写法为“字段名 运算符 值 逻辑连接符 …”，类似 SQL 表达式。以下语法依据官方快速开始文档中的公开示例整理，IP 均为文档保留地址；不同版本字段可能增减，使用前请在平台字段说明中确认。万象（COSMOS / AISOC）的字段级检索语法未公开，本平台条目仅覆盖全悉。",
+  "notice": "长亭全悉（T-Answer）为流量检测与响应（NDR）产品，告警检索支持“快速筛选”与“高级筛选”，高级筛选写法为“字段名 运算符 值 逻辑连接符 …”，类似 SQL 表达式。以下语法依据长亭官方支持文档《全悉（T-Answer）产品快速开始》中的字段表与高级筛选示例整理，官方列出的常用字段包括 attacker、victim、severity、result、phase、app_proto、appbrief.url；IP 均为文档保留地址。不同版本字段可能增减，使用前请在平台字段说明中确认。万象（COSMOS / AISOC）的字段级检索语法未公开，本平台条目仅覆盖全悉。",
   "items": [
     {
       "id": "changting-high-severity",
@@ -12,7 +12,7 @@
       "desc": "severity 取值 1 为超危、2 为高危、3 为中危、4 为低危，用 in 一次筛选两个等级。",
       "tags": ["severity", "in"],
       "vars": [],
-      "source": "依据官方文档中的高级筛选示例整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》高级筛选示例整理",
       "risk": "safe"
     },
     {
@@ -23,7 +23,7 @@
       "desc": "result 表示攻击结果：control 失陷、success 成功、failed 失败、unknown 企图。",
       "tags": ["result", "success"],
       "vars": [],
-      "source": "依据官方文档中的高级筛选示例整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》高级筛选示例整理",
       "risk": "safe"
     },
     {
@@ -34,7 +34,7 @@
       "desc": "组合威胁等级、攻击结果与攻击 IP 三个条件，快速锁定需要优先研判的事件。",
       "tags": ["组合", "AND"],
       "vars": [],
-      "source": "依据官方文档中的高级筛选示例整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》高级筛选示例整理",
       "risk": "safe"
     },
     {
@@ -45,7 +45,7 @@
       "desc": "attacker 为攻击 IP，适合从情报或外部通报的地址反查全悉中的告警。",
       "tags": ["attacker", "溯源"],
       "vars": [],
-      "source": "依据官方文档中的字段说明整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
       "risk": "safe"
     },
     {
@@ -56,7 +56,7 @@
       "desc": "victim 为受害 IP，叠加等级条件可确认某台资产是否被高危事件命中。",
       "tags": ["victim", "severity"],
       "vars": [],
-      "source": "依据官方文档中的字段说明整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
       "risk": "safe"
     },
     {
@@ -67,7 +67,7 @@
       "desc": "unknown 表示企图（未确认成功），可用于排查被拦截的高危探测。",
       "tags": ["result", "unknown"],
       "vars": [],
-      "source": "依据官方文档中的字段说明整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
       "risk": "safe"
     },
     {
@@ -78,7 +78,7 @@
       "desc": "app_proto 为应用层协议，配合攻击结果可聚焦指定协议上的成功攻击。",
       "tags": ["app_proto", "协议"],
       "vars": [],
-      "source": "依据官方文档中的字段说明整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
       "risk": "safe"
     },
     {
@@ -89,7 +89,20 @@
       "desc": "appbrief.url 为 URL 路径，适合核查针对后台入口的高危攻击。",
       "tags": ["appbrief.url", "URL"],
       "vars": [],
-      "source": "依据官方文档中的字段说明整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
+      "risk": "safe"
+    },
+    {
+      "id": "changting-phase",
+      "title": "按攻击阶段筛选",
+      "category": "告警筛选",
+      "code": "severity in (1, 2) AND phase = '{{phase}}'",
+      "desc": "phase 为攻击阶段字段，官方字段表已列出但未公开枚举值，需在告警详情中确认实际取值后替换，适合按杀伤链阶段研判。",
+      "tags": ["phase", "攻击阶段"],
+      "vars": [
+        { "name": "phase", "label": "攻击阶段取值", "placeholder": "以平台字段说明为准", "example": "以平台字段说明为准" }
+      ],
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》字段表整理",
       "risk": "safe"
     },
     {
@@ -103,7 +116,7 @@
         { "name": "levels", "label": "威胁等级集合", "placeholder": "1, 2", "example": "1, 2" },
         { "name": "ip", "label": "受害 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }
       ],
-      "source": "依据官方文档中的高级筛选示例整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》高级筛选示例整理",
       "risk": "safe"
     },
     {
@@ -116,7 +129,7 @@
       "vars": [
         { "name": "ip", "label": "攻击 IP", "placeholder": "198.51.100.20", "example": "198.51.100.20" }
       ],
-      "source": "依据官方文档中的高级筛选示例整理",
+      "source": "依据长亭官方文档《全悉（T-Answer）产品快速开始》高级筛选示例整理",
       "risk": "safe"
     }
   ]
