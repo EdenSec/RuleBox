@@ -498,42 +498,6 @@
       ]
     },
     {
-      "id": "alpha",
-      "name": "Alpha 态势感知",
-      "vendor": "私有部署",
-      "kind": "situation",
-      "color": "#3fb950",
-      "docUrl": "",
-      "syntax": "field == \"value\" AND field in [\"a\",\"b\"]",
-      "summary": "告警与流量检索语法。字段覆盖流量方向、威胁等级、告警名称、处置状态等常见维度，示例值均为通用占位，实际字段以所在平台的字典为准。",
-      "operators": [
-        { "op": "==", "desc": "等于" },
-        { "op": "!=", "desc": "不等于" },
-        { "op": "in", "desc": "命中列表中的任一值" },
-        { "op": "AND", "desc": "逻辑与（大写）" },
-        { "op": "OR", "desc": "逻辑或（大写）" },
-        { "op": "()", "desc": "条件分组" }
-      ],
-      "fields": [
-        { "key": "direction", "desc": "流量方向，示例中 \"10\" 表示纵向 / 外到内，具体取值以平台字典为准" },
-        { "key": "threatSeverity", "desc": "威胁等级，如 Medium、High" },
-        { "key": "alarmName", "desc": "告警名称（示例值如 rule-a、rule-b，实际以平台字典为准）" },
-        { "key": "alarmStatus", "desc": "告警状态，如 processed" },
-        { "key": "alarmResults", "desc": "告警判定结果，如 OK、UNKNOWN" },
-        { "key": "responseCode", "desc": "HTTP 响应码，如 \"200\"" },
-        { "key": "destAddress", "desc": "目的 IP 地址" },
-        { "key": "srcAddress", "desc": "源 IP 地址（常见字段，按平台字典确认）" },
-        { "key": "destPort", "desc": "目的端口（常见字段，按平台字典确认）" },
-        { "key": "srcPort", "desc": "源端口（常见字段，按平台字典确认）" }
-      ],
-      "tips": [
-        "字符串值使用双引号，数字也建议加引号以匹配平台示例。",
-        "排除类条件较多时，建议把公共排除项抽成固定前缀，便于复用。",
-        "direction 等枚举值含义以所在平台的字典为准，本插件仅保留示例。",
-        "该平台为私有部署产品，没有公开语法文档，字段与取值请以所在环境的字典和帮助页为准。"
-      ]
-    },
-    {
       "id": "tianyan",
       "name": "奇安信天眼",
       "vendor": "奇安信",
@@ -649,6 +613,98 @@
         "区间查询用 BETWEEN ... AND ...，状态码示例 status BETWEEN 200 AND 299。",
         "模糊匹配用 LIKE 与 %，如 url LIKE '%login%'。",
         "不同数据源的可检索字段不同，使用前请在平台检索帮助中确认字段名与类型。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
+      ]
+    },
+    {
+      "id": "sangfor",
+      "name": "深信服 SIP",
+      "vendor": "深信服",
+      "kind": "situation",
+      "color": "#7b8fa6",
+      "docUrl": "https://support.sangfor.com.cn/productDocument/read?product_id=81",
+      "syntax": "src_ip:192.0.2.10 AND dst_port:80",
+      "summary": "深信服 SIP / SIP-Logger 日志检索支持“不指定字段（全文）”与“指定字段（字段名:值）”两种模式，多条件用 AND / OR 连接；值可用双引号包裹，支持 ~ 模糊匹配与 ? 单字符通配，常见于日志溯源与告警下钻场景。",
+      "operators": [
+        { "op": ":", "desc": "字段与值连接，如 src_ip:192.0.2.10" },
+        { "op": "\"\"", "desc": "值含下划线、空格等特殊字符时用双引号包裹" },
+        { "op": "AND", "desc": "逻辑与，多字段组合" },
+        { "op": "OR", "desc": "逻辑或，同字段多取值" },
+        { "op": "~", "desc": "模糊匹配，写在值前，如 \"~密操作\"" },
+        { "op": "?", "desc": "通配符，匹配单个字符，如 \"?密操作\"" }
+      ],
+      "fields": [
+        { "key": "src_ip", "desc": "源 IP 地址" },
+        { "key": "dst_ip", "desc": "目的 IP 地址" },
+        { "key": "src_port", "desc": "源端口" },
+        { "key": "dst_port", "desc": "目的端口" },
+        { "key": "dev_id", "desc": "日志来源设备标识，格式通常为“设备IP_端口”，如 192.0.2.5_1518" },
+        { "key": "syslog_message", "desc": "日志正文（syslog 消息）" }
+      ],
+      "tips": [
+        "指定字段检索格式为“字段名:值”，如 src_ip:192.0.2.10。",
+        "不指定字段时直接输入关键词并加双引号，如 \"加密操作\"。",
+        "多条件组合用 AND / OR 连接，如 src_ip:192.0.2.10 AND dst_port:80。",
+        "~ 表示模糊匹配、? 表示单个字符通配，可放在双引号内使用。",
+        "源 / 目的 IP 与端口的字段名在不同版本中可能不同，使用前请在平台字段字典或“重点字段”中确认。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
+      ]
+    },
+    {
+      "id": "changting",
+      "name": "长亭全悉 T-Answer",
+      "vendor": "长亭科技",
+      "kind": "situation",
+      "color": "#8a7db8",
+      "docUrl": "https://support.chaitin.cn/docs/line-67834be5/line-c392579d/main/02-c8337c4507",
+      "syntax": "severity in (1, 2) AND result in ('control', 'success')",
+      "summary": "长亭全悉（T-Answer）为流量检测与响应产品，告警支持快速筛选与高级筛选；高级筛选写法为“字段名 运算符 值 逻辑连接符 …”，类似 SQL 表达式，支持 =、in () 与 AND 组合。",
+      "operators": [
+        { "op": "=", "desc": "等于，如 attacker = '192.0.2.10'" },
+        { "op": "in ()", "desc": "命中列表中的任一值，如 severity in (1, 2)" },
+        { "op": "AND", "desc": "逻辑与，连接多个条件" },
+        { "op": "''", "desc": "字符串值使用单引号包裹" }
+      ],
+      "fields": [
+        { "key": "attacker", "desc": "攻击 IP" },
+        { "key": "victim", "desc": "受害 IP" },
+        { "key": "severity", "desc": "威胁等级：1 超危、2 高危、3 中危、4 低危" },
+        { "key": "result", "desc": "攻击结果：control 失陷、success 成功、failed 失败、unknown 企图" },
+        { "key": "phase", "desc": "攻击阶段" },
+        { "key": "app_proto", "desc": "应用层协议" },
+        { "key": "appbrief.url", "desc": "URL 路径" }
+      ],
+      "tips": [
+        "高级筛选格式：字段名 运算符 值 逻辑连接符 字段名 运算符 值。",
+        "多个取值用 in () 表达，如 severity in (1, 2)、result in ('control', 'success')。",
+        "字符串值使用单引号，如 attacker = '192.0.2.10'。",
+        "快速筛选适合按攻击 IP、受害 IP 等固定条件过滤，高级筛选适合精确组合。",
+        "万象（COSMOS / AISOC）的字段级检索语法未公开，本平台条目仅覆盖全悉。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
+      ]
+    },
+    {
+      "id": "h3c",
+      "name": "新华三 SecCenter CSAP",
+      "vendor": "新华三",
+      "kind": "situation",
+      "color": "#7d9b76",
+      "docUrl": "https://www.h3c.com/cn/d_202204/1580411_30005_0.htm",
+      "syntax": "\"192.0.2.10\" AND \"192.0.2.?\"",
+      "summary": "新华三 SecCenter CSAP 日志中心的搜索框支持不指定字段检索（全文，需双引号）与指定字段检索，另提供“新增过滤条件”表单筛选；支持 ? 与 * 通配符，多条件用大写 AND 连接。",
+      "operators": [
+        { "op": "\"\"", "desc": "不指定字段检索时，输入内容必须用双引号包裹" },
+        { "op": "?", "desc": "通配符，匹配一个字符" },
+        { "op": "*", "desc": "通配符，匹配任意个字符" },
+        { "op": "AND", "desc": "逻辑与（必须大写）" }
+      ],
+      "fields": [],
+      "tips": [
+        "不指定字段检索时必须加双引号，如 \"192.0.2.10\"，否则按普通关键字处理。",
+        "数值类型的查找项（如端口号）不支持通配符，必须填写精确值。",
+        "多个条件用大写 AND 连接，小写可能不生效。",
+        "时间类字段的过滤条件需填写 Unix 时间戳。",
+        "不同版本可检索字段不同，字段名请在“新增过滤条件”下拉中选择后填写，本平台未固定字段名。",
         "示例 IP 均为文档保留地址，请替换为实际排查目标。"
       ]
     },

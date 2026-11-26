@@ -1,0 +1,123 @@
+{
+  "platform": "sangfor",
+  "version": 1,
+  "categories": ["常用模板", "日志筛选", "IP 与资产", "自定义组合"],
+  "notice": "深信服 SIP / SIP-Logger 各版本的可检索字段与检索方式存在差异。以下语法依据官方“日志检索指导书”整理（支持“字段名:值”精准检索、AND / OR 组合、引号全文检索、~ 模糊与 ? 通配），示例 IP 均为文档保留地址。源 / 目的 IP 与端口的字段名在不同版本中可能不同（如 src_ip、dst_ip、src_port、dst_port），使用前请在平台字段字典或“重点字段”中确认。",
+  "items": [
+    {
+      "id": "sangfor-src-ip",
+      "title": "按源 IP 精准检索",
+      "category": "常用模板",
+      "code": "src_ip:192.0.2.10",
+      "desc": "指定字段模式下的基础写法：字段名:值。适合从告警或事件直接下钻到某个来源地址的日志。",
+      "tags": ["src_ip", "字段检索"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-src-to-dst",
+      "title": "源 IP 访问指定端口",
+      "category": "常用模板",
+      "code": "src_ip:198.51.100.20 AND dst_port:80",
+      "desc": "多个字段用 AND 组合，缩小到某个外部地址访问 Web 端口的日志范围。",
+      "tags": ["src_ip", "dst_port", "AND"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-dev-syslog",
+      "title": "指定设备与日志关键字",
+      "category": "日志筛选",
+      "code": "dev_id:\"192.0.2.5_1518\" AND syslog_message:\"加密操作\"",
+      "desc": "dev_id 用于定位日志来源设备，值含下划线等特殊字符时用双引号包裹；syslog_message 匹配日志正文关键字。",
+      "tags": ["dev_id", "syslog_message", "双引号"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-fulltext",
+      "title": "全文检索关键字",
+      "category": "日志筛选",
+      "code": "\"加密操作\"",
+      "desc": "不指定字段时使用全文检索，直接输入关键词并加双引号，系统在所有字段中模糊匹配。",
+      "tags": ["全文检索", "双引号"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-fuzzy",
+      "title": "模糊匹配日志正文",
+      "category": "日志筛选",
+      "code": "\"~密操作\"",
+      "desc": "在值前加 ~ 表示模糊匹配，适合只记得部分内容（如“密操作”）的情况。",
+      "tags": ["模糊", "~"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-wildcard",
+      "title": "通配符匹配单个字符",
+      "category": "日志筛选",
+      "code": "\"?密操作\"",
+      "desc": "? 匹配一个字符，可覆盖“加密操作”“解密操作”等写法差异。",
+      "tags": ["通配符", "?"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-or-ip",
+      "title": "多个源 IP 组合",
+      "category": "IP 与资产",
+      "code": "src_ip:192.0.2.10 OR src_ip:192.0.2.11",
+      "desc": "同一字段的多个取值用 OR 连接，适合同一批次地址的合并排查。",
+      "tags": ["OR", "src_ip"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-dst-ssh",
+      "title": "目的地址与端口组合",
+      "category": "IP 与资产",
+      "code": "dst_ip:192.0.2.10 AND dst_port:22",
+      "desc": "聚焦访问内网主机的 SSH 行为，便于核对异常登录来源。",
+      "tags": ["dst_ip", "dst_port"],
+      "vars": [],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-var-combo",
+      "title": "源 IP 与端口变量组合",
+      "category": "自定义组合",
+      "code": "src_ip:{{ip}} AND dst_port:{{port}}",
+      "desc": "把地址与端口抽成变量，应急时只需替换两个值即可复用。",
+      "tags": ["变量", "组合"],
+      "vars": [
+        { "name": "ip", "label": "源 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" },
+        { "name": "port", "label": "目的端口", "placeholder": "443", "example": "443" }
+      ],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    },
+    {
+      "id": "sangfor-var-keyword",
+      "title": "全文关键词变量",
+      "category": "自定义组合",
+      "code": "\"{{keyword}}\"",
+      "desc": "把检索关键词做成变量，便于在告警名称、操作类型等场景间快速切换。",
+      "tags": ["变量", "全文检索"],
+      "vars": [
+        { "name": "keyword", "label": "关键词", "placeholder": "暴力破解", "example": "暴力破解" }
+      ],
+      "source": "依据官方日志检索指导书整理",
+      "risk": "safe"
+    }
+  ]
+}

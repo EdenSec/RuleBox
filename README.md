@@ -35,12 +35,12 @@
 
 **RuleBox 把这些变成了一个可搜索、可筛选、可变量填充的面板** — 装到 Chrome / Edge 里，按一下快捷键就弹出来，搜一下、填变量、点复制，直接粘到测试工具里。
 
-- 🗂️ **14 个语法库**：11 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / Alpha）+ Google / 百度 + 常用命令行工具
+- 🗂️ **16 个语法库**：13 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / 深信服 SIP / 长亭全悉 T-Answer / 新华三 SecCenter CSAP）+ Google / 百度 + 常用命令行工具
 - 💣 **19 类安全测试 Payload / 252 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
 - 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
-目前内置 **765 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+目前内置 **791 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
 
 ---
 
@@ -330,8 +330,7 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 ## 📖 数据来源与免责声明
 
 - 语法与字段依据各平台**公开文档**与公开技术资料整理，条目内标注 `source` 来源；平台语法可能随官方改版而变化，欢迎纠错
-- Alpha 态势感知为私有部署产品，字段参考通用模式整理，不同版本可能存在差异，示例值均为**通用占位**
-- 奇安信天眼、安恒 AiLPHA、华为云安全云脑的字段与运算符依据公开技术资料整理，不同版本、不同数据源的可检索字段存在差异，示例 IP 均为文档保留地址，实际以平台帮助文档为准
+- 奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉、新华三 SecCenter CSAP 的字段与运算符依据公开技术资料/官方手册整理，不同版本、不同数据源的可检索字段存在差异，示例 IP 均为文档保留地址，实际以平台帮助文档为准
 - 本插件提供语法与 Payload 的速查、复制、生成与样本导出能力，所有内容仅供**已授权的安全测试与防御研究**使用。使用者在未授权目标上使用相关内容所产生的一切后果自行承担。
 
 ---

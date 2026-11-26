@@ -66,27 +66,27 @@
         {
           "id": "soc-response-200",
           "title": "查询响应码 200 的告警",
-          "text": "帮我生成 Alpha 态势感知查询语句：查询响应码为 200 的告警，同时排除 alarmName 为 rule-a、rule-b、rule-c 的记录，并排除目标地址 192.0.2.10。"
+          "text": "帮我生成 安恒 AiLPHA 态势感知查询语句：查询响应码为 200 的告警，同时排除 alarmName 为 rule-a、rule-b、rule-c 的记录，并排除目标地址 192.0.2.10。"
         },
         {
           "id": "soc-high-severity",
           "title": "查询中高危未处理告警",
-          "text": "帮我生成 Alpha 态势感知查询语句：查询方向为 10、威胁等级为 Medium 或 High、且 alarmStatus 不等于 processed 的告警。"
+          "text": "帮我生成 安恒 AiLPHA 态势感知查询语句：查询方向为 10、威胁等级为 Medium 或 High、且 alarmStatus 不等于 processed 的告警。"
         },
         {
           "id": "soc-ok-result",
           "title": "查询结果为 OK 的攻击告警",
-          "text": "帮我生成 Alpha 态势感知查询语句：查询 alarmResults 为 OK 且方向为 10 的中高危告警，排除常见噪声告警名。"
+          "text": "帮我生成 安恒 AiLPHA 态势感知查询语句：查询 alarmResults 为 OK 且方向为 10 的中高危告警，排除常见噪声告警名。"
         },
         {
           "id": "soc-unknown",
           "title": "查询结果未知的告警",
-          "text": "帮我生成 Alpha 态势感知查询语句：查询 alarmResults 为 UNKNOWN 或 OK、响应码 200、方向为 10 的告警，排除噪声告警名。"
+          "text": "帮我生成 安恒 AiLPHA 态势感知查询语句：查询 alarmResults 为 UNKNOWN 或 OK、响应码 200、方向为 10 的告警，排除噪声告警名。"
         },
         {
           "id": "soc-ip",
           "title": "查询指定 IP 相关告警",
-          "text": "帮我生成 Alpha 态势感知查询语句：查询源地址或目的地址为 192.0.2.10 的全部告警，并按威胁等级降序排列。"
+          "text": "帮我生成 安恒 AiLPHA 态势感知查询语句：查询源地址或目的地址为 192.0.2.10 的全部告警，并按威胁等级降序排列。"
         }
       ]
     },
