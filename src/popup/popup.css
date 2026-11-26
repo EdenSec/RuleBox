@@ -880,6 +880,22 @@ body.is-fluid {
   text-decoration: underline;
 }
 
+/* 真实 URL：标题多为站名，域名与路径只能从这一行读到，必须完整显示、可点开、可选中复制 */
+.rb-cyber-item-url {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--rb-mono);
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: var(--rb-fg);
+  overflow-wrap: anywhere;
+}
+
+.rb-cyber-item-url:hover {
+  color: var(--rb-accent);
+  text-decoration: underline;
+}
+
 .rb-cyber-item-meta,
 .rb-cyber-item-sub {
   margin: 3px 0 0;

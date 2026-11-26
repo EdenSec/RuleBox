@@ -2176,8 +2176,25 @@ function cyberGroupNode(group) {
   return el('section', { className: 'rb-cyber-group' }, [head, body]);
 }
 
+/**
+ * 取 URL 的主机名（去掉 www. 前缀）用于对比域名。
+ * 解析失败时返回空字符串，调用方按“URL 不可比较”处理即可。
+ */
+function cyberUrlHost(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./i, '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
 function cyberItemNode(item) {
   const titleText = item.title || item.domain || item.ip || '未命名资产';
+  const url = typeof item.url === 'string' ? item.url.trim() : '';
+  // 标题常常是中文站名（如“某某浏览器”），看不出真实域名与路径；
+  // 而确认资产是否在收录范围时先要看 URL，所以 URL 必须单独占一行，
+  // 不能只塞进链接的 title 属性里。
+  const urlHost = cyberUrlHost(url);
   const title = item.url
     ? el('a', {
       className: 'rb-cyber-item-title',
@@ -2191,11 +2208,29 @@ function cyberItemNode(item) {
     })
     : el('span', { className: 'rb-cyber-item-title', text: titleText });
 
+  const urlNode = url
+    ? el('a', {
+      className: 'rb-cyber-item-url',
+      text: url,
+      attrs: {
+        href: url,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title: `在新标签页打开 ${url}`
+      }
+    })
+    : null;
+
   const metaParts = [
     item.ip ? `${item.ip}${item.port ? `:${item.port}` : ''}` : '',
-    item.protocol,
+    // 协议已经体现在 URL 里，有 URL 时不再重复展示
+    url ? '' : item.protocol,
     item.status ? `HTTP ${item.status}` : '',
-    item.domain && item.domain !== item.ip ? item.domain : '',
+    item.domain &&
+    item.domain !== item.ip &&
+    item.domain.toLowerCase() !== urlHost
+      ? item.domain
+      : '',
     item.server
   ].filter(Boolean);
 
@@ -2226,6 +2261,7 @@ function cyberItemNode(item) {
   return el('article', { className: 'rb-cyber-item' }, [
     el('div', { className: 'rb-cyber-item-main' }, [
       title,
+      urlNode,
       metaParts.length ? el('p', { className: 'rb-cyber-item-meta', text: metaParts.join(' · ') }) : null,
       subParts.length ? el('p', { className: 'rb-cyber-item-sub', text: subParts.join(' · ') }) : null
     ]),
