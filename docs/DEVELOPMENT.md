@@ -1,4 +1,4 @@
-﻿# RuleBox 开发与维护文档
+# RuleBox 开发与维护文档
 
 > 本文档面向后续所有开发 / 修复 / 扩展 RuleBox 的开发者与贡献者。
 > **核心约定：任何开发动手之前，先通读本文档对应章节，并在代码库中检索是否已存在同类实现，禁止重复造轮子**（禁止新开同功能组件、同义字段、重复端点/存储键/映射）。若发现既有实现与期望不一致，优先修正旧实现并同步本文档，而不是另起一套。
@@ -255,7 +255,8 @@ src\
 `rb.settings` 结构（`DEFAULT_SETTINGS`，`mergeSettings` 做深合并保证旧配置兼容）：
 
 - `theme`：`auto | dark | light`
-- `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`openMode`、`showRiskBadges`、`copyFormat`、`showDesc`
+- `ui`：`closeAfterCopy`、`recentsLimit`、`frequentFirst`、`defaultTab`、`openMode`、`showRiskBadges`、`copyFormat`、`showDesc`
+  - `frequentFirst`：列表“常用优先”排序（默认开启）。按 `rb.recents` 的复制次数降序、次数相同按最近使用时间降序排列，未使用过的条目保持数据文件原有顺序；搜索时仍按匹配度排序，不掺入使用次数。关闭后完全保留原有顺序。
   - `openMode`：`last`（默认，跟随 `rb.lastTab`）| `fixed`（固定打开 `defaultTab`）；设置页只有一个下拉，选“上次使用”写 `last`，选具体标签页写 `fixed` + `defaultTab`。`mergeSettings` 会校验两者取值。
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
 - `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次使用的平台，空数组表示还没有记录，面板会回退到已配置 Key 的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）

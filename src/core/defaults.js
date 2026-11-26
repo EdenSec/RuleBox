@@ -31,6 +31,8 @@ export const DEFAULT_SETTINGS = {
     closeAfterCopy: true,
     // 最近使用保留条数
     recentsLimit: 20,
+    // 列表“常用优先”排序：复制次数越多越靠前，未使用过的条目保持原有顺序
+    frequentFirst: true,
     // 默认打开的标签页：snippets | payloads | cyber | ai
     defaultTab: 'snippets',
     // 打开方式：last = 跟随上次使用；fixed = 固定打开 defaultTab
@@ -150,6 +152,7 @@ export function mergeSettings(input) {
   const TAB_IDS = ['snippets', 'payloads', 'cyber', 'ai'];
   merged.ui.defaultTab = TAB_IDS.includes(merged.ui.defaultTab) ? merged.ui.defaultTab : 'snippets';
   merged.ui.openMode = merged.ui.openMode === 'fixed' ? 'fixed' : 'last';
+  merged.ui.frequentFirst = merged.ui.frequentFirst !== false;
 
   // 测绘查询：逐项校验，避免旧配置或手改 JSON 把开关写成字符串、把平台写成不存在的 ID
   const search = input.search && typeof input.search === 'object' ? input.search : {};

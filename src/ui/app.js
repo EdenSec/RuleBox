@@ -712,8 +712,33 @@ function applyFavorites(list) {
   return list.filter((item) => state.favorites.has(itemKey(item)));
 }
 
+/**
+ * 常用优先排序。
+ * 复制次数多的条目往上排，次数相同按最近使用时间倒序；从没用过的条目保持
+ * 数据文件里的原有顺序（稳定排序，不靠随机打乱）。搜索时以匹配度为准，
+ * 不掺入使用次数，避免不相关条目被“用得多”顶上来。
+ * 关闭 settings.ui.frequentFirst 后完全保留原有顺序。
+ */
+function sortByUsage(list) {
+  if (!state.settings.ui.frequentFirst) return list;
+  if (state.query.trim()) return list;
+  if (!state.recents.length || list.length < 2) return list;
+
+  const stats = new Map(state.recents.map((entry) => [entry.key, entry]));
+  return list
+    .map((item, index) => ({ item, index, stat: stats.get(itemKey(item)) }))
+    .sort((a, b) => {
+      const countDiff = (b.stat?.count || 0) - (a.stat?.count || 0);
+      if (countDiff) return countDiff;
+      const timeDiff = (b.stat?.lastUsed || 0) - (a.stat?.lastUsed || 0);
+      if (timeDiff) return timeDiff;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.item);
+}
+
 function visibleSnippets() {
-  return applyFavorites(filterByCategory(snippetScope(), state.snippetCategory));
+  return sortByUsage(applyFavorites(filterByCategory(snippetScope(), state.snippetCategory)));
 }
 
 function renderSnippetList() {
@@ -928,7 +953,7 @@ function payloadScope() {
 }
 
 function visiblePayloads() {
-  return applyFavorites(filterByCategory(payloadScope(), state.payloadCategory));
+  return sortByUsage(applyFavorites(filterByCategory(payloadScope(), state.payloadCategory)));
 }
 
 function renderPayloads() {

@@ -1282,6 +1282,7 @@ function fillAll() {
   $('#opt-default-tab').value = settings.ui.openMode === 'fixed' ? settings.ui.defaultTab : 'last';
   $('#opt-copy-format').value = settings.ui.copyFormat;
   $('#opt-recents-limit').value = String(settings.ui.recentsLimit);
+  $('#opt-frequent-first').checked = settings.ui.frequentFirst !== false;
   $('#opt-close-after-copy').checked = Boolean(settings.ui.closeAfterCopy);
   $('#opt-show-desc').checked = Boolean(settings.ui.showDesc);
   $('#opt-show-risk').checked = Boolean(settings.ui.showRiskBadges);
@@ -1368,6 +1369,7 @@ function bindGeneral() {
   });
 
   bindCheckbox('#opt-close-after-copy', (draft, checked) => { draft.ui.closeAfterCopy = checked; });
+  bindCheckbox('#opt-frequent-first', (draft, checked) => { draft.ui.frequentFirst = checked; });
   bindCheckbox('#opt-show-desc', (draft, checked) => { draft.ui.showDesc = checked; });
   bindCheckbox('#opt-show-risk', (draft, checked) => { draft.ui.showRiskBadges = checked; });
   bindCheckbox('#opt-side-panel', (draft, checked) => { draft.features.sidePanel = checked; }, () => notifyBackground());
