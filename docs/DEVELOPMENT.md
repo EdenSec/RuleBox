@@ -1,4 +1,4 @@
-# RuleBox 开发与维护文档
+﻿# RuleBox 开发与维护文档
 
 > 本文档面向后续所有开发 / 修复 / 扩展 RuleBox 的开发者与贡献者。
 > **核心约定：任何开发动手之前，先通读本文档对应章节，并在代码库中检索是否已存在同类实现，禁止重复造轮子**（禁止新开同功能组件、同义字段、重复端点/存储键/映射）。若发现既有实现与期望不一致，优先修正旧实现并同步本文档，而不是另起一套。
@@ -419,7 +419,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 3. `manifest.json` 的 `host_permissions` 增加该平台 API 域名（端点固定，不接受运行时传入）。
 4. 无需改 UI：平台选择、设置页密钥行、分页、复制与跳转都从注册表自动生成。
 
-已在用的平台：FOFA、Hunter 鹰图、Quake 360、ZoomEye、Shodan、0.zone、DayDayMap。ZoomEye 使用 `api.zoomeye.ai/v2/search`（`API-KEY` 头 + `qbase64`）；Quake 使用旧版 `X-QuakeToken` 端点，若账号已切换到新的 APPID/SECRET 签名接口，需要在此扩展鉴权方式；0.zone 将 `zone_key_id` 放在 JSON body，并按语法中的模块独有字段推断 `query_type`（site / domain / email / app / code），识别不到时按 site；DayDayMap 使用 `api-key` 头且 `keyword` 为 Base64。
+已在用的平台：FOFA、Hunter 鹰图、Quake 360、ZoomEye、Shodan、0.zone、DayDayMap。ZoomEye 使用 `api.zoomeye.org/v2/search`（国内账号；海外账号为 `api.zoomeye.ai`，跨区调用会返回区域不可用；`API-KEY` 头 + `qbase64`）；Quake 使用旧版 `X-QuakeToken` 端点，若账号已切换到新的 APPID/SECRET 签名接口，需要在此扩展鉴权方式；0.zone 将 `zone_key_id` 放在 JSON body，并按语法中的模块独有字段推断 `query_type`（site / domain / email / app / code），识别不到时按 site；DayDayMap 使用 `api-key` 头且 `keyword` 为 Base64。
 
 非 Web 资产（SSH / Redis / MySQL 等）不会拼出 `http://ip:port` 跳转链接，避免点开必然报错；复制时仍回退为 `ip:port`，逻辑在 `assetUrl()` / `isWebAsset()`。
 

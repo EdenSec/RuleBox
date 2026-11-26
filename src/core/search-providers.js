@@ -38,7 +38,7 @@ export const SEARCH_PROVIDERS = [
     vendor: '白帽汇',
     color: '#4c8dff',
     keyUrl: 'https://fofa.info/userInfo',
-    docUrl: 'https://fofa.info/',
+    docUrl: 'https://fofa.info/api/',
     placeholder: 'domain="example.com"',
     keyHint: '个人中心 → API 管理'
   },
@@ -48,7 +48,7 @@ export const SEARCH_PROVIDERS = [
     vendor: '奇安信',
     color: '#f0a020',
     keyUrl: 'https://hunter.qianxin.com/',
-    docUrl: 'https://hunter.qianxin.com/',
+    docUrl: 'https://hunter.qianxin.com/home/helpCenter',
     placeholder: 'domain="example.com"',
     keyHint: '个人中心 → API 管理'
   },
@@ -67,8 +67,9 @@ export const SEARCH_PROVIDERS = [
     name: 'ZoomEye',
     vendor: '知道创宇',
     color: '#a06bff',
-    keyUrl: 'https://www.zoomeye.ai/',
-    docUrl: 'https://www.zoomeye.ai/',
+    // ZoomEye 按区域拆分服务：国内账号用 .org，海外账号用 .ai，跨区调用会返回区域不可用
+    keyUrl: 'https://www.zoomeye.org/profile',
+    docUrl: 'https://www.zoomeye.org/',
     placeholder: 'domain="example.com"',
     keyHint: '个人中心 → API Key'
   },
@@ -387,7 +388,7 @@ export function buildProviderRequest(providerId, { query, page, size, apiKey }) 
     }
     case 'zoomeye': {
       return {
-        url: 'https://api.zoomeye.ai/v2/search',
+        url: 'https://api.zoomeye.org/v2/search',
         method: 'POST',
         headers: {
           'API-KEY': key,
