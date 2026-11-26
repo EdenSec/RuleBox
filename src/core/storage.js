@@ -5,6 +5,7 @@
  */
 
 import { STORAGE_KEYS, DEFAULT_SETTINGS, DEFAULT_CUSTOM, DEFAULT_USAGE, mergeSettings } from './defaults.js';
+import { SEARCH_PAGE_SIZES } from './search-providers.js';
 
 const hasChromeStorage = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
 
@@ -149,6 +150,89 @@ export async function getRecents() {
 export async function setRecents(list) {
   const value = normalizeRecents(list);
   await setItems({ [STORAGE_KEYS.recents]: value });
+  return value;
+}
+
+/* ------------------------------------------------------------------ */
+/* 聚合查询会话快照                                                     */
+/* ------------------------------------------------------------------ */
+
+const CYBER_SESSION_MAX_QUERY = 2000;
+const CYBER_SESSION_MAX_GROUPS = 7;
+const CYBER_SESSION_MAX_ITEMS = 50;
+
+/** 结果条目只保留展示需要的字段，并限制长度，避免快照无限膨胀 */
+function normalizeCyberItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const text = (value, limit = 300) => (typeof value === 'string' ? value.slice(0, limit) : '');
+  const url = text(raw.url, 2000);
+  const item = {
+    title: text(raw.title, 300),
+    url: /^https?:\/\//i.test(url) ? url : '',
+    domain: text(raw.domain, 300),
+    ip: text(raw.ip, 64),
+    port: Number.isFinite(Number(raw.port)) && Number(raw.port) > 0 ? Number(raw.port) : '',
+    protocol: text(raw.protocol, 32),
+    status: Number.isFinite(Number(raw.status)) && Number(raw.status) > 0 ? Number(raw.status) : '',
+    server: text(raw.server, 200),
+    location: text(raw.location, 200),
+    updatedAt: text(raw.updatedAt, 40)
+  };
+  return item.title || item.url || item.ip || item.domain ? item : null;
+}
+
+function normalizeCyberSession(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const query = typeof raw.query === 'string' ? raw.query.trim().slice(0, CYBER_SESSION_MAX_QUERY) : '';
+  const providers = Array.isArray(raw.providers)
+    ? [...new Set(raw.providers.filter((id) => typeof id === 'string' && id))].slice(0, CYBER_SESSION_MAX_GROUPS)
+    : [];
+  if (!query || !providers.length) return null;
+
+  const results = Array.isArray(raw.results)
+    ? raw.results.slice(0, CYBER_SESSION_MAX_GROUPS).map((group) => {
+      if (!group || typeof group !== 'object') return null;
+      const provider = typeof group.provider === 'string' ? group.provider : '';
+      if (!provider) return null;
+      const items = Array.isArray(group.items)
+        ? group.items.slice(0, CYBER_SESSION_MAX_ITEMS).map(normalizeCyberItem).filter(Boolean)
+        : [];
+      return {
+        provider,
+        ok: group.ok === true,
+        total: Number(group.total) > 0 ? Math.floor(Number(group.total)) : 0,
+        page: Number(group.page) > 0 ? Math.floor(Number(group.page)) : 1,
+        error: typeof group.error === 'string' ? group.error.slice(0, 300) : '',
+        items
+      };
+    }).filter(Boolean)
+    : [];
+
+  const size = Number(raw.pageSize);
+  return {
+    query,
+    providers,
+    page: Number(raw.page) > 0 ? Math.floor(Number(raw.page)) : 1,
+    pageSize: SEARCH_PAGE_SIZES.includes(size) ? size : SEARCH_PAGE_SIZES[1],
+    results,
+    savedAt: Number(raw.savedAt) > 0 ? Number(raw.savedAt) : Date.now()
+  };
+}
+
+/** 读取上次聚合查询的快照（无记录或格式非法时返回 null） */
+export async function getCyberSession() {
+  const data = await getItems(STORAGE_KEYS.cyberSession);
+  return normalizeCyberSession(data[STORAGE_KEYS.cyberSession]);
+}
+
+/** 保存聚合查询快照；传入空值时删除该键 */
+export async function setCyberSession(session) {
+  const value = normalizeCyberSession(session);
+  if (!value) {
+    await removeItems(STORAGE_KEYS.cyberSession);
+    return null;
+  }
+  await setItems({ [STORAGE_KEYS.cyberSession]: value });
   return value;
 }
 

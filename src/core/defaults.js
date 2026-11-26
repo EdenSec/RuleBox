@@ -16,7 +16,9 @@ export const STORAGE_KEYS = {
   aiHistory: 'rb.aiHistory',
   usage: 'rb.usage',
   // 右键菜单“搜索”传递的待搜索关键词（一次性，面板消费后即删除）
-  pendingSearch: 'rb.pendingSearch'
+  pendingSearch: 'rb.pendingSearch',
+  // 聚合查询会话快照（语法、平台、页码、结果），重开面板时恢复，避免重复消耗额度
+  cyberSession: 'rb.cyberSession'
 };
 
 export const DEFAULT_SETTINGS = {

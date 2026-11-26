@@ -26,6 +26,8 @@ import {
   onStorageChanged,
   getItems,
   removeItems,
+  getCyberSession,
+  setCyberSession,
   getCustom,
   setCustom,
   getHidden,
@@ -106,7 +108,10 @@ const state = {
     loading: false,
     results: null,
     pickerOpen: false,
-    guideTimer: null
+    guideTimer: null,
+    // 结果来自上次会话快照时为 true，状态栏会标注“上次查询”，避免误以为是刚查的
+    restored: false,
+    savedAt: 0
   }
 };
 
@@ -184,6 +189,11 @@ async function init() {
     : [firstConfigured?.id || SEARCH_PROVIDERS[0].id];
   state.cyber.multi = state.cyber.providers.length > 1;
   state.cyber.pageSize = state.settings.search.pageSize;
+
+  // 恢复上次查询会话：语法、平台、页码与结果一并回来，
+  // 免得用户点击结果跳转后重开面板还要再查一遍、白耗额度
+  const cyberSession = await getCyberSession();
+  if (cyberSession) applyCyberSession(cyberSession);
 
   bindHeader();
   bindSearch();
@@ -1597,7 +1607,8 @@ function renderCyberStatus() {
     const provider = getSearchProvider(group.provider);
     return `${provider?.name || group.provider} ${formatCyberCount(group.total)} 条`;
   });
-  node.textContent = `${summary.length ? `查询完成：${summary.join(' · ')}` : '查询完成：没有平台返回结果'}${
+  const prefix = state.cyber.restored ? `上次查询（${formatSessionStamp(state.cyber.savedAt)}）：` : '查询完成：';
+  node.textContent = `${summary.length ? `${prefix}${summary.join(' · ')}` : `${prefix}没有平台返回结果`}${
     failed ? ` · ${failed} 个平台失败` : ''
   }`;
 }
@@ -1643,6 +1654,9 @@ async function runCyberSearch({ page = 1 } = {}) {
     state.cyber.results = response;
     state.cyber.page = response.page || state.cyber.page;
     if (response.size) state.cyber.pageSize = response.size;
+    state.cyber.restored = false;
+    // 落一份快照：popup 关闭后重新打开仍能看到这批结果，不必重复查询
+    void saveCyberSession();
   } catch (error) {
     state.cyber.results = {
       error: error?.message || '查询失败，请稍后重试',
@@ -1654,6 +1668,58 @@ async function runCyberSearch({ page = 1 } = {}) {
     const holder = $('#cyber-results');
     if (holder) holder.scrollTop = 0;
   }
+}
+
+/** 把会话快照套用到当前状态（语法、平台、页码、结果） */
+function applyCyberSession(session) {
+  if (!session) return;
+  const providers = session.providers.filter((id) => SEARCH_PROVIDERS.some((provider) => provider.id === id));
+  if (!providers.length) return;
+  state.cyber.query = session.query;
+  state.cyber.providers = providers;
+  state.cyber.multi = providers.length > 1;
+  state.cyber.page = session.page || 1;
+  if (SEARCH_PAGE_SIZES.includes(session.pageSize)) state.cyber.pageSize = session.pageSize;
+  state.cyber.savedAt = session.savedAt || 0;
+
+  const input = $('#cyber-query');
+  if (input) input.value = session.query;
+
+  if (session.results?.length) {
+    state.cyber.results = {
+      ok: true,
+      page: state.cyber.page,
+      size: state.cyber.pageSize,
+      results: session.results
+    };
+    state.cyber.restored = true;
+  }
+}
+
+/** 保存当前查询快照；失败时静默（不影响查询结果展示） */
+async function saveCyberSession() {
+  const data = state.cyber.results;
+  if (!data || data.error) return;
+  try {
+    const saved = await setCyberSession({
+      query: state.cyber.query,
+      providers: state.cyber.providers,
+      page: state.cyber.page,
+      pageSize: state.cyber.pageSize,
+      results: Array.isArray(data.results) ? data.results : [],
+      savedAt: Date.now()
+    });
+    if (saved) state.cyber.savedAt = saved.savedAt;
+  } catch {
+    /* 存储失败不影响本次查询 */
+  }
+}
+
+/** “MM-DD HH:mm”时间戳，用于标注恢复的结果来自上次查询 */
+function formatSessionStamp(time) {
+  const date = new Date(Number(time) || Date.now());
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function renderCyber() {

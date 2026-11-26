@@ -336,6 +336,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 ```
 
 - 平台默认值：`lastProviders` 有记录就恢复；没有记录时优先已配置 Key 的平台，最后才回退 FOFA。`lastProviders` 默认为空数组，避免“首次打开被写成 FOFA”掩盖无历史状态。
+- 会话快照：每次查询成功写入 `rb.cyberSession`（语法、平台、页码、每页条数、结果分组），面板初始化时恢复并在状态栏标注「上次查询（时间）」。popup 关闭会销毁页面内存，没有快照就只能重查、白耗额度；快照只存展示字段（最多 7 个平台 × 50 条），不含任何 Key，`resetAll` 会一并清除。
 - 设置页每个平台提供「测试连接」（`rb:cyber-test`）：SW 只从设置读取 Key，同一平台 3 秒冷却；FOFA / Shodan 走账号信息接口（不消耗额度），其余平台用一次最小检索验证。
 
 - 平台元数据、请求构造与响应解析全部在 `src/core/search-providers.js`，UI 不拼 URL、不解析平台响应；新增平台只改这一个文件（并在 `manifest.json` 补 host 权限）。
