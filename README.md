@@ -14,20 +14,6 @@
 
 > 如果 RuleBox 对你有帮助，欢迎点一个 Star；发现语法过期或有更好的写法，欢迎提 Issue / PR。
 
-## 📑 目录
-
-- [这是什么](#-这是什么)
-- [界面预览](#preview)
-- [快速安装](#-快速安装)
-- [快捷键](#shortcuts)
-- [功能一览](#-功能一览)
-- [聚合查询配置](#cyber-config)
-- [AI 配置](#-ai-配置可选)
-- [权限与隐私](#-权限与隐私)
-- [FAQ](#-faq)
-- [帮助、反馈与贡献](#-帮助反馈与贡献)
-- [数据来源与免责声明](#-数据来源与免责声明)
-
 ---
 
 ## ✨ 这是什么？
@@ -37,11 +23,11 @@
 **RuleBox 把这些变成了一个可搜索、可筛选、可变量填充的面板** — 装到 Chrome / Edge 里，按一下快捷键就弹出来，搜一下、填变量、点复制，直接粘到测试工具里。
 
 - 🗂️ **16 个语法库**：13 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / 深信服 SIP / 长亭全悉 T-Answer / 新华三 SecCenter CSAP）+ Google / 百度 + 常用命令行工具
-- 💣 **19 类安全测试 Payload / 252 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
+- 💣 **19 类安全测试 Payload / 267 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
 - 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页、可导出
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
-目前内置 **802 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+目前内置 **802 条语法、267 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
 
 ### v2.0 新增
 
