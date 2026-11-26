@@ -54,15 +54,16 @@
   <img src="assets/demo-tabswitch.gif" alt="四个标签页切换演示" width="420">
 </p>
 
-<br>
-
-### 演示：搜索 → 填变量 → 复制
-
-搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制。
-
-<p align="center">
-  <img src="assets/demo-varfill.gif" alt="搜索条目、填写变量并一键复制的完整流程" width="420">
-</p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="assets/screenshot-popup-dark.png" alt="语法库" width="200"><br><sub>语法库</sub></td>
+    <td align="center"><img src="assets/screenshot-payloads-dark.png" alt="Payload 库" width="200"><br><sub>Payload 库</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/screenshot-cyber-dark.png" alt="聚合查询" width="200"><br><sub>聚合查询</sub></td>
+    <td align="center"><img src="assets/screenshot-ai-dark.png" alt="AI 助手" width="200"><br><sub>AI 助手</sub></td>
+  </tr>
+</table>
 
 <br>
 
@@ -84,6 +85,10 @@
   <img src="assets/demo-payload-scroll.gif" alt="Payload 库 · 向下滚动浏览更多条目" width="420">
 </p>
 
+<p align="center">
+  <img src="assets/screenshot-payloads-dark.png" alt="Payload 库 · 静态界面" width="420">
+</p>
+
 <br>
 
 ### 聚合查询
@@ -102,7 +107,11 @@
 
 ### 变量填充
 
-带变量的条目会弹出填写框，下方实时预览填充后的最终语句。
+搜索语法 → 点复制 → 填写 `example.com` → 预览确认 → 一键复制；带变量的条目会弹出填写框，下方实时预览填充后的最终语句。
+
+<p align="center">
+  <img src="assets/demo-varfill.gif" alt="搜索条目、填写变量并一键复制的完整流程" width="420">
+</p>
 
 <p align="center">
   <img src="assets/screenshot-varfill-dark.png" alt="变量填充 · 实时预览最终语法" width="420">
