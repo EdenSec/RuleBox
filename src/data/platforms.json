@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-24",
+  "updated": "2026-11-26",
   "notice": "字段与运算符依据各平台公开文档与公开技术资料整理，平台会员等级会影响可用字段，实际以官方控制台为准。",
   "platforms": [
     {
@@ -531,6 +531,125 @@
         "排除类条件较多时，建议把公共排除项抽成固定前缀，便于复用。",
         "direction 等枚举值含义以所在平台的字典为准，本插件仅保留示例。",
         "该平台为私有部署产品，没有公开语法文档，字段与取值请以所在环境的字典和帮助页为准。"
+      ]
+    },
+    {
+      "id": "tianyan",
+      "name": "奇安信天眼",
+      "vendor": "奇安信",
+      "kind": "situation",
+      "color": "#c27c4a",
+      "docUrl": "",
+      "syntax": "sip:192.0.2.10 AND dport:80 AND uri:\"/api\"",
+      "summary": "全流量与告警检索语法，采用“字段:值”形式，逻辑运算符使用大写 AND / OR / NOT；支持通配符、范围、数值比较与模糊匹配，具体以当前版本字段字典为准。",
+      "operators": [
+        { "op": ":", "desc": "字段与值连接，如 sip:192.0.2.10" },
+        { "op": "AND", "desc": "逻辑与（大写）" },
+        { "op": "OR", "desc": "逻辑或（大写）" },
+        { "op": "NOT", "desc": "逻辑非（大写）" },
+        { "op": "\"\"", "desc": "值含空格或特殊字符时用双引号包裹" },
+        { "op": "*", "desc": "通配符，部分字段支持" },
+        { "op": "[ TO ]", "desc": "范围匹配，如 sport:[1024 TO 65535]" },
+        { "op": "> >= < <=", "desc": "数值比较，适用于端口、状态码等字段" },
+        { "op": "~", "desc": "模糊匹配，支持情况按版本确认" }
+      ],
+      "fields": [
+        { "key": "sip", "desc": "源 IP 地址" },
+        { "key": "dip", "desc": "目的 IP 地址" },
+        { "key": "sport", "desc": "源端口" },
+        { "key": "dport", "desc": "目的端口" },
+        { "key": "proto", "desc": "协议，如 TCP / UDP" },
+        { "key": "uri", "desc": "请求 URI / 路径" },
+        { "key": "method", "desc": "HTTP 请求方法" },
+        { "key": "host", "desc": "访问域名 / Host" },
+        { "key": "status", "desc": "HTTP 响应状态码" },
+        { "key": "data", "desc": "请求内容，可用于关键词匹配" }
+      ],
+      "tips": [
+        "逻辑运算符必须大写：AND、OR、NOT。",
+        "值含空格或特殊字符时用双引号包裹，如 uri:\"/api/login\"。",
+        "不同版本（NTA、SDS、态势感知联动）字段与运算符支持存在差异，使用前先在平台查询帮助中确认。",
+        "data 等载荷字段通常受留存周期与权限限制，查询无结果时先确认数据范围。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
+      ]
+    },
+    {
+      "id": "ailpha",
+      "name": "安恒 AiLPHA",
+      "vendor": "安恒信息",
+      "kind": "situation",
+      "color": "#4f9e8f",
+      "docUrl": "",
+      "syntax": "srcAddress == \"192.0.2.10\" AND threatSeverity in [\"High\"]",
+      "summary": "告警与流量检索语法，常用比较符 == / !=，支持 in / notin 列表、contains 包含、exist 存在性判断与 es:all 全字段检索，逻辑运算符为 AND / OR / NOT。",
+      "operators": [
+        { "op": "==", "desc": "等于" },
+        { "op": "!=", "desc": "不等于" },
+        { "op": "in [ ]", "desc": "命中列表中的任一值" },
+        { "op": "notin [ ]", "desc": "排除列表中的全部值" },
+        { "op": "contains", "desc": "字段包含指定关键词" },
+        { "op": "exist", "desc": "字段存在且有值" },
+        { "op": "notexist", "desc": "字段不存在或为空" },
+        { "op": "es:all()", "desc": "全字段关键词检索" },
+        { "op": "> >= < <=", "desc": "数值比较，适用于端口等字段" },
+        { "op": "AND / OR / NOT", "desc": "逻辑运算" },
+        { "op": "()", "desc": "条件分组，明确优先级" }
+      ],
+      "fields": [
+        { "key": "srcAddress", "desc": "源 IP 地址" },
+        { "key": "destAddress", "desc": "目的 IP 地址" },
+        { "key": "srcPort", "desc": "源端口（以平台字典为准）" },
+        { "key": "destPort", "desc": "目的端口" },
+        { "key": "alarmName", "desc": "告警名称" },
+        { "key": "alarmStatus", "desc": "告警处置状态，如 processed" },
+        { "key": "alarmResults", "desc": "告警判定结果，如 OK、UNKNOWN" },
+        { "key": "threatSeverity", "desc": "威胁等级，如 High、Medium、Low" },
+        { "key": "direction", "desc": "流量方向（枚举值以平台字典为准）" },
+        { "key": "responseCode", "desc": "HTTP 响应码" },
+        { "key": "url", "desc": "请求 URL" }
+      ],
+      "tips": [
+        "字符串值用双引号包裹，列表用 in [\"a\",\"b\"] 或 notin [\"a\",\"b\"]。",
+        "contains 适合告警名称、URL 等文本字段的模糊匹配。",
+        "es:all(\"关键词\") 为全字段检索，适合先宽后窄地定位线索。",
+        "字段名与枚举值在不同版本中可能不同，使用前请在平台检索帮助中确认。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
+      ]
+    },
+    {
+      "id": "secmaster",
+      "name": "华为云安全云脑",
+      "vendor": "华为云",
+      "kind": "situation",
+      "color": "#6b8fb5",
+      "docUrl": "",
+      "syntax": "request_method = 'GET' AND status BETWEEN 200 AND 299",
+      "summary": "华为云 SecMaster（安全云脑）检索语法为“字段 操作符 值”，字符串值使用单引号；支持 IN、BETWEEN、LIKE、IS NULL / IS NOT NULL 与 NOT / AND / OR 组合。",
+      "operators": [
+        { "op": "=", "desc": "等于" },
+        { "op": "<>", "desc": "不等于" },
+        { "op": "> >= < <=", "desc": "数值比较" },
+        { "op": "BETWEEN ... AND ...", "desc": "闭区间匹配，如 status BETWEEN 200 AND 299" },
+        { "op": "IN (...)", "desc": "命中列表中的任一值" },
+        { "op": "LIKE", "desc": "模糊匹配，配合 % 使用，如 url LIKE '%/admin%'" },
+        { "op": "IS NULL", "desc": "字段为空" },
+        { "op": "IS NOT NULL", "desc": "字段非空" },
+        { "op": "NOT", "desc": "逻辑非" },
+        { "op": "AND / OR", "desc": "逻辑与 / 逻辑或" },
+        { "op": "()", "desc": "条件分组" }
+      ],
+      "fields": [
+        { "key": "ipList", "desc": "关联 IP 列表，官方示例 ipList = '192.0.2.10'" },
+        { "key": "request_method", "desc": "HTTP 请求方法，如 GET、POST" },
+        { "key": "status", "desc": "HTTP 响应状态码" },
+        { "key": "url", "desc": "请求 URL" }
+      ],
+      "tips": [
+        "字符串值使用单引号：request_method = 'GET'。",
+        "区间查询用 BETWEEN ... AND ...，状态码示例 status BETWEEN 200 AND 299。",
+        "模糊匹配用 LIKE 与 %，如 url LIKE '%login%'。",
+        "不同数据源的可检索字段不同，使用前请在平台检索帮助中确认字段名与类型。",
+        "示例 IP 均为文档保留地址，请替换为实际排查目标。"
       ]
     },
     {

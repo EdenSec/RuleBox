@@ -1,0 +1,145 @@
+{
+  "platform": "ailpha",
+  "version": 1,
+  "categories": ["常用模板", "告警筛选", "IP 与资产", "自定义组合"],
+  "notice": "安恒 AiLPHA 各版本在字段名、枚举值与运算符支持上可能存在差异。以下语法依据公开技术资料整理，IP 均为文档保留地址，使用前请在平台“检索帮助 / 数据字典”中确认；时间范围条件需按平台提供的字段补充。",
+  "items": [
+    {
+      "id": "ailpha-high-unprocessed",
+      "title": "高危未处置告警",
+      "category": "常用模板",
+      "code": "threatSeverity in [\"High\",\"Medium\"] AND alarmStatus != \"processed\"",
+      "desc": "筛选中高危且尚未处置的告警，作为值班巡检的默认视图。",
+      "tags": ["高危", "未处置"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-src-dst",
+      "title": "指定源与目的地址",
+      "category": "常用模板",
+      "code": "srcAddress == \"198.51.100.20\" AND destAddress == \"192.0.2.10\"",
+      "desc": "精确限定源与目的地址，用于应急时确认单条链路的告警。",
+      "tags": ["srcAddress", "destAddress"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-alarm-contains",
+      "title": "告警名称包含关键词",
+      "category": "告警筛选",
+      "code": "alarmName contains \"WebShell\" AND alarmStatus != \"processed\"",
+      "desc": "按告警名称关键词做包含匹配，适合单类告警的专项排查。",
+      "tags": ["alarmName", "contains"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-port-range",
+      "title": "目的端口区间",
+      "category": "告警筛选",
+      "code": "destPort >= 8000 AND destPort <= 9000 AND threatSeverity == \"High\"",
+      "desc": "用数值比较圈定高段业务端口，聚焦对应服务的告警。",
+      "tags": ["destPort", "区间"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-url-contains",
+      "title": "URL 包含接口路径",
+      "category": "告警筛选",
+      "code": "url contains \"/api/\" AND alarmStatus != \"processed\"",
+      "desc": "在 URL 中做包含匹配，快速定位业务接口相关告警。",
+      "tags": ["url", "接口"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-exclude-ip",
+      "title": "排除多个已知地址",
+      "category": "告警筛选",
+      "code": "srcAddress notin [\"192.0.2.10\",\"192.0.2.11\"] AND threatSeverity == \"High\"",
+      "desc": "用 notin 一次排除多个扫描器或内部探测源，降低重复告警干扰。",
+      "tags": ["notin", "降噪"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-result-exist",
+      "title": "判定结果非空",
+      "category": "告警筛选",
+      "code": "alarmResults exist AND alarmStatus != \"processed\"",
+      "desc": "筛出已产生判定结果的未处置告警，便于直接进入研判流程；exist 语法以平台版本为准。",
+      "tags": ["alarmResults", "exist"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-es-all",
+      "title": "全字段关键词检索",
+      "category": "常用模板",
+      "code": "es:all(\"union select\")",
+      "desc": "用全字段检索定位包含指定关键词的告警或日志，适合先宽后窄的排查思路。",
+      "tags": ["全字段", "关键词"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-src-or",
+      "title": "多个源地址组合",
+      "category": "IP 与资产",
+      "code": "srcAddress in [\"198.51.100.20\",\"198.51.100.21\"] AND destPort == 443",
+      "desc": "把多个可疑源地址合并查询，适合同一批次的溯源分析。",
+      "tags": ["srcAddress", "in"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-dest-asset",
+      "title": "指定资产的高危告警",
+      "category": "IP 与资产",
+      "code": "destAddress == \"{{ip}}\" AND threatSeverity in [\"High\",\"Medium\"]",
+      "desc": "把目的地址抽成变量，快速切换需要应急的主机。",
+      "tags": ["资产", "变量"],
+      "vars": [
+        { "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }
+      ],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-rule-and-dst",
+      "title": "告警规则 + 目的资产",
+      "category": "自定义组合",
+      "code": "alarmName contains \"{{rule}}\" AND destAddress == \"{{ip}}\" AND alarmStatus != \"processed\"",
+      "desc": "把规则关键词与资产地址同时抽成变量，适合专项规则在单台资产上的核查。",
+      "tags": ["规则", "资产", "变量"],
+      "vars": [
+        { "name": "rule", "label": "告警名称关键词", "placeholder": "WebShell", "example": "WebShell" },
+        { "name": "ip", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" }
+      ],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "ailpha-processed-review",
+      "title": "已处置告警复盘",
+      "category": "自定义组合",
+      "code": "alarmStatus == \"processed\" AND threatSeverity in [\"High\"]",
+      "desc": "查看已处置的高危告警，用于复盘闭环情况与统计处置质量。",
+      "tags": ["已处置", "复盘"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    }
+  ]
+}

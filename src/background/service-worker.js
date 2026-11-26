@@ -111,7 +111,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 void syncFeatures();
 
 const SEARCH_TIMEOUT_MS = 20000;
-const SEARCH_MAX_PROVIDERS = 5;
+const SEARCH_MAX_PROVIDERS = 7;
 
 /**
  * 单个平台的检索请求。

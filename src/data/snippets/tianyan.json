@@ -1,0 +1,144 @@
+{
+  "platform": "tianyan",
+  "version": 1,
+  "categories": ["常用模板", "流量筛选", "IP 与资产", "自定义组合"],
+  "notice": "奇安信天眼（NTA / 全流量）各版本在可检索字段、字段名与运算符支持上存在差异。以下语法依据公开技术资料整理，IP 均为文档保留地址，使用前请在天眼“查询帮助 / 字段字典”中确认当前版本的字段与取值范围。",
+  "items": [
+    {
+      "id": "tianyan-src-to-web",
+      "title": "指定源 IP 访问内网 Web",
+      "category": "常用模板",
+      "code": "sip:198.51.100.20 AND dip:192.0.2.10 AND dport:80",
+      "desc": "按源 IP、目的 IP 与目的端口缩小流量范围，适合应急时确认某个外部地址是否访问过指定资产。",
+      "tags": ["sip", "dip", "dport"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-uri-post",
+      "title": "指定 URI 的 POST 请求",
+      "category": "常用模板",
+      "code": "uri:\"/api/login\" AND method:POST AND status:200",
+      "desc": "查询某个接口的成功 POST 请求，常用于登录、上传等关键接口的访问回溯。",
+      "tags": ["uri", "POST"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-status-500",
+      "title": "HTTP 500 响应",
+      "category": "流量筛选",
+      "code": "status:500 AND dport:80",
+      "desc": "筛选服务端错误响应，辅助定位异常访问或探测行为。",
+      "tags": ["status", "500"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-upload-success",
+      "title": "上传接口成功请求",
+      "category": "流量筛选",
+      "code": "method:POST AND uri:\"/upload\" AND status:200",
+      "desc": "聚焦文件上传接口的成功请求，便于核查是否存在异常上传。",
+      "tags": ["上传", "POST"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-sensitive-path",
+      "title": "敏感路径探测",
+      "category": "流量筛选",
+      "code": "uri:\"/.env\" OR uri:\"/config.php\" OR uri:\"/backup.zip\"",
+      "desc": "匹配常见敏感文件探测路径；多个条件用 OR 连接，结果较多时可叠加 sip 或 status 缩小范围。",
+      "tags": ["敏感路径", "探测"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-admin-login",
+      "title": "后台路径访问（排除扫描源）",
+      "category": "流量筛选",
+      "code": "uri:\"/admin\" AND NOT sip:192.0.2.10",
+      "desc": "查看后台路径的访问情况，并排除已知的内部扫描源地址；如平台支持括号，可把多个 uri 用 OR 组合后再取反。",
+      "tags": ["后台", "降噪"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-ssh-range",
+      "title": "源端口范围访问 SSH",
+      "category": "IP 与资产",
+      "code": "sport:[1024 TO 65535] AND dport:22",
+      "desc": "使用方括号范围匹配高位源端口，查看外部对 SSH 服务的访问。范围写法请按当前版本确认。",
+      "tags": ["sport", "范围", "SSH"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-dip-range",
+      "title": "目的 IP 网段范围",
+      "category": "IP 与资产",
+      "code": "dip:[192.0.2.1 TO 192.0.2.254] AND dport:3389",
+      "desc": "用范围语法覆盖一个网段的目的地址，适合排查 RDP 等远程管理端口的访问来源。",
+      "tags": ["dip", "网段"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-host-access",
+      "title": "按访问域名筛选",
+      "category": "IP 与资产",
+      "code": "sip:192.0.2.10 AND host:\"example.com\"",
+      "desc": "锁定内网主机访问的外部域名，用于代理、DNS 或外联行为核查。",
+      "tags": ["host", "外联"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-proto-udp",
+      "title": "按协议筛选 DNS 流量",
+      "category": "IP 与资产",
+      "code": "proto:UDP AND dport:53",
+      "desc": "筛选 UDP 53 端口流量，辅助分析 DNS 请求与隧道类行为。协议取值大小写以平台为准。",
+      "tags": ["proto", "DNS"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-data-keyword",
+      "title": "请求内容关键词",
+      "category": "自定义组合",
+      "code": "data:\"union select\" AND method:POST",
+      "desc": "在请求内容中匹配关键词，适合排查注入类 payload；data 字段通常需要更高权限或更长留存。",
+      "tags": ["data", "注入"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "tianyan-var-combo",
+      "title": "源 / 目的 / 端口变量组合",
+      "category": "自定义组合",
+      "code": "sip:{{src}} AND dip:{{dst}} AND dport:{{port}}",
+      "desc": "把常用三元组抽成变量，切换目标时只改变量即可。",
+      "tags": ["变量", "组合"],
+      "vars": [
+        { "name": "src", "label": "源 IP", "placeholder": "198.51.100.20", "example": "198.51.100.20" },
+        { "name": "dst", "label": "目的 IP", "placeholder": "192.0.2.10", "example": "192.0.2.10" },
+        { "name": "port", "label": "目的端口", "placeholder": "443", "example": "443" }
+      ],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    }
+  ]
+}

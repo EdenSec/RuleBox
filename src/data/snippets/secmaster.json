@@ -1,0 +1,133 @@
+{
+  "platform": "secmaster",
+  "version": 1,
+  "categories": ["常用模板", "日志筛选", "IP 与资产", "自定义组合"],
+  "notice": "华为云安全云脑（SecMaster）检索语法为“字段 操作符 值”，字符串值使用单引号。不同版本与数据源的可检索字段存在差异，以下语法依据公开文档整理，IP 均为文档保留地址，使用前请在平台检索帮助中确认字段名。",
+  "items": [
+    {
+      "id": "secmaster-get-2xx",
+      "title": "GET 请求且响应 2xx",
+      "category": "常用模板",
+      "code": "request_method = 'GET' AND status BETWEEN 200 AND 299",
+      "desc": "用 BETWEEN 圈定成功响应区间，统计正常访问基线。",
+      "tags": ["request_method", "BETWEEN"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-ip",
+      "title": "按 IP 检索",
+      "category": "常用模板",
+      "code": "ipList = '192.0.2.10'",
+      "desc": "查询与指定 IP 关联的日志，适合从告警直接下钻到原始日志。",
+      "tags": ["ipList", "下钻"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-admin-like",
+      "title": "URL 包含后台路径",
+      "category": "日志筛选",
+      "code": "url LIKE '%/admin%'",
+      "desc": "用 LIKE 做模糊匹配，定位访问后台路径的请求。",
+      "tags": ["url", "LIKE"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-404-post",
+      "title": "POST 且响应 404",
+      "category": "日志筛选",
+      "code": "status = 404 AND request_method = 'POST'",
+      "desc": "筛选打向不存在路径的 POST 请求，辅助发现接口探测行为。",
+      "tags": ["404", "POST"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-error",
+      "title": "非 200 响应",
+      "category": "日志筛选",
+      "code": "status <> 200 AND request_method = 'GET'",
+      "desc": "用 <> 排除正常响应，快速浏览异常状态码分布。",
+      "tags": ["status", "<>"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-login-post",
+      "title": "登录接口 POST 请求",
+      "category": "日志筛选",
+      "code": "url LIKE '%login%' AND request_method = 'POST'",
+      "desc": "聚焦登录接口的提交请求，适合暴力破解与撞库类排查。",
+      "tags": ["登录", "POST"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-ip-in",
+      "title": "多个 IP 组合查询",
+      "category": "IP 与资产",
+      "code": "ipList IN ('192.0.2.10','192.0.2.11') AND status >= 400",
+      "desc": "用 IN 合并多个地址，只看错误响应，适合同一批次资产排查。",
+      "tags": ["ipList", "IN"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-ip-2xx-post",
+      "title": "指定 IP 的成功 POST",
+      "category": "IP 与资产",
+      "code": "ipList = '198.51.100.20' AND status BETWEEN 200 AND 299 AND request_method = 'POST'",
+      "desc": "组合地址、状态码与请求方法，定位某个来源的成功提交行为。",
+      "tags": ["ipList", "组合"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-url-not-null",
+      "title": "URL 非空且为动态页面",
+      "category": "IP 与资产",
+      "code": "url IS NOT NULL AND url LIKE '%.php%'",
+      "desc": "先排除空 URL，再按后缀过滤动态页面，减少静态资源噪音。",
+      "tags": ["IS NOT NULL", "url"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-var-ip-status",
+      "title": "IP 与状态码变量组合",
+      "category": "自定义组合",
+      "code": "ipList = '{{ip}}' AND status BETWEEN {{min}} AND {{max}}",
+      "desc": "把地址与状态码区间抽成变量，便于在排查时快速切换目标。",
+      "tags": ["变量", "区间"],
+      "vars": [
+        { "name": "ip", "label": "IP 地址", "placeholder": "192.0.2.10", "example": "192.0.2.10" },
+        { "name": "min", "label": "状态码下限", "placeholder": "200", "example": "200" },
+        { "name": "max", "label": "状态码上限", "placeholder": "299", "example": "299" }
+      ],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    },
+    {
+      "id": "secmaster-not-method",
+      "title": "排除指定请求方法",
+      "category": "自定义组合",
+      "code": "NOT request_method = 'OPTIONS' AND status BETWEEN 200 AND 299",
+      "desc": "用 NOT 排除预检等低价值请求，保留成功响应用于分析。",
+      "tags": ["NOT", "降噪"],
+      "vars": [],
+      "source": "依据平台公开检索语法整理的示例",
+      "risk": "safe"
+    }
+  ]
+}

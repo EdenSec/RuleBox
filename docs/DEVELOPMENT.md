@@ -60,7 +60,7 @@ src\
 `manifest.json`：
 
 - permissions：`storage`、`clipboardWrite`、`contextMenus`、`sidePanel`。
-- host_permissions：内置 5 家 AI 供应商域名、`localhost/127.0.0.1`（Ollama），以及 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan 的 API 域名（聚合查询直接由 SW 发起，端点固定，不接受页面传入 URL）。
+- host_permissions：内置 5 家 AI 供应商域名、`localhost/127.0.0.1`（Ollama），以及 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap 的 API 域名（聚合查询直接由 SW 发起，端点固定，不接受页面传入 URL）。
 - optional_host_permissions：`https://*/*`、`http://*/*`——自定义 AI 端点在用户手势内 `chrome.permissions.request` 动态授权。
 - CSP：`script-src 'self'; object-src 'self'; base-uri 'self'`（禁止内联脚本 / eval / 远程代码）。
 
@@ -256,7 +256,7 @@ src\
 - `theme`：`auto | dark | light`
 - `ui`：`closeAfterCopy`、`recentsLimit`、`defaultTab`、`showRiskBadges`、`copyFormat`、`showDesc`
 - `features`：`sidePanel`、`contextMenu`、`ai`（功能开关，右键菜单 / 侧边栏开关变更后需向 SW 发 `rb:sync` 消息）
-- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次勾选的平台）、`providers{ fofa|hunter|quake|zoomeye|shodan: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
+- `search`：`enabled`（聚合查询总开关）、`promptAfterCopy`（复制语法后是否提示一站式查询）、`pageSize`（10/20/50）、`lastProviders[]`（上次勾选的平台）、`providers{ <平台ID>: { apiKey } }`（密钥只存本地，导出 / 导入时由 `storage.js` 清空）
 - `ai`：`enabled`、`activeProfileId`、`profiles[]`（id/name/providerId/baseUrl/model/apiKey/temperature/maxTokens/timeoutMs/thinking/extraBody）、`systemPrompt`（空字符串 = 使用内置默认）、`systemPromptAppend`、`includePlatformContext`、`includeLibraryExamples`、`historyLimit`、`stream`、`minIntervalMs`、`dailyRequestLimit`
 - 系统提示词由 [`ai-client.js`](../src/core/ai-client.js) 的 `DEFAULT_SYSTEM_PROMPT` 提供基准：设置页展示并允许编辑，与内置文本完全一致或留空时存空字符串，保证扩展升级默认提示词后能自动生效；平台字段上下文与 `systemPromptAppend` 始终由 `buildSystemPrompt()` 拼接，不受用户编辑影响。
 - `limits`：`maxImportBytes`、`maxCustomItems`
@@ -329,7 +329,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 面板勾选平台 + 输入语法
   → chrome.runtime.sendMessage({ type:'rb:cyber-search', query, providers[], page, size })
   → SW handleCyberSearch：校验 sender.id、query 长度、平台 ID 白名单、page/size 范围
-       → 读取 rb.settings.search.providers[].apiKey（密钥不出 SW）
+       → 读取 rb.settings.search.providers[].apiKey（仅 SW 用于发起请求；面板只判断“是否已配置”）
        → Promise.all 并行 searchOneProvider（固定端点 + 20s 超时）
        → 逐平台返回 { ok, total, items[] } 或 { ok:false, error }
   → 面板按平台分组渲染，支持翻页、点击跳转、复制地址
@@ -412,11 +412,13 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 3. `manifest.json` 的 `host_permissions` 增加该平台 API 域名（端点固定，不接受运行时传入）。
 4. 无需改 UI：平台选择、设置页密钥行、分页、复制与跳转都从注册表自动生成。
 
-已在用的平台：FOFA、Hunter 鹰图、Quake 360、ZoomEye、Shodan。ZoomEye 使用 `api.zoomeye.ai/v2/search`（`API-KEY` 头 + `qbase64`）；Quake 使用旧版 `X-QuakeToken` 端点，若账号已切换到新的 APPID/SECRET 签名接口，需要在此扩展鉴权方式。
+已在用的平台：FOFA、Hunter 鹰图、Quake 360、ZoomEye、Shodan、0.zone、DayDayMap。ZoomEye 使用 `api.zoomeye.ai/v2/search`（`API-KEY` 头 + `qbase64`）；Quake 使用旧版 `X-QuakeToken` 端点，若账号已切换到新的 APPID/SECRET 签名接口，需要在此扩展鉴权方式；0.zone 将 `zone_key_id` 放在 JSON body，并按语法中的模块独有字段推断 `query_type`（site / domain / email / app / code），识别不到时按 site；DayDayMap 使用 `api-key` 头且 `keyword` 为 Base64。
+
+非 Web 资产（SSH / Redis / MySQL 等）不会拼出 `http://ip:port` 跳转链接，避免点开必然报错；复制时仍回退为 `ip:port`，逻辑在 `assetUrl()` / `isWebAsset()`。
 
 ### 8.6 未来方向（已预留，未实现）
 
-- 更多测绘平台（如零零信安 0.zone、DayDayMap）与可配置的自定义 API 适配器。
+- 更多国际测绘平台（Censys、Netlas、BinaryEdge、Criminal IP、FullHunt 等）与可配置的自定义 API 适配器。
 - 聚合结果导出（CSV / JSON）与查询历史（需先确认存储体积与隐私边界）。
 
 ## 9. 变更纪律
@@ -431,5 +433,5 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 | 版本 | 主要能力 |
 | --- | --- |
-| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化 |
+| 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑三个态势感知平台 |
 | 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |

@@ -35,12 +35,12 @@
 
 **RuleBox 把这些变成了一个可搜索、可筛选、可变量填充的面板** — 装到 Chrome / Edge 里，按一下快捷键就弹出来，搜一下、填变量、点复制，直接粘到测试工具里。
 
-- 🗂️ **11 个语法库**：8 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / Alpha / DayDayMap / 0.zone）+ Google / 百度 + 常用命令行工具
+- 🗂️ **14 个语法库**：11 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / Alpha）+ Google / 百度 + 常用命令行工具
 - 💣 **19 类安全测试 Payload / 252 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
-- 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页
+- 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
-目前内置 **730 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+目前内置 **765 条语法、252 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
 
 ---
 
@@ -249,7 +249,7 @@
 ## 🔎 测绘查询配置（可选）
 
 1. 打开面板右上角「设置」→「测绘查询」
-2. 在对应平台行填入 API Key（FOFA 个人中心、Hunter 个人中心、Quake 密钥管理、ZoomEye 个人中心、Shodan Account 均可获取）
+2. 在对应平台行填入 API Key（FOFA 个人中心、Hunter 个人中心、Quake 密钥管理、ZoomEye 个人中心、Shodan Account、0.zone 个人中心、DayDayMap 个人中心均可获取）
 3. 回到面板「聚合查询」，勾选平台、输入语法即可查询
 4. 不同平台语法不完全通用，例如 FOFA 的 `domain="example.com"` 与 Hunter 的 `domain="example.com"` 语义接近，但 Quake 使用 `domain: "example.com"`；建议只勾选与语法匹配的平台
 
@@ -279,7 +279,7 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 | `clipboardWrite` | 点击复制时写入剪贴板 |
 | `contextMenus` | 提供「在 RuleBox 中搜索」右键菜单 |
 | `sidePanel` | 侧边栏常驻模式 |
-| `host_permissions` | 5 家内置 AI 服务、本地 Ollama 地址，以及 FOFA / Hunter / Quake / ZoomEye / Shodan 的 API 域名 |
+| `host_permissions` | 5 家内置 AI 服务、本地 Ollama 地址，以及 FOFA / Hunter / Quake / ZoomEye / Shodan / 0.zone / DayDayMap 的 API 域名 |
 | `optional_host_permissions` | 自定义 AI 端点首次使用时按需申请，不授权则不发起请求 |
 
 测绘查询的 API Key 与 AI Key 一样只保存在本机，不会发送给 RuleBox 作者或任何第三方中转；请求直接从扩展后台发往你选择的平台。导出配置时所有密钥都会被清空。
@@ -331,6 +331,7 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 
 - 语法与字段依据各平台**公开文档**与公开技术资料整理，条目内标注 `source` 来源；平台语法可能随官方改版而变化，欢迎纠错
 - Alpha 态势感知为私有部署产品，字段参考通用模式整理，不同版本可能存在差异，示例值均为**通用占位**
+- 奇安信天眼、安恒 AiLPHA、华为云安全云脑的字段与运算符依据公开技术资料整理，不同版本、不同数据源的可检索字段存在差异，示例 IP 均为文档保留地址，实际以平台帮助文档为准
 - 本插件提供语法与 Payload 的速查、复制、生成与样本导出能力，所有内容仅供**已授权的安全测试与防御研究**使用。使用者在未授权目标上使用相关内容所产生的一切后果自行承担。
 
 ---

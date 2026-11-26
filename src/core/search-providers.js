@@ -50,7 +50,7 @@ export const SEARCH_PROVIDERS = [
     name: 'ZoomEye',
     vendor: '知道创宇',
     color: '#a06bff',
-    keyUrl: 'https://www.zoomeye.ai/profile',
+    keyUrl: 'https://www.zoomeye.ai/',
     docUrl: 'https://www.zoomeye.ai/',
     placeholder: 'domain="example.com"',
     keyHint: '个人中心 → API Key'
@@ -64,6 +64,26 @@ export const SEARCH_PROVIDERS = [
     docUrl: 'https://developer.shodan.io/api',
     placeholder: 'hostname:example.com',
     keyHint: 'Account → API Key'
+  },
+  {
+    id: 'zerozone',
+    name: '零零信安 0.zone',
+    vendor: '零零信安',
+    color: '#8b949e',
+    keyUrl: 'https://0.zone/',
+    docUrl: 'https://0.zone/grammarList',
+    placeholder: 'url==example.com',
+    keyHint: '个人中心 → API 管理'
+  },
+  {
+    id: 'daydaymap',
+    name: 'DayDayMap',
+    vendor: '盛邦安全',
+    color: '#5bc0be',
+    keyUrl: 'https://www.daydaymap.com/',
+    docUrl: 'https://www.daydaymap.com/help/document?type=api-data',
+    placeholder: 'domain="example.com"',
+    keyHint: '个人中心 → API Key'
   }
 ];
 
@@ -162,6 +182,29 @@ function parseHostPort(value) {
   return { host: raw, port: 0 };
 }
 
+/** 常见 Web 端口：只有这些端口才值得拼出 http(s) 跳转链接 */
+const WEB_PORTS = new Set([
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+  443, 3000, 5000, 7001, 8000, 8008, 8009, 8010, 8020, 8030,
+  8040, 8050, 8060, 8070, 8080, 8081, 8082, 8083, 8084, 8085,
+  8086, 8087, 8088, 8089, 8090, 8181, 8443, 8880, 8888, 8899,
+  9000, 9001, 9002, 9080, 9090, 9200, 9443, 10443, 18080
+]);
+
+const IPV4_PATTERN = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
+/**
+ * 是否为可直接访问的 Web 资产。
+ * SSH / Redis / MySQL 等非 Web 协议如果也拼成 http://ip:port，点开必然报错，
+ * 因此只在协议含 http、端口属于常见 Web 端口，或裸域名（无端口）时才生成链接。
+ */
+function isWebAsset(protocol, port, host) {
+  const proto = String(protocol || '').toLowerCase();
+  if (proto.includes('http')) return true;
+  if (port) return WEB_PORTS.has(port);
+  return Boolean(host) && !IPV4_PATTERN.test(host) && !host.includes(':');
+}
+
 /** 域名 / IP 补全为可点击地址：有域名优先域名，否则用 IP + 端口 */
 function assetUrl({ url, domain, hostname, ip, port, protocol }) {
   // 只有明确带 http(s) 协议的地址才直接采用；裸主机名 / IP 需要结合端口重新拼，
@@ -183,6 +226,8 @@ function assetUrl({ url, domain, hostname, ip, port, protocol }) {
   if (!host) return '';
 
   const portNum = toNumber(port) || embeddedPort;
+  if (!isWebAsset(protocol, portNum, host)) return '';
+
   const isHttps = String(protocol || '').toLowerCase().includes('https') || portNum === 443;
   const scheme = isHttps ? 'https' : 'http';
   const defaultPort = (isHttps && portNum === 443) || (!isHttps && portNum === 80);
@@ -238,6 +283,22 @@ export function describeHttpStatus(status) {
   if (status === 429) return '请求过于频繁，请稍后重试';
   if (status >= 500) return '平台服务异常，请稍后重试';
   return `请求失败（HTTP ${status}）`;
+}
+
+/**
+ * 0.zone 按模块区分查询类型（信息系统 / 域名 / 邮箱 / 移动端应用 / 代码与文档）。
+ * 只用各模块独有的字段判断，避免把 company、name 这类多模块通用字段误判；
+ * 识别不到时按信息系统（site）处理。
+ */
+function detectZerozoneQueryType(query) {
+  const rules = [
+    { type: 'code', pattern: /\b(?:code_detail|related_company|timestamp_update|suffix|keyword)\b|\b(?:repository|detail_parsing)\./i },
+    { type: 'email', pattern: /\b(?:email|email_domain|email_type|leakage_num)\b|\bmsg\.tags\b/i },
+    { type: 'domain', pattern: /\b(?:root_domain|toplv_domain|level|domain)\b/i },
+    { type: 'app', pattern: /\b(?:domain_list|description)\b/i }
+  ];
+  const matched = rules.find((rule) => rule.pattern.test(String(query || '')));
+  return matched ? matched.type : 'site';
 }
 
 /* ------------------------------------------------------------------ */
@@ -332,6 +393,37 @@ export function buildProviderRequest(providerId, { query, page, size, apiKey }) 
         headers: {}
       };
     }
+    case 'zerozone': {
+      return {
+        url: 'https://0.zone/api/data/',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: q,
+          query_type: detectZerozoneQueryType(q),
+          page: currentPage,
+          pagesize: pageSize,
+          zone_key_id: key
+        })
+      };
+    }
+    case 'daydaymap': {
+      return {
+        url: 'https://www.daydaymap.com/api/v1/raymap/search/all',
+        method: 'POST',
+        headers: {
+          'api-key': key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          page: currentPage,
+          page_size: pageSize,
+          keyword: base64Utf8(q)
+        })
+      };
+    }
     default:
       throw new Error('不支持的查询平台');
   }
@@ -357,6 +449,10 @@ export function parseProviderResponse(providerId, json) {
       return parseZoomEye(json);
     case 'shodan':
       return parseShodan(json);
+    case 'zerozone':
+      return parseZerozone(json);
+    case 'daydaymap':
+      return parseDaydaymap(json);
     default:
       throw new Error('不支持的查询平台');
   }
@@ -506,6 +602,65 @@ function parseShodan(json) {
 
   return {
     total: toNumber(json.total) || items.length,
+    items
+  };
+}
+
+function parseZerozone(json) {
+  if (!json || typeof json !== 'object') throw new Error('0.zone 返回内容为空');
+  if (toNumber(json.code) !== 0) {
+    throw new Error(readProviderError(json) || '0.zone 查询失败');
+  }
+
+  const payload = json.data;
+  const rows = Array.isArray(payload)
+    ? payload
+    : (Array.isArray(payload?.list) ? payload.list : []);
+  const items = rows.map((row) => buildItem({
+    title: row.title || row.url || row.ip,
+    url: row.url,
+    ip: row.ip,
+    port: row.port,
+    protocol: row.service,
+    domain: '',
+    server: row.component || row.cms,
+    location: joinLocation(row.country, row.province, row.city),
+    updatedAt: row.timestamp,
+    status: row.status_code
+  }));
+
+  return {
+    total: toNumber(json.total) || items.length,
+    items
+  };
+}
+
+function parseDaydaymap(json) {
+  if (!json || typeof json !== 'object') throw new Error('DayDayMap 返回内容为空');
+  const code = toNumber(json.code);
+  if (code && code !== 200) {
+    throw new Error(readProviderError(json) || 'DayDayMap 查询失败');
+  }
+
+  const payload = json.data;
+  const rows = Array.isArray(payload)
+    ? payload
+    : (Array.isArray(payload?.list) ? payload.list : []);
+  const items = rows.map((row) => buildItem({
+    title: row.title || row.domain || row.ip,
+    url: row.url,
+    ip: row.ip,
+    port: row.port,
+    protocol: row.protocol || row.service,
+    domain: row.domain,
+    server: row.server || row.service,
+    location: joinLocation(row.country, row.province, row.city),
+    updatedAt: row.time_stamp || row.timestamp,
+    status: row.status_code
+  }));
+
+  return {
+    total: toNumber(payload?.total) || toNumber(json.total) || items.length,
     items
   };
 }

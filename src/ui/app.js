@@ -1592,7 +1592,7 @@ function cyberEmptyState() {
     return emptyState({
       iconName: 'shield',
       title: '先配置平台密钥',
-      desc: '支持 FOFA、Hunter 鹰图、Quake、ZoomEye 与 Shodan。密钥只保存在本机，导出配置时自动剔除。'
+      desc: '支持 FOFA、Hunter 鹰图、Quake、ZoomEye、Shodan、0.zone 与 DayDayMap。密钥只保存在本机，导出配置时自动剔除。'
     });
   }
   return emptyState({

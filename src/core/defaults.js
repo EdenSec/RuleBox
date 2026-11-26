@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS = {
     closeAfterCopy: true,
     // 最近使用保留条数
     recentsLimit: 20,
-    // 默认打开的标签页：snippets | payloads | ai
+    // 默认打开的标签页：snippets | payloads | cyber | ai
     defaultTab: 'snippets',
     // 是否显示风险等级徽标
     showRiskBadges: true,

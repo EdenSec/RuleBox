@@ -43,6 +43,8 @@
     "https://quake.360.net/*",
     "https://api.zoomeye.ai/*",
     "https://api.shodan.io/*",
+    "https://0.zone/*",
+    "https://www.daydaymap.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],
