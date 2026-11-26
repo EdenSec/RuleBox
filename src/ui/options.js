@@ -457,7 +457,7 @@ async function addProfile() {
       name,
       providerId: 'deepseek',
       baseUrl: 'https://api.deepseek.com/v1',
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-flash',
       apiKey: '',
       temperature: 0.2,
       maxTokens: 2048,

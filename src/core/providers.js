@@ -9,20 +9,25 @@ export const PROVIDERS = [
     id: 'deepseek',
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
-    docs: 'https://platform.deepseek.com/api-docs/',
+    models: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+    docs: 'https://api-docs.deepseek.com/',
     keyUrl: 'https://platform.deepseek.com/api_keys',
-    note: 'OpenAI 兼容协议，性价比高。',
-    // DeepSeek 没有独立的思考开关，思考能力由模型决定，因此只给提示不提供下拉
+    note: 'OpenAI 兼容协议，思考模式默认开启。',
+    // 官方支持 thinking 开关（默认 enabled）；推理强度用 reasoning_effort（high / max）调节
     thinking: {
-      hint: 'DeepSeek 的思考模式由模型决定：把上方“模型”改为 deepseek-reasoner 即可，无需额外参数。'
+      param: 'thinking',
+      options: [
+        { value: 'on', label: '开启（默认）', body: { type: 'enabled' } },
+        { value: 'off', label: '关闭（非思考模式）', body: { type: 'disabled' } }
+      ],
+      hint: '官方默认开启思考；需要调整推理强度时，可在下方自定义参数中追加 reasoning_effort（high / max）。'
     }
   },
   {
     id: 'dashscope',
     name: '通义千问（阿里云百炼）',
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    models: ['qwen-plus', 'qwen-max', 'qwen-turbo'],
+    models: ['qwen4-max', 'qwen3.7-plus', 'qwen3.8-flash'],
     docs: 'https://help.aliyun.com/zh/model-studio/',
     keyUrl: 'https://bailian.console.aliyun.com/',
     note: '使用兼容模式接口，模型名以控制台为准。',
@@ -32,43 +37,52 @@ export const PROVIDERS = [
         { value: 'on', label: '开启', body: true },
         { value: 'off', label: '关闭', body: false }
       ],
-      hint: 'Qwen3 等混合思考模型支持该开关，普通模型会自动忽略。'
+      hint: 'qwen4-max 等混合思考模型支持该开关；推理强度可用自定义参数 reasoning_effort（low / high / xhigh）追加。'
     }
   },
   {
     id: 'moonshot',
-    name: 'Moonshot Kimi',
+    name: 'Kimi（Moonshot）',
     baseUrl: 'https://api.moonshot.cn/v1',
-    models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
-    docs: 'https://platform.moonshot.cn/docs/',
-    keyUrl: 'https://platform.moonshot.cn/console/api-keys',
-    note: '长上下文场景较友好。',
+    models: ['kimi-k3.1-pro', 'kimi-k3.1-pro-highspeed', 'kimi-k3'],
+    docs: 'https://platform.kimi.com/docs/',
+    keyUrl: 'https://platform.kimi.com/console/api-keys',
+    note: 'K3 系列支持 100 万 token 上下文，长文档场景较友好。',
+    // K3 系列始终思考，不支持 thinking 开关，只能用顶层 reasoning_effort 调节强度
     thinking: {
-      hint: 'Kimi 的思考能力由模型决定，请把上方“模型”改为控制台提供的思考模型；如有专有参数可用下方自定义请求参数补充。'
+      param: 'reasoning_effort',
+      options: [
+        { value: 'low', label: '低（更快）', body: 'low' },
+        { value: 'high', label: '高（增强推理）', body: 'high' },
+        { value: 'max', label: '最高（默认）', body: 'max' }
+      ],
+      hint: 'K3 系列始终开启思考，不支持关闭；用 reasoning_effort 调节推理强度（默认 max）。'
     }
   },
   {
     id: 'zhipu',
     name: '智谱 GLM',
     baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-    models: ['glm-4-plus', 'glm-4-flash', 'glm-4-air'],
-    docs: 'https://open.bigmodel.cn/dev/api',
+    models: ['glm-5.3', 'glm-5.3-flash', 'glm-4.7-flash'],
+    docs: 'https://docs.bigmodel.cn/cn/guide/start/model-overview',
     keyUrl: 'https://bigmodel.cn/usercenter/apikeys',
     note: '兼容 OpenAI 协议。',
+    // GLM-5.3 始终思考，传 thinking.type=disabled 会直接报错，因此只调节强度
     thinking: {
-      param: 'thinking',
+      param: 'reasoning_effort',
       options: [
-        { value: 'on', label: '开启', body: { type: 'enabled' } },
-        { value: 'off', label: '关闭', body: { type: 'disabled' } }
+        { value: 'low', label: '低（更快）', body: 'low' },
+        { value: 'high', label: '高（增强推理）', body: 'high' },
+        { value: 'max', label: '最高（默认）', body: 'max' }
       ],
-      hint: 'GLM-4.5 等模型支持该开关，不支持的模型会自动忽略。'
+      hint: 'GLM-5.3 始终开启思考，不再支持关闭；用 reasoning_effort 调节强度（默认 max）。'
     }
   },
   {
     id: 'openai',
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
-    models: ['gpt-4o-mini', 'gpt-4o'],
+    models: ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano'],
     docs: 'https://platform.openai.com/docs/api-reference',
     keyUrl: 'https://platform.openai.com/api-keys',
     note: '国内网络可能无法直连，需自备网络条件。',
@@ -77,18 +91,19 @@ export const PROVIDERS = [
       options: [
         { value: 'low', label: '低（更快）', body: 'low' },
         { value: 'medium', label: '中（均衡）', body: 'medium' },
-        { value: 'high', label: '高（更深入）', body: 'high' }
+        { value: 'high', label: '高（更深入）', body: 'high' },
+        { value: 'xhigh', label: '极高（最深入）', body: 'xhigh' }
       ],
-      hint: '推理模型（o 系列 / GPT-5）支持推理强度；普通对话模型会忽略该参数。'
+      hint: 'GPT-5.x 系列支持 reasoning_effort（none / low / medium / high / xhigh）；普通对话模型会忽略该参数。'
     }
   },
   {
     id: 'ollama',
     name: 'Ollama（本地）',
     baseUrl: 'http://localhost:11434/v1',
-    models: ['qwen2.5:7b', 'llama3.1:8b'],
-    docs: 'https://github.com/ollama/ollama/blob/main/docs/openai.md',
-    note: '本地模型无需密钥，密钥字段留空即可。'
+    models: ['gpt-oss:20b', 'qwen3:8b', 'llama3.2:3b'],
+    docs: 'https://docs.ollama.com/api/openai-compatibility',
+    note: '本地模型无需密钥，密钥字段留空即可；11434 是 Ollama 官方默认端口。模型名需与 ollama list 一致。'
   },
   {
     id: 'custom',

@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS = {
         name: '默认档案',
         providerId: 'deepseek',
         baseUrl: 'https://api.deepseek.com/v1',
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         apiKey: '',
         temperature: 0.2,
         maxTokens: 4096,
@@ -113,6 +113,23 @@ export const DEFAULT_CUSTOM = {
 export const DEFAULT_USAGE = {
   date: '',
   count: 0
+};
+
+/**
+ * 供应商官方已下线 / 停用的旧模型名 → 同系列现行模型。
+ * 仅用于升级时自动修正旧档案，避免用户升级后请求直接失败。
+ */
+const LEGACY_MODEL_ALIAS = {
+  deepseek: {
+    'deepseek-chat': 'deepseek-v4-flash',
+    'deepseek-reasoner': 'deepseek-v4-pro'
+  },
+  moonshot: {
+    'moonshot-v1-8k': 'kimi-k3.1-pro',
+    'moonshot-v1-32k': 'kimi-k3.1-pro',
+    'moonshot-v1-128k': 'kimi-k3.1-pro',
+    'moonshot-v1-auto': 'kimi-k3.1-pro'
+  }
 };
 
 /** 深合并默认配置，保证旧版本配置缺失字段时仍可运行 */
@@ -170,19 +187,23 @@ export function mergeSettings(input) {
   if (!Array.isArray(merged.ai.profiles) || merged.ai.profiles.length === 0) {
     merged.ai.profiles = structuredClone(DEFAULT_SETTINGS.ai.profiles);
   } else {
-    merged.ai.profiles = merged.ai.profiles.map((profile, index) => ({
-      id: profile.id || `profile_${index}`,
-      name: profile.name || `档案 ${index + 1}`,
-      providerId: profile.providerId || 'custom',
-      baseUrl: profile.baseUrl || '',
-      model: profile.model || '',
-      apiKey: profile.apiKey || '',
-      temperature: Number.isFinite(profile.temperature) ? profile.temperature : 0.2,
-      maxTokens: Number.isFinite(profile.maxTokens) ? profile.maxTokens : 2048,
-      timeoutMs: Number.isFinite(profile.timeoutMs) ? profile.timeoutMs : 60000,
-      thinking: typeof profile.thinking === 'string' ? profile.thinking : '',
-      extraBody: typeof profile.extraBody === 'string' ? profile.extraBody : ''
-    }));
+    merged.ai.profiles = merged.ai.profiles.map((profile, index) => {
+      const providerId = profile.providerId || 'custom';
+      const legacyModel = LEGACY_MODEL_ALIAS[providerId]?.[profile.model];
+      return {
+        id: profile.id || `profile_${index}`,
+        name: profile.name || `档案 ${index + 1}`,
+        providerId,
+        baseUrl: profile.baseUrl || '',
+        model: legacyModel || profile.model || '',
+        apiKey: profile.apiKey || '',
+        temperature: Number.isFinite(profile.temperature) ? profile.temperature : 0.2,
+        maxTokens: Number.isFinite(profile.maxTokens) ? profile.maxTokens : 2048,
+        timeoutMs: Number.isFinite(profile.timeoutMs) ? profile.timeoutMs : 60000,
+        thinking: typeof profile.thinking === 'string' ? profile.thinking : '',
+        extraBody: typeof profile.extraBody === 'string' ? profile.extraBody : ''
+      };
+    });
   }
 
   // 保证 activeProfileId 指向存在的档案
