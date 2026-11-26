@@ -161,6 +161,8 @@ async function init() {
   state.contextType = await detectContextType();
   state.isPopup = state.contextType === 'POPUP';
   applyContextLayout();
+  // 侧边栏刚打开时自身上下文可能还没登记，首次判定为空，需要稍后重试
+  if (!state.contextType) watchContextType();
 
   state.settings = await getSettings();
   applyTheme(state.settings.theme);
@@ -310,13 +312,44 @@ async function detectContextType() {
     const contexts = await chrome.runtime.getContexts({
       contextTypes: ['TAB', 'POPUP', 'SIDE_PANEL']
     });
-    const hit = contexts.find(
+    const hits = contexts.filter(
       (context) => String(context.documentUrl || '').split('?')[0] === base
     );
-    return hit ? hit.contextType : '';
+    if (!hits.length) return '';
+    const has = (type) => hits.some((context) => context.contextType === type);
+    // 侧边栏与 popup 指向同一个 HTML：从 popup 点“在侧边栏打开”时两个上下文会短暂并存，
+    // 按数组顺序取第一个会把侧边栏误判成 popup（面板只剩 420×580，右侧被裁、高度也不足）。
+    // popup 是无边框独立小窗，outerWidth 与 innerWidth 只差一圈阴影；侧边栏依附在主窗口里，
+    // outerWidth 是整个浏览器窗口的宽度，据此排除“自己就是 popup”的误判。
+    const frameless = window.outerWidth - window.innerWidth < 120;
+    if (!frameless && has('SIDE_PANEL')) return 'SIDE_PANEL';
+    if (!frameless && has('TAB')) return 'TAB';
+    if (has('POPUP')) return 'POPUP';
+    return hits[0].contextType;
   } catch {
     return '';
   }
+}
+
+/**
+ * 兜底重试：侧边栏页面刚打开时，自身上下文可能还没被 getContexts 登记，
+ * 首次判定会得到空结果（面板保持 420×580、右侧被裁）。这里短轮询补齐，
+ * 一旦拿到结果就停止；确实是 popup 时也会把多余的状态改回去。
+ */
+function watchContextType() {
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries += 1;
+    const type = await detectContextType();
+    if (type) {
+      clearInterval(timer);
+      state.contextType = type;
+      state.isPopup = type === 'POPUP';
+      applyContextLayout();
+      return;
+    }
+    if (tries >= 10) clearInterval(timer);
+  }, 200);
 }
 
 /**

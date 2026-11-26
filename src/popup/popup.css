@@ -23,6 +23,16 @@ body.is-fluid {
   height: 100vh;
 }
 
+/* 兜底：popup 的可视高度上限是 600px，永远不会命中这条；侧边栏/标签页通常更高，
+ * 即使 getContexts 判定失败（侧边栏刚打开时自身上下文尚未登记）也能铺满，
+ * 不至于只露出 580px 高、右侧被裁掉一截。只按高度判断，不影响 popup 的宽度测量。 */
+@media (min-height: 620px) {
+  body {
+    width: 100%;
+    height: 100vh;
+  }
+}
+
 @media (min-width: 460px) {
   .rb-app {
     max-width: 900px;
