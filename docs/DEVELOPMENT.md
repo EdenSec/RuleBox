@@ -69,7 +69,8 @@ src\
 - **密钥只存本地**（`rb.settings` 内 `ai.profiles[].apiKey`），导出配置自动剔除 apiKey。
 - 所有外部 / 用户数据一律 `textContent` 渲染（`el()` 构造 DOM），禁止拼 HTML 字符串；仅静态 SVG 用 innerHTML。
 - 自定义 AI 端点仅允许 `https://`（`isAllowedEndpoint` 校验；本机 http 仅放行 localhost）。
-- 日志与错误提示必须用 `mask`（`src/core/logger.js`）脱敏，勿在 URL 或日志中输出完整 Key。
+- 日志与错误提示必须用 `mask`（`src/core/logger.js`）脱敏，勿在日志或错误文案中输出完整 Key。
+- **已知限制（CWE-598，厂商接口约束）**：FOFA、Hunter 鹰图的公开 API 只接受查询串中的 `key` / `api-key`，Shodan 同样只支持 `key` 查询参数，无法改为请求头；Quake / ZoomEye / DayDayMap / 0.zone 使用请求头或 POST 请求体。因此这三家的 Key 会出现在后台发起的请求 URL 中，属于平台接口设计限制，不是本项目可控项。缓解措施：Key 只存本地、请求只由 Service Worker 发起、日志与错误信息统一脱敏、导出配置剔除 Key；新增平台时优先选择请求头 / 请求体鉴权，禁止在页面侧拼接带 Key 的 URL。排障截图或录屏需自行对 URL 打码。
 - 设置页导入配置有大小上限（`limits.maxImportBytes`，默认 512KB）与条目上限（`maxCustomItems`，默认 500），导入前 `validateConfig` 校验 + 二次确认。
 - Service Worker 不 import 任何 DOM 依赖模块。
 - 前端 UI 禁止渐变色、禁止廉价 AI 感；新增页面须适配移动端（已有 `@media` 断点风格）。

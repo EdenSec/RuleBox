@@ -1870,15 +1870,27 @@ function csvCell(value) {
   return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
-/** Markdown 表格单元格：竖线转义、换行压空格，尖括号转义防止被渲染成 HTML */
+/**
+ * Markdown 表格单元格：竖线转义、换行压空格，尖括号转义防止被渲染成 HTML；
+ * 同时转义反斜杠与链接 / 图片定界符，避免第三方标题、地址被拼成可点击的
+ * Markdown 链接或图片（如 [[点击]](https://…)、!(…)）。
+ */
 function mdCell(value) {
   const text = value === null || value === undefined ? '' : String(value);
   return text
+    .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
     .replace(/\r?\n/g, ' ')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/([\[\]()!])/g, '\\$1')
     .trim();
+}
+
+/** Markdown 行内代码：查询语法可能来自自定义条目，压成单行并替换反引号，避免跳出代码段 */
+function mdInlineCode(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return text.replace(/\r?\n/g, ' ').replace(/`/g, "'").trim();
 }
 
 /** 导出用的扁平记录：成功平台的全部条目 + 平台名，供 CSV / MD / JSON 共用 */
@@ -2006,7 +2018,7 @@ function exportCyberResults() {
     const lines = [
       '# RuleBox 聚合查询结果',
       '',
-      `- 查询语法：${query ? `\`${query.replace(/`/g, "'")}\`` : '（未填写）'}`,
+      `- 查询语法：${query ? `\`${mdInlineCode(query)}\`` : '（未填写）'}`,
       `- 导出时间：${now.toLocaleString('zh-CN')}`,
       `- 页码：${state.cyber.page || 1}（每页 ${state.cyber.pageSize || 0} 条）`,
       `- 结果条目：${records.length} 条`,

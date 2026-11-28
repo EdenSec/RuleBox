@@ -328,7 +328,15 @@ function detectZerozoneQueryType(query) {
 /* ------------------------------------------------------------------ */
 
 /**
- * 构造平台请求参数
+ * 构造平台请求参数。
+ *
+ * 鉴权方式由平台接口决定，不要为了“美观”随意改：
+ * - Quake / ZoomEye / DayDayMap / 0.zone 支持请求头或 POST 请求体，Key 不出现在 URL；
+ * - FOFA / Hunter 鹰图 / Shodan 的公开 API 只接受查询串中的 key，属于厂商限制（CWE-598）。
+ *
+ * 因此调用方与日志层必须保证：不记录完整请求 URL、错误信息用 mask 脱敏、
+ * 不在页面侧拼接带 Key 的地址（请求统一由 Service Worker 发起）。
+ *
  * @param {string} providerId
  * @param {{query: string, page: number, size: number, apiKey: string}} options
  * @returns {{url: string, method: string, headers: Record<string,string>, body?: string}}
