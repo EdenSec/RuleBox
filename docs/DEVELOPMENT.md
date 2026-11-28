@@ -40,7 +40,7 @@ src\
 │   ├─ index.json                 # 数据索引（snippets/payloads 文件路径清单 + version + updated）
 │   ├─ platforms.json             # 平台注册表
 │   ├─ prompts.json               # AI 提示词库
-│   ├─ snippets\*.json            # 各平台语法库（16 个文件）
+│   ├─ snippets\*.json            # 各平台语法库（17 个文件）
 │   └─ payloads\*.json            # 各类 Payload 库（19 个文件）
 ├─ options\                       # 设置页 HTML/CSS
 ├─ popup\                         # 面板 HTML/CSS（popup 与 side panel 共用）
@@ -370,7 +370,7 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 14. **禁止用 `@media` 按视口宽度改写 `body` 尺寸**：Chrome 打开 action popup 时会先用一个很小的视口测量内容；若命中“窄屏兜底”把 body 改成 `100vw/100vh`，会与测量互相触发，把 popup 永久锁死在一个极小尺寸（曾出现 `154×187`）。正确做法：`popup.css` 中 body 固定 `420px × 580px`，SIDE_PANEL / TAB 由 `body.is-fluid` 铺满（类名由 `app.js` 的 `applyContextLayout()` 按上下文添加）。
 15. **变量弹窗提交按钮必须在 `<form>` 内**：`.rb-dialog-foot` 若被放到 `</form>` 之后，`type=submit` 的按钮与回车都失效；`components.js` 的 `openVariableDialog` 已按“form 包裹 body + foot”实现，复用时不要拆开。
 16. **`chrome.windows.create({ type: 'popup' })` 不是 POPUP 上下文**：它创建的是 `TAB` 上下文，`getContexts({ contextTypes: ['POPUP'] })` 查不到。测试真实 action popup（如 `closeAfterCopy`、固定尺寸）必须用 `chrome.action.openPopup()` 打开；否则会得到错误结论。
-17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，16 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已移除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
+17. **筛选控件只有下拉一种实现**：平台 / 语法分类 / Payload 类型 / Payload 分类 / AI 提示词场景统一用 `<select class="rb-select rb-select--filter">`，由 `components.js` 的 `syncFilterSelect()` 生成选项，调用方必须把返回值写回 `state`。**禁止再引入任何横向滚动的 chip 条 / 标签条做筛选**——popup 固定 420px 宽，17 个平台排成滚动条一次只看得到 3 个，没有溢出提示，还会叠出多条同权重滚动行（旧实现已移除）。`syncFilterSelect()` 用 `dataset.optionSignature` 比对选项集合，只有集合真变化才重建 `<option>`，避免下拉展开中被强行收起、键盘焦点丢失。
 18. **列表纵向滚动复位只发生在“换了一批结果”时**：平台 / 分类 / Payload 类型 / 搜索 / 收藏过滤 / 右键菜单搜索切换会调用 `app.js` 的 `resetContentScroll()`；“加载更多”只追加卡片，**禁止**调用，否则会打断阅读位置。
 19. **禁止写 `scrollbar-width` / `scrollbar-color`**：Chromium 121+ 中这两个标准属性一旦出现，会整体覆盖 `::-webkit-scrollbar` 定制（`options.css`、`base.css` 两处都已剔除并留注释）。滚动条样式只能走 `::-webkit-scrollbar-thumb`；确需横向滚动的容器（如设置页左侧导航）配 `overscroll-behavior-x: contain` 防止滚动穿透。
 20. **搜索与平台 / 类型 / 分类筛选是叠加关系**：`snippetScope()` / `payloadScope()` 先按平台（类型）取子集，再在子集内按关键词过滤；因此各下拉括号内的计数必须与实际结果同源（含“只看收藏”），页脚 `#footer-count` 也走同一份结果，禁止另算一套计数。
@@ -443,5 +443,6 @@ app.js bindAi → sendAi → requestAI（ai-client.js）
 
 | 版本 | 主要能力 |
 | --- | --- |
+| 2.1.0 | 新增 Wireshark 显示过滤语法库（第 17 个语法库，`kind: command`，161 条）：覆盖比较 / 逻辑运算符、地址与端口、TCP 与传输层、UDP / ICMP、HTTP、DNS / DHCP / ARP、TLS 与证书、邮件与文件传输、排错与性能、综合场景；`platforms.json` 补充运算符、字段与使用提示（显示过滤与捕获过滤的区别、多值字段取反、`contains` / `matches` 大小写、TLS 解密条件等）；示例统一使用 `example.com` 与文档保留网段；README 同步平台数、语法总数与版本号 |
 | 2.0.0 | 聚合查询标签页：接入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / 0.zone / DayDayMap，支持多平台并行检索、10/20/50 分页、结果跳转与复制；复制语法后“一站式查询”提示（可在设置关闭）；设置页新增测绘查询分区与本地 API Key 管理（导出时自动剔除）；`search-providers.js` 统一平台请求构造与响应归一化；语法库补充奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉 T-Answer、新华三 SecCenter CSAP 六个态势感知平台，并将早期误命名的条目并入安恒 AiLPHA；平台选择改为默认单选下拉 + 可切换多选面板，打开时恢复上次使用或已配置 Key 的平台；设置页新增逐平台「测试连接」（`rb:cyber-test`，3 秒冷却，仅后台读取 Key）；API Key 改为输入即保存，避免未失焦就关闭页面导致丢配置；修复 `patchSettings` updater 漏写 return 时把 `undefined` 写入设置、导致平台 API Key 与默认标签页被整体重置的问题；结果导出支持 JSON / CSV / Markdown / TXT；默认标签页可跟随上次使用或固定 |
 | 1.0.0 | 11 个测绘平台语法库与 19 类 Payload 库全量入库（按官方字段表覆盖）；变量填充与一键复制、收藏与最近使用、右键菜单搜索、侧边栏模式；深色 / 浅色 / 跟随系统三档主题；AI 助手多供应商流式生成（含本地召回示例与端点、额度、间隔三重校验）；文本与二进制样本「存为文件」；内置条目软隐藏与自定义条目就地编辑 |

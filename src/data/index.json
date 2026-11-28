@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-26",
+  "updated": "2026-11-28",
   "snippets": [
     { "path": "snippets/fofa.json", "platform": "fofa" },
     { "path": "snippets/hunter.json", "platform": "hunter" },
@@ -17,7 +17,8 @@
     { "path": "snippets/zerozone.json", "platform": "zerozone" },
     { "path": "snippets/google.json", "platform": "google" },
     { "path": "snippets/baidu.json", "platform": "baidu" },
-    { "path": "snippets/tools.json", "platform": "tools" }
+    { "path": "snippets/tools.json", "platform": "tools" },
+    { "path": "snippets/wireshark.json", "platform": "wireshark" }
   ],
   "payloads": [
     { "path": "payloads/sqli.json" },

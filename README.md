@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue) ![Chrome](https://img.shields.io/badge/Chrome-116%2B-green) ![Edge](https://img.shields.io/badge/Edge-116%2B-green) ![Manifest](https://img.shields.io/badge/Manifest-V3-3fb950) ![License](https://img.shields.io/badge/license-MIT-3fb950) ![Build](https://img.shields.io/badge/build-none-3fb950) ![Backend](https://img.shields.io/badge/backend-none-3fb950) ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen)
+![Version](https://img.shields.io/badge/version-2.1.0-blue) ![Chrome](https://img.shields.io/badge/Chrome-116%2B-green) ![Edge](https://img.shields.io/badge/Edge-116%2B-green) ![Manifest](https://img.shields.io/badge/Manifest-V3-3fb950) ![License](https://img.shields.io/badge/license-MIT-3fb950) ![Build](https://img.shields.io/badge/build-none-3fb950) ![Backend](https://img.shields.io/badge/backend-none-3fb950) ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
 **面向网络安全工程师的浏览器速取面板** — 测绘语法、安全测试 Payload、聚合查询、AI 助手，四者合一，一键复制。
 
@@ -22,12 +22,16 @@
 
 **RuleBox 把这些变成了一个可搜索、可筛选、可变量填充的面板** — 装到 Chrome / Edge 里，按一下快捷键就弹出来，搜一下、填变量、点复制，直接粘到测试工具里。
 
-- 🗂️ **16 个语法库**：13 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / 深信服 SIP / 长亭全悉 T-Answer / 新华三 SecCenter CSAP）+ Google / 百度 + 常用命令行工具
+- 🗂️ **17 个语法库**：13 个测绘与态势平台（FOFA / Hunter / Quake / ZoomEye / Shodan / DayDayMap / 0.zone / 奇安信天眼 / 安恒 AiLPHA / 华为云安全云脑 / 深信服 SIP / 长亭全悉 T-Answer / 新华三 SecCenter CSAP）+ Google / 百度 + 常用命令行工具 + Wireshark 显示过滤
 - 💣 **19 类安全测试 Payload / 267 条**：SQLi / XSS / SSRF / RCE / LFI / XXE / SSTI / Deserialization / JWT / NoSQL / LDAP / CRLF / Redirect / Upload / JNDI / Shell / Webshell / Sensitive / WAF
 - 🔎 **测绘聚合查询**：填入 FOFA / Hunter 鹰图 / Quake / ZoomEye / Shodan / DayDayMap / 0.zone 的 API Key 后，在面板内用同一语法并行检索多个平台，结果可跳转、可复制、可翻页、可导出
 - 🤖 **AI 助手**（可选）：6 家预设 + 任意 OpenAI 兼容端点，自然语言生成定制语法与 Payload
 
-目前内置 **802 条语法、267 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+目前内置 **963 条语法、267 条 Payload、20 条 AI 提示词**，全部可搜索、可筛选、可收藏。
+
+### v2.1 新增
+
+- **Wireshark 显示过滤语法库**：新增 161 条显示过滤表达式，覆盖比较与逻辑组合、地址与端口、TCP 排障、HTTP / DNS / DHCP / ARP、TLS 与证书、邮件与文件传输、性能分析等场景，复制后粘贴到过滤器栏即可筛选报文
 
 ### v2.0 新增
 
@@ -278,6 +282,7 @@ git clone https://github.com/EdenSec/RuleBox.git
 - **隐藏内置条目**：暂时用不到的点眼睛图标隐藏，不删除任何数据；设置页可恢复
 - **自定义条目**：筛选行的 `+` 可就地新增；自定义卡片支持直接编辑、删除，跟内置的一样用
 - **右键搜索**：选中网页文本后右键「在 RuleBox 中搜索」，关键词直接带入
+- **Wireshark 显示过滤**：内置 161 条显示过滤表达式，支持字段比较、逻辑组合、`contains` 与 `matches` 正则匹配，复制后直接粘贴到 Wireshark 过滤器栏；示例地址统一使用文档保留段与示例域名
 - **默认标签页**：可跟随上次使用（默认），也可在设置里固定为语法库 / Payload / 聚合查询 / AI 助手，常用哪个就停在哪
 - **侧边栏模式**：Chrome 116+ / Edge 116+ 固定常驻；低版本或侧边栏不可用时自动降级到弹窗 / 标签页
 
@@ -409,6 +414,7 @@ RuleBox 没有后端服务，不上传语法库、Payload、收藏、历史，�
 
 - 语法与字段依据各平台**公开文档**与公开技术资料整理，条目内标注 `source` 来源；平台语法可能随官方改版而变化，欢迎纠错
 - 奇安信天眼、安恒 AiLPHA、华为云安全云脑、深信服 SIP、长亭全悉、新华三 SecCenter CSAP 的字段与运算符依据公开技术资料/官方手册整理，不同版本、不同数据源的可检索字段存在差异，示例 IP 均为文档保留地址，实际以平台帮助文档为准
+- Wireshark 语法依据官方显示过滤参考与公开文档整理，涉及 `tcp.analysis.*` 的条目需要开启 TCP 流分析；HTTPS 报文需配置 `SSLKEYLOGFILE` 或服务器私钥后才能用 `http.*` 字段解析；示例地址为文档保留段与示例域名
 - 本插件提供语法与 Payload 的速查、复制、生成与样本导出能力，所有内容仅供**已授权的安全测试与防御研究**使用。使用者在未授权目标上使用相关内容所产生的一切后果自行承担。
 
 ---

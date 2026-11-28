@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "RuleBox · 安全语法与 Payload 速取",
   "short_name": "RuleBox",
-  "version": "2.0.0",
-  "description": "网络安全语法与 Payload 速取面板：FOFA / 鹰图 / Quake 等测绘语法与 API 聚合查询、SQLi / XSS 等 Payload 一键复制，并支持 AI 生成定制语句。",
+  "version": "2.1.0",
+  "description": "网络安全语法与 Payload 速取面板：FOFA / 鹰图 / Quake 等测绘语法与 API 聚合查询、Wireshark 显示过滤、SQLi / XSS 等 Payload 一键复制，并支持 AI 生成定制语句。",
   "minimum_chrome_version": "116",
   "action": {
     "default_title": "RuleBox",
