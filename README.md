@@ -97,7 +97,7 @@
 
 ### 聚合查询
 
-一条语法 `domain="qq.com"`，同时检索已配置密钥的多个平台，结果可复制、可导出、可翻页。
+一条语法 `domain="example.com"`，同时检索已配置密钥的多个平台，结果可复制、可导出、可翻页。
 
 <p align="center">
   <img src="assets/demo-cyber-query.gif" alt="聚合查询 · 输入语法并同时检索 FOFA 与 Hunter 鹰图" width="420">
